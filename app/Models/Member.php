@@ -5,10 +5,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Member extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'member_id',
@@ -53,6 +54,27 @@ class Member extends Model
     public function children()
     {
         return $this->hasMany(Child::class);
+    }
+
+    // Financial relationships
+    public function tithes()
+    {
+        return $this->hasMany(Tithe::class);
+    }
+
+    public function offerings()
+    {
+        return $this->hasMany(Offering::class);
+    }
+
+    public function donations()
+    {
+        return $this->hasMany(Donation::class);
+    }
+
+    public function pledges()
+    {
+        return $this->hasMany(Pledge::class);
     }
 
     /**

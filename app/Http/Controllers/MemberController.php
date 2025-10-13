@@ -401,8 +401,86 @@ public function update(Request $request, Member $member)
 
 public function destroy(Member $member)
 {
-    $member->delete();
-    return response()->json(['success' => true, 'message' => 'Member deleted successfully']);
+    try {
+        \Log::info('DELETE_MEMBER_ATTEMPT', [
+            'member_id' => $member->id,
+            'member_id_string' => $member->member_id,
+            'full_name' => $member->full_name,
+            'request_method' => request()->method(),
+            'request_url' => request()->url(),
+            'request_headers' => request()->headers->all(),
+            'route_name' => request()->route()->getName(),
+            'route_parameters' => request()->route()->parameters()
+        ]);
+
+        // Check if member has any related data that might prevent deletion
+        $hasChildren = $member->children()->count() > 0;
+        $hasTithes = \App\Models\Tithe::where('member_id', $member->id)->count() > 0;
+        $hasOfferings = \App\Models\Offering::where('member_id', $member->id)->count() > 0;
+        $hasDonations = \App\Models\Donation::where('member_id', $member->id)->count() > 0;
+        $hasPledges = \App\Models\Pledge::where('member_id', $member->id)->count() > 0;
+
+        if ($hasChildren || $hasTithes || $hasOfferings || $hasDonations || $hasPledges) {
+            \Log::warning('DELETE_MEMBER_BLOCKED', [
+                'member_id' => $member->id,
+                'has_children' => $hasChildren,
+                'has_tithes' => $hasTithes,
+                'has_offerings' => $hasOfferings,
+                'has_donations' => $hasDonations,
+                'has_pledges' => $hasPledges
+            ]);
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete member. Member has associated records (children, tithes, offerings, donations, or pledges). Please archive the member instead.',
+                    'error_type' => 'has_related_data'
+                ], 422);
+            }
+            
+            return redirect()->route('members.view')
+                ->with('error', 'Cannot delete member. Member has associated records. Please archive the member instead.');
+        }
+
+        // Delete associated children first
+        $member->children()->delete();
+
+        // Delete the member
+        $member->delete();
+
+        \Log::info('DELETE_MEMBER_SUCCESS', [
+            'member_id' => $member->id,
+            'member_id_string' => $member->member_id
+        ]);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Member deleted successfully'
+            ]);
+        }
+        
+        return redirect()->route('members.view')
+            ->with('success', 'Member deleted successfully');
+
+    } catch (\Exception $e) {
+        \Log::error('DELETE_MEMBER_FAILED', [
+            'member_id' => $member->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting the member: ' . $e->getMessage(),
+                'error_type' => 'exception'
+            ], 500);
+        }
+        
+        return redirect()->route('members.view')
+            ->with('error', 'An error occurred while deleting the member: ' . $e->getMessage());
+    }
 }
 
 public function archive(Request $request, Member $member)
@@ -438,6 +516,78 @@ public function archive(Request $request, Member $member)
     }
     return redirect()->route('members.view', ['tab' => 'archived'])
         ->with('success', 'Member archived successfully');
+}
+
+/**
+ * Permanently delete an archived member
+ */
+public function destroyArchived(Request $request, $memberId)
+{
+    try {
+        \Log::info('DELETE_ARCHIVED_MEMBER_ATTEMPT', [
+            'member_id' => $memberId,
+            'request_method' => request()->method(),
+            'request_url' => request()->url(),
+            'request_headers' => request()->headers->all()
+        ]);
+
+        // Find the archived member
+        $archivedMember = DeletedMember::where('member_id', $memberId)->first();
+        
+        if (!$archivedMember) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Archived member not found'
+            ], 404);
+        }
+
+        // Check if there are any related financial records
+        $hasTithes = \App\Models\Tithe::where('member_id', $memberId)->count() > 0;
+        $hasOfferings = \App\Models\Offering::where('member_id', $memberId)->count() > 0;
+        $hasDonations = \App\Models\Donation::where('member_id', $memberId)->count() > 0;
+        $hasPledges = \App\Models\Pledge::where('member_id', $memberId)->count() > 0;
+
+        if ($hasTithes || $hasOfferings || $hasDonations || $hasPledges) {
+            \Log::warning('DELETE_ARCHIVED_MEMBER_BLOCKED', [
+                'member_id' => $memberId,
+                'has_tithes' => $hasTithes,
+                'has_offerings' => $hasOfferings,
+                'has_donations' => $hasDonations,
+                'has_pledges' => $hasPledges
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot permanently delete archived member. Member has associated financial records (tithes, offerings, donations, or pledges).',
+                'error_type' => 'has_related_data'
+            ], 422);
+        }
+
+        // Delete the archived member record
+        $archivedMember->delete();
+
+        \Log::info('DELETE_ARCHIVED_MEMBER_SUCCESS', [
+            'member_id' => $memberId
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Archived member permanently deleted successfully'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('DELETE_ARCHIVED_MEMBER_FAILED', [
+            'member_id' => $memberId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while deleting the archived member: ' . $e->getMessage(),
+            'error_type' => 'exception'
+        ], 500);
+    }
 }
 
 public function exportCsv(Request $request)

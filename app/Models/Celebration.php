@@ -24,8 +24,8 @@ class Celebration extends Model
 
     protected $casts = [
         'celebration_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        'start_time' => 'string',
+        'end_time' => 'string',
         'expected_guests' => 'integer',
         'budget' => 'decimal:2',
         'is_public' => 'boolean'

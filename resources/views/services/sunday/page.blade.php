@@ -1,88 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Sunday Services</title>
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@extends('layouts.index')
+
+@section('content')
         <style>
-            .sb-sidenav { background-color: #17082d !important; }
-            .sb-sidenav .nav-link { color: white !important; transition: all 0.3s ease; }
-            .sb-sidenav .nav-link:hover { background-color: #293846 !important; color: white !important; }
             .table.interactive-table tbody tr:hover { background-color: #f8f9ff; }
             .table.interactive-table tbody tr td:first-child { border-left: 4px solid #5b2a86; }
         </style>
-    </head>
-    <body class="sb-nav-fixed">
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand ps-3 d-flex align-items-center" href="{{ route('dashboard.secretary') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
-            <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;"><strong>Sunday Services</strong></div>
-            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <div id="layoutSidenav">
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu">
-                        <div class="nav">
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            <div class="sb-sidenav-menu-heading">Management</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Members
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
-                                </nav>
-                            </div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="true" aria-controls="collapseEvents">
-                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                                Events & Services
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse show" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link active" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Sunday Services</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Logged in as:</div>
-                        {{ Auth::user()->name ?? 'User' }}
-                    </div>
-                </nav>
-            </div>
-            <div id="layoutSidenav_content">
-                <main>
                     <div class="container-fluid px-4">
                         <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
                             <h2 class="mb-0">Sunday Services</h2>
@@ -454,68 +376,172 @@
 
         <!-- Edit Modal -->
         <div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-                    <div class="modal-header bg-white border-0">
-                        <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-edit text-primary"></i><span>Edit Sunday Service</span></h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden; animation: modalSlideIn 0.3s ease-out;">
+                    <!-- Header -->
+                    <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #1f2b6c 0%, #5b2a86 100%); border: none; padding: 1.5rem;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="fas fa-edit fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title mb-1 fw-bold">Edit Sunday Service</h5>
+                                <p class="mb-0 opacity-75 small">Update details and keep your records accurate</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+
+                    <!-- Body -->
+                    <div class="modal-body" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 2rem;">
                         <form id="editServiceForm">
                             <input type="hidden" id="edit_id">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Service Date</label>
-                                    <input type="date" class="form-control" id="edit_date" required>
+
+                            <!-- Service Information -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
+                                    <h6 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-info-circle me-2"></i>Service Information
+                                    </h6>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Start Time</label>
-                                    <input type="time" class="form-control" id="edit_start">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">End Time</label>
-                                    <input type="time" class="form-control" id="edit_end">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Theme</label>
-                                    <input type="text" class="form-control" id="edit_theme">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Preacher</label>
-                                    <input type="text" class="form-control" id="edit_preacher">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Venue</label>
-                                    <input type="text" class="form-control" id="edit_venue">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Attendance</label>
-                                    <input type="number" min="0" class="form-control" id="edit_attendance">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Offerings (TZS)</label>
-                                    <input type="number" min="0" step="0.01" class="form-control" id="edit_offerings">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Scripture Readings</label>
-                                    <textarea class="form-control" id="edit_readings" rows="2"></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Choir</label>
-                                    <input type="text" class="form-control" id="edit_choir">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Announcements</label>
-                                    <textarea class="form-control" id="edit_announcements" rows="2"></textarea>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Notes</label>
-                                    <textarea class="form-control" id="edit_notes" rows="2"></textarea>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="edit_theme" placeholder="Service Theme" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_theme" class="text-muted"><i class="fas fa-star me-1"></i>Service Theme</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="edit_preacher" placeholder="Preacher Name" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_preacher" class="text-muted"><i class="fas fa-user-tie me-1"></i>Preacher</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="edit_venue" placeholder="Venue" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_venue" class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>Venue</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="edit_choir" placeholder="Choir" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_choir" class="text-muted"><i class="fas fa-music me-1"></i>Choir</label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save</button>
+
+                            <!-- Date & Time -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
+                                    <h6 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-clock me-2"></i>Date & Time
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="date" class="form-control" id="edit_date" required style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_date" class="text-muted"><i class="fas fa-calendar-alt me-1"></i>Service Date</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="time" class="form-control" id="edit_start" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_start" class="text-muted"><i class="fas fa-play me-1"></i>Start Time</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="time" class="form-control" id="edit_end" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_end" class="text-muted"><i class="fas fa-stop me-1"></i>End Time</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Attendance & Offerings -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
+                                    <h6 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-chart-line me-2"></i>Attendance & Offerings
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="number" min="0" class="form-control" id="edit_attendance" placeholder="Attendance" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_attendance" class="text-muted"><i class="fas fa-users me-1"></i>Attendance</label>
+                                            </div>
+                                </div>
+                                <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="number" min="0" step="0.01" class="form-control" id="edit_offerings" placeholder="Offerings (TZS)" style="border-radius: 10px; border: 2px solid #e9ecef;">
+                                                <label for="edit_offerings" class="text-muted"><i class="fas fa-money-bill-wave me-1"></i>Offerings (TZS)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+
+                            <!-- Scripture & Content -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
+                                    <h6 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-bible me-2"></i>Scripture & Content
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                <div class="col-12">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="edit_readings" placeholder="Scripture Readings" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; resize: none;"></textarea>
+                                                <label for="edit_readings" class="text-muted"><i class="fas fa-book-open me-1"></i>Scripture Readings</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Announcements & Notes -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
+                                    <h6 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-bullhorn me-2"></i>Announcements & Notes
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                <div class="col-12">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="edit_announcements" placeholder="Service Announcements" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; resize: none;"></textarea>
+                                                <label for="edit_announcements" class="text-muted"><i class="fas fa-bullhorn me-1"></i>Announcements</label>
+                                            </div>
+                                </div>
+                                <div class="col-12">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="edit_notes" placeholder="Additional Notes" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; resize: none;"></textarea>
+                                                <label for="edit_notes" class="text-muted"><i class="fas fa-sticky-note me-1"></i>Notes</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex justify-content-end gap-3 mt-4">
+                                <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600;">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 25px; font-weight: 600; background: linear-gradient(135deg, #940000 0%, #667eea 100%); border: none; box-shadow: 0 4px 15px rgba(148, 0, 0, 0.3);">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -531,26 +557,74 @@
                 fetch(`{{ url('/services/sunday') }}/${id}`, { headers: { 'Accept': 'application/json' } })
                     .then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
                     .then(s => {
-                        const row = (label, value) => `<tr><td class="text-muted text-nowrap">${label}</td><td class="fw-semibold">${value || '—'}</td></tr>`;
+                        const fmtTime = (t) => {
+                            if (!t) return '—';
+                            try {
+                                // Handle ISO or "YYYY-MM-DD HH:MM:SS"
+                                if (t.includes('T') || /\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(t)) {
+                                    const d = new Date(t);
+                                    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                }
+                                // Handle HH:MM(:SS)
+                                if (/^\d{2}:\d{2}/.test(t)) {
+                                    const [hh, mm] = t.split(':');
+                                    const d = new Date();
+                                    d.setHours(parseInt(hh), parseInt(mm), 0);
+                                    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                }
+                                return t;
+                            } catch { return '—'; }
+                        };
+                        const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+                        const fmtCurrency = (amount) => (amount || amount === 0) ? `TZS ${parseFloat(amount).toLocaleString()}` : '—';
+
+                        const basicInfo = `
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                                <div class="mb-2"><strong>Theme:</strong> ${s.theme ?? '—'}</div>
+                                <div class="mb-2"><strong>Preacher:</strong> ${s.preacher ?? '—'}</div>
+                                <div class="mb-2"><strong>Venue:</strong> ${s.venue ?? '—'}</div>
+                                <div class="mb-2"><strong>Choir:</strong> ${s.choir ?? '—'}</div>
+                            </div>`;
+
+                        const dateTime = `
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="fas fa-clock me-2"></i>Date & Time</h6>
+                                <div class="mb-2"><strong>Date:</strong> ${fmtDate(s.service_date)}</div>
+                                <div class="mb-2"><strong>Time:</strong> ${fmtTime(s.start_time)} ${s.end_time ? ' - ' + fmtTime(s.end_time) : ''}</div>
+                                <div class="mb-2"><strong>Attendance:</strong> ${s.attendance_count ?? '—'}</div>
+                                <div class="mb-2"><strong>Offerings:</strong> ${fmtCurrency(s.offerings_amount)}</div>
+                            </div>`;
+
+                        const scripture = s.scripture_readings ? `
+                            <div class="mt-4">
+                                <h6 class="text-primary mb-3"><i class="fas fa-bible me-2"></i>Scripture Readings</h6>
+                                <div class="p-3 bg-white border rounded">${s.scripture_readings}</div>
+                            </div>` : '';
+
+                        const announcements = s.announcements ? `
+                            <div class="mt-4">
+                                <h6 class="text-primary mb-3"><i class="fas fa-bullhorn me-2"></i>Announcements</h6>
+                                <div class="p-3 bg-white border rounded">${s.announcements}</div>
+                            </div>` : '';
+
+                        const notes = s.notes ? `
+                            <div class="mt-4">
+                                <h6 class="text-primary mb-3"><i class="fas fa-sticky-note me-2"></i>Notes</h6>
+                                <div class="p-3 bg-white border rounded">${s.notes}</div>
+                            </div>` : '';
+
                         const html = `
-                            <div class=\"small text-uppercase text-muted mt-2 mb-1\">Overview</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('Service Date', (s.service_date || '').replaceAll('-', '/'))}
-                                ${row('Theme', s.theme)}
-                                ${row('Preacher', s.preacher)}
-                                ${row('Time', (s.start_time||'--:--') + ' - ' + (s.end_time||'--:--'))}
-                                ${row('Venue', s.venue)}
-                                ${row('Attendance', s.attendance_count)}
-                                ${row('Offerings (TZS)', s.offerings_amount)}
-                            </tbody></table>
-                            <div class=\"small text-uppercase text-muted mt-3 mb-1\">Details</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('Scripture Readings', s.scripture_readings)}
-                                ${row('Choir', s.choir)}
-                                ${row('Announcements', s.announcements)}
-                                ${row('Notes', s.notes)}
-                            </tbody></table>
-                        `;
+                            <div class="container-fluid">
+                                <div class="row g-3">
+                                    ${basicInfo}
+                                    ${dateTime}
+                                </div>
+                                ${scripture}
+                                ${announcements}
+                                ${notes}
+                            </div>`;
+
                         document.getElementById('serviceDetailsBody').innerHTML = html;
                         new bootstrap.Modal(document.getElementById('serviceDetailsModal')).show();
                     })
@@ -629,7 +703,6 @@
                     .catch(()=> Swal.fire({ icon:'error', title:'Error', text:'Request failed.' })); } });
             }
         </script>
-    </body>
-</html>
+@endsection
 
 

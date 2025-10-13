@@ -1,20 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Special Events</title>
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@extends('layouts.index')
+
+@section('content')
         <style>
-            .sb-sidenav { background-color: #17082d !important; }
-            .sb-sidenav .nav-link { color: white !important; transition: all 0.3s ease; }
-            .sb-sidenav .nav-link:hover { background-color: #293846 !important; color: white !important; }
             .table.interactive-table tbody tr:hover { background-color: #f8f9ff; }
             .table.interactive-table tbody tr td:first-child { border-left: 4px solid #5b2a86; }
             
@@ -201,118 +188,50 @@
                 border-color: #6c757d;
                 color: #495057;
             }
+
+            /* Event type badge styling */
+            .event-type-badge {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+            
+            /* Event date styling */
+            .event-date {
+                background: linear-gradient(135deg, #940000, #667eea);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 25px;
+                font-weight: 600;
+            }
+            
+            /* Action buttons styling */
+            .btn-group .btn {
+                border: none !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: all 0.3s ease;
+            }
+            
+            .btn-group .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+            
+            .btn-group .btn-info {
+                background: linear-gradient(135deg, #17a2b8, #138496) !important;
+            }
+            
+            .btn-group .btn-primary {
+                background: linear-gradient(135deg, #007bff, #0056b3) !important;
+            }
+            
+            .btn-group .btn-danger {
+                background: linear-gradient(135deg, #dc3545, #c82333) !important;
+            }
         </style>
-    </head>
-    <body class="sb-nav-fixed">
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <!-- Navbar Brand-->
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <!-- Sidebar Toggle-->
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <!-- Welcome Message -->
-            <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
-                <strong>Welcome to Waumini Link</strong>
-            </div>
-            <!-- Navbar-->
-            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#!">Settings</a></li>
-                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}" 
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <div id="layoutSidenav">
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu">
-                        <div class="nav">
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            
-                            <div class="sb-sidenav-menu-heading">Management</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Members
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('members.add') }}">
-                                        <i class="fas fa-user-plus me-2"></i>Add New Member
-                                    </a>
-                                    <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
-                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                                Events & Services
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Sunday Services</a>
-                                    <a class="nav-link active" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-donate"></i></div>
-                                Finance
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="#"><i class="fas fa-money-bill-wave me-2"></i>Donations</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Financial Reports</a>
-                                </nav>
-                            </div>
-                            
-                            <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Analytics
-                            </a>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                Reports
-                            </a>
-                            
-                            <div class="sb-sidenav-menu-heading">Settings</div>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
-                                System Settings
-                            </a>
-                        </div>
-                    </div>
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Logged in as:</div>
-                        {{ Auth::user()->name ?? 'User' }}
-                    </div>
-                </nav>
-            </div>
-            <div id="layoutSidenav_content">
-                <main>
                     <div class="container-fluid px-4">
                         <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
                             <h2 class="mb-0">Special Events</h2>
@@ -358,13 +277,14 @@
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="text-nowrap">#</th>
-                                                <th>Date</th>
                                                 <th>Title</th>
                                                 <th>Speaker</th>
+                                                <th>Category</th>
+                                                <th>Date</th>
                                                 <th>Time</th>
                                                 <th>Venue</th>
-                                                <th class="text-end">Actions</th>
+                                                <th>Budget</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -372,26 +292,71 @@
                                                 @php
                                                     $fmtTime = function($t){
                                                         if (!$t) return '--:--';
-                                                        try { if (preg_match('/^\d{2}:\d{2}/',$t)) return substr($t,0,5); return \Carbon\Carbon::parse($t)->format('H:i'); } catch (\Throwable $e) { return '--:--'; }
+                                                        try { 
+                                                            if (preg_match('/^\d{2}:\d{2}/',$t)) return substr($t,0,5); 
+                                                            return \Carbon\Carbon::parse($t)->format('H:i'); 
+                                                        } catch (\Throwable $e) { 
+                                                            return '--:--'; 
+                                                        }
                                                     };
                                                 @endphp
                                                 <tr id="row-{{ $event->id }}">
-                                                    <td class="text-muted">{{ $events->firstItem() + $loop->index }}</td>
-                                                    <td><span class="badge bg-secondary">{{ $event->event_date ? \Carbon\Carbon::parse($event->event_date)->format('d/m/Y') : '—' }}</span></td>
-                                                    <td>{{ $event->title ?? '—' }}</td>
+                                                    <td>
+                                                        <div class="fw-bold">{{ $event->title ?? '—' }}</div>
+                                                        @if($event->description)
+                                                            <small class="text-muted">{{ Str::limit($event->description, 50) }}</small>
+                                                        @endif
+                                                    </td>
                                                     <td>{{ $event->speaker ?? '—' }}</td>
-                                                    <td>{{ $fmtTime($event->start_time) }} - {{ $fmtTime($event->end_time) }}</td>
+                                                    <td>
+                                                        @if($event->category)
+                                                            <span class="event-type-badge">{{ $event->category }}</span>
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <span class="event-date">
+                                                            {{ $event->event_date ? \Carbon\Carbon::parse($event->event_date)->format('M d, Y') : '—' }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @if($event->start_time && $event->end_time)
+                                                            {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($event->end_time)->format('g:i A') }}
+                                                        @elseif($event->start_time)
+                                                            {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
                                                     <td>{{ $event->venue ?? '—' }}</td>
-                                                    <td class="text-end">
-                                                        <div class="btn-group btn-group-sm" role="group">
-                                                            <button class="btn btn-outline-info" onclick="viewEvent({{ $event->id }})"><i class="fas fa-eye"></i></button>
-                                                            <button class="btn btn-outline-primary" onclick="openEditEvent({{ $event->id }})"><i class="fas fa-edit"></i></button>
-                                                            <button class="btn btn-outline-danger" onclick="confirmDeleteEvent({{ $event->id }})"><i class="fas fa-trash"></i></button>
+                                                    <td>{{ $event->budget_amount ? 'TZS ' . number_format($event->budget_amount) : '—' }}</td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <button class="btn btn-info btn-sm text-white" onclick="viewEvent({{ $event->id }})" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-primary btn-sm text-white" onclick="openEditEvent({{ $event->id }})" title="Edit Event">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-danger btn-sm text-white" onclick="confirmDeleteEvent({{ $event->id }})" title="Delete Event">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
                                             @empty
-                                                <tr><td colspan="7" class="text-center py-4">No special events found.</td></tr>
+                                                <tr>
+                                                    <td colspan="8" class="text-center py-4">
+                                                        <div class="text-muted">
+                                                            <i class="fas fa-calendar-plus fa-3x mb-3"></i>
+                                                            <p>No special events found</p>
+                                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal" onclick="openAddEvent()">
+                                                                <i class="fas fa-plus me-2"></i>Add First Event
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             @endforelse
                                         </tbody>
                                     </table>
@@ -534,10 +499,9 @@
                             </div>
                         </div>
                     </div>
-                </main>
-            </div>
-        </div>
+@endsection
 
+@section('modals')
         <!-- Add Event Modal -->
         <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl">
@@ -764,6 +728,263 @@
             .modal-backdrop {
                 background: linear-gradient(135deg, rgba(148, 0, 0, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
             }
+            /* Compact & Interactive SweetAlert Styling */
+            .swal-popup-compact {
+                border-radius: 16px !important;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08) !important;
+                border: none !important;
+                overflow: hidden !important;
+            }
+            
+            .swal-title-compact {
+                font-size: 1.2rem !important;
+                font-weight: 600 !important;
+                color: #333 !important;
+                margin-bottom: 0.5rem !important;
+                padding: 0 !important;
+            }
+            
+            .swal-title-custom {
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+                color: #667eea !important;
+                font-weight: 600 !important;
+            }
+            
+            .swal-title-custom i {
+                font-size: 1.1rem !important;
+                color: #667eea !important;
+            }
+            
+            .swal-content-compact {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-height: 70vh !important;
+                overflow-y: auto !important;
+            }
+            
+            /* Event Details Container */
+            .event-details-container {
+                padding: 1rem;
+                background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                border-radius: 12px;
+            }
+            
+            /* Header Section */
+            .event-header-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #e9ecef;
+            }
+            
+            .event-title-main {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #333;
+            }
+            
+            .event-icon {
+                color: #667eea;
+                font-size: 1.2rem;
+                animation: pulse 2s infinite;
+            }
+            
+            .event-category-badge {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 0.4rem 0.8rem;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            }
+            
+            /* Info Grid */
+            .event-info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .info-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem;
+                background: white;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .info-item::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+                transition: left 0.5s;
+            }
+            
+            .info-item:hover::before {
+                left: 100%;
+            }
+            
+            .info-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+                border-color: #667eea;
+            }
+            
+            .info-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 0.9rem;
+                flex-shrink: 0;
+                transition: all 0.3s ease;
+            }
+            
+            .info-item:hover .info-icon {
+                transform: scale(1.1) rotate(5deg);
+            }
+            
+            .info-content {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .info-label {
+                display: block;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: #6c757d;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.25rem;
+            }
+            
+            .info-value {
+                display: block;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #333;
+                word-break: break-word;
+            }
+            
+            /* Description & Notes Sections */
+            .event-description-section,
+            .event-notes-section {
+                margin-top: 1rem;
+                background: white;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            
+            .event-description-section:hover,
+            .event-notes-section:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            
+            .section-header {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+            
+            .section-content {
+                padding: 1rem;
+            }
+            
+            .section-content p {
+                margin: 0;
+                line-height: 1.5;
+                color: #555;
+            }
+            
+            /* Animations */
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            
+            @keyframes slideInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .info-item {
+                animation: slideInUp 0.6s ease-out;
+            }
+            
+            .info-item:nth-child(1) { animation-delay: 0.1s; }
+            .info-item:nth-child(2) { animation-delay: 0.2s; }
+            .info-item:nth-child(3) { animation-delay: 0.3s; }
+            .info-item:nth-child(4) { animation-delay: 0.4s; }
+            .info-item:nth-child(5) { animation-delay: 0.5s; }
+            .info-item:nth-child(6) { animation-delay: 0.6s; }
+            
+            /* SweetAlert Button Styling */
+            .swal2-confirm {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                border: none !important;
+                border-radius: 20px !important;
+                padding: 0.6rem 1.5rem !important;
+                font-weight: 600 !important;
+                font-size: 0.9rem !important;
+                transition: all 0.3s ease !important;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+            }
+            
+            .swal2-confirm:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+            }
+            
+            .swal2-close {
+                color: #667eea !important;
+                font-size: 1.5rem !important;
+                transition: all 0.3s ease !important;
+            }
+            
+            .swal2-close:hover {
+                transform: scale(1.1) !important;
+                color: #764ba2 !important;
+            }
         </style>
 
         <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
@@ -806,27 +1027,153 @@
                 fetch(`{{ url('/special-events') }}/${id}`, { headers: { 'Accept': 'application/json' } })
                     .then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
                     .then(s => {
-                        const row = (label, value) => `<tr><td class="text-muted text-nowrap">${label}</td><td class="fw-semibold">${value || '—'}</td></tr>`;
-                        const fmtTime = (t) => { try { if(!t) return '--:--'; if(/^\d{2}:\d{2}/.test(t)) return t.substring(0,5); return new Date(`1970-01-01T${t}`).toISOString().substring(11,16);} catch { return '--:--'; } };
+                        const fmtTime = (t) => { 
+                            try { 
+                                if(!t) return '--:--'; 
+                                // Handle ISO format
+                                if (t.includes('T')) {
+                                    const time = new Date(t);
+                                    return time.toLocaleTimeString('en-US', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: true 
+                                    });
+                                }
+                                // Handle HH:MM:SS format
+                                if(/^\d{2}:\d{2}/.test(t)) {
+                                    const [hours, minutes] = t.split(':');
+                                    const time = new Date();
+                                    time.setHours(parseInt(hours), parseInt(minutes), 0);
+                                    return time.toLocaleTimeString('en-US', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: true 
+                                    });
+                                }
+                                return t.substring(0,5); 
+                            } catch { 
+                                return '--:--'; 
+                            } 
+                        };
+                        const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+                        const fmtCurrency = (amount) => amount ? `TZS ${parseFloat(amount).toLocaleString()}` : '—';
+                        
                         const html = `
-                            <div class="small text-uppercase text-muted mt-2 mb-1">Overview</div>
-                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                ${row('Event Date', (s.event_date || '').replaceAll('-', '/'))}
-                                ${row('Title', s.title)}
-                                ${row('Speaker', s.speaker)}
-                                ${row('Time', fmtTime(s.start_time)+' - '+fmtTime(s.end_time))}
-                                ${row('Venue', s.venue)}
-                                ${row('Attendance', s.attendance_count)}
-                                ${row('Budget (TZS)', s.budget_amount)}
-                                ${row('Category', s.category)}
-                            </tbody></table>
-                            <div class="small text-uppercase text-muted mt-3 mb-1">Details</div>
-                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                ${row('Description', s.description)}
-                                ${row('Notes', s.notes)}
-                            </tbody></table>
+                            <div class="event-details-container">
+                                <!-- Header Section -->
+                                <div class="event-header-section">
+                                    <div class="event-title-main">
+                                        <i class="fas fa-calendar-plus event-icon"></i>
+                                        <span>${s.title || 'Special Event'}</span>
+                                    </div>
+                                    ${s.category ? `<span class="event-category-badge">${s.category}</span>` : ''}
+                                </div>
+                                
+                                <!-- Main Info Grid -->
+                                <div class="event-info-grid">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Date</span>
+                                            <span class="info-value">${fmtDate(s.event_date)}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Time</span>
+                                            <span class="info-value">${fmtTime(s.start_time)} - ${fmtTime(s.end_time)}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Speaker</span>
+                                            <span class="info-value">${s.speaker || '—'}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Venue</span>
+                                            <span class="info-value">${s.venue || '—'}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Attendance</span>
+                                            <span class="info-value">${s.attendance_count || '—'}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <span class="info-label">Budget</span>
+                                            <span class="info-value">${fmtCurrency(s.budget_amount)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${s.description ? `
+                                    <div class="event-description-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-file-alt"></i>
+                                            <span>Description</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <p>${s.description}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${s.notes ? `
+                                    <div class="event-notes-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-sticky-note"></i>
+                                            <span>Notes</span>
+                                        </div>
+                                        <div class="section-content">
+                                            <p>${s.notes}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
                         `;
-                        Swal.fire({ title:'Event Details', html: html, width: 900, showConfirmButton: true });
+                        
+                        Swal.fire({ 
+                            title: '<div class="swal-title-custom"><i class="fas fa-calendar-plus"></i><span>Event Details</span></div>', 
+                            html: html, 
+                            width: 650, 
+                            showConfirmButton: true,
+                            confirmButtonText: 'Close',
+                            confirmButtonColor: '#667eea',
+                            customClass: {
+                                popup: 'swal-popup-compact',
+                                title: 'swal-title-compact',
+                                content: 'swal-content-compact'
+                            },
+                            showCloseButton: true,
+                            focusConfirm: false,
+                            allowOutsideClick: true
+                        });
                     })
                     .catch(() => Swal.fire({ icon:'error', title:'Failed to load details' }));
             }
@@ -834,8 +1181,10 @@
             function openAddEvent(){
                 // Reset form and set add mode
                 document.getElementById('editing_event_id').value = '';
-                document.querySelector('.modal-title span').textContent = 'Add Special Event';
-                document.getElementById('submitButton').textContent = 'Save';
+                const titleEl = document.querySelector('#addEventModal .modal-title');
+                if (titleEl) titleEl.textContent = 'Create Special Event';
+                const submitBtnEl = document.getElementById('submitButton');
+                if (submitBtnEl) submitBtnEl.textContent = 'Save';
                 document.getElementById('addEventForm').reset();
                 new bootstrap.Modal(document.getElementById('addEventModal')).show();
             }
@@ -846,8 +1195,10 @@
                     .then(s => {
                         // Set editing mode
                         document.getElementById('editing_event_id').value = id;
-                        document.querySelector('.modal-title span').textContent = 'Edit Special Event';
-                        document.getElementById('submitButton').textContent = 'Update';
+                        const titleEl = document.querySelector('#addEventModal .modal-title');
+                        if (titleEl) titleEl.textContent = 'Edit Special Event';
+                        const submitBtnEl = document.getElementById('submitButton');
+                        if (submitBtnEl) submitBtnEl.textContent = 'Update';
                         
                         // Populate form fields
                         document.getElementById('ev_date').value = s.event_date || '';
@@ -867,6 +1218,11 @@
 
             document.getElementById('addEventForm').addEventListener('submit', function(e){
                 e.preventDefault();
+                const submitBtn = document.getElementById('submitButton');
+                submitBtn.disabled = true;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
                 const fd = new FormData();
                 fd.append('event_date', document.getElementById('ev_date').value);
                 fd.append('start_time', document.getElementById('ev_start').value);
@@ -897,25 +1253,52 @@
                 fetch(url, { 
                     method: method, 
                     headers: { 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     }, 
                     body: fd
                 })
-                    .then(r => r.json())
+                    .then(async (r) => {
+                        const contentType = r.headers.get('content-type') || '';
+                        if (!r.ok) {
+                            let errorMsg = `HTTP ${r.status}`;
+                            if (contentType.includes('application/json')) {
+                                const err = await r.json().catch(() => null);
+                                if (err && err.message) errorMsg = err.message;
+                            } else {
+                                const text = await r.text().catch(() => '');
+                                if (text) errorMsg = text.substring(0, 200);
+                            }
+                            throw new Error(errorMsg);
+                        }
+                        if (contentType.includes('application/json')) {
+                            return r.json();
+                        }
+                        // Fallback: treat non-JSON as success if reached here
+                        return { success: true, message: 'Saved' };
+                    })
                     .then(res => { 
-                        if(res.success){ 
+                        if(res && res.success){ 
                             // Reset form after successful submission
                             document.getElementById('addEventForm').reset();
                             document.getElementById('editing_event_id').value = '';
-                            document.querySelector('.modal-title span').textContent = 'Add Special Event';
-                            document.getElementById('submitButton').textContent = 'Save';
+                            const titleEl = document.querySelector('#addEventModal .modal-title');
+                            if (titleEl) titleEl.textContent = 'Create Special Event';
+                            const submitBtnEl = document.getElementById('submitButton');
+                            if (submitBtnEl) submitBtnEl.textContent = 'Save';
                             
                             Swal.fire({ icon:'success', title: editingId ? 'Updated' : 'Saved', timer:1200, showConfirmButton:false }).then(()=>location.reload()); 
                         } else { 
-                            Swal.fire({ icon:'error', title:'Failed', text: res.message || 'Try again' }); 
+                            Swal.fire({ icon:'error', title:'Failed', text: (res && res.message) ? res.message : 'Try again' }); 
                         } 
                     })
-                    .catch(() => Swal.fire({ icon:'error', title:'Network error' }));
+                    .catch((err) => {
+                        Swal.fire({ icon:'error', title:'Request error', text: err?.message || 'Network error' });
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
             });
 
             function confirmDeleteEvent(id){
@@ -939,5 +1322,4 @@
                 });
             }
         </script>
-    </body>
-</html>
+@endsection

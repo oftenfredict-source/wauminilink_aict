@@ -16,6 +16,8 @@ class SpecialEvent extends Model
 
     protected $casts = [
         'event_date' => 'date',
+        'start_time' => 'string',
+        'end_time' => 'string',
         'attendance_count' => 'integer',
         'budget_amount' => 'decimal:2',
     ];

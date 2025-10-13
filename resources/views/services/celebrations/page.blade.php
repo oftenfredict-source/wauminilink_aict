@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Waumini Link - Celebrations</title>
-    <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-    <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-    <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@extends('layouts.index')
+
+@section('content')
     <style>
         .logo-white-section {
             background-color: white !important;
@@ -107,122 +97,7 @@
         .sb-nav-fixed #layoutSidenav #layoutSidenav_nav { position: fixed; top: 56px; left: 0; width: 225px; height: calc(100vh - 56px); z-index: 1039; }
         .sb-nav-fixed #layoutSidenav #layoutSidenav_content { padding-left: 225px; }
     </style>
-</head>
-<body class="sb-nav-fixed">
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <!-- Navbar Brand-->
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <!-- Sidebar Toggle-->
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <!-- Welcome Message -->
-            <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
-                <strong>Celebrations</strong>
-            </div>
-            <!-- Navbar Search-->
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-                <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2" />
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>
-                    </div>
-                </div>
-            </form>
-            <!-- Navbar-->
-            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#!">Settings</a></li>
-                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">
-            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                <div class="sb-sidenav-menu">
-                    <div class="nav">
-                        <div class="sb-sidenav-menu-heading">Main</div>
-                        <a class="nav-link" href="{{ route('dashboard.secretary') }}">
-                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                            Dashboard
-                        </a>
-                        
-                        <div class="sb-sidenav-menu-heading">Management</div>
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                            <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                            Members
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-
-                                <a class="nav-link" href="{{ route('members.add') }}">
-            <i class="fas fa-user-plus me-2"></i>Add New Member
-        </a>
-                                <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
-                                
-                            </nav>
-                        </div>
-                        
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
-                            <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                            Events & Services
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Sunday Services</a>
-                                <a class="nav-link" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                <a class="nav-link" href="{{ route('celebrations.index') }}"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                            </nav>
-                        </div>
-                        
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                            <div class="sb-nav-link-icon"><i class="fas fa-donate"></i></div>
-                            Finance
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="#"><i class="fas fa-money-bill-wave me-2"></i>Donations</a>
-                                <a class="nav-link" href="#"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Financial Reports</a>
-                            </nav>
-                        </div>
-                        
-                        <div class="sb-sidenav-menu-heading">Reports</div>
-                        <a class="nav-link" href="#">
-                            <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                            Analytics
-                        </a>
-                        <a class="nav-link" href="#">
-                            <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                            Reports
-                        </a>
-                        
-                        <div class="sb-sidenav-menu-heading">Settings</div>
-                        <a class="nav-link" href="#">
-                            <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
-                            System Settings
-                        </a>
-                    </div>
-                </div>
-                <div class="sb-sidenav-footer">
-                    <div class="small">Logged in as:</div>
-                    Secretary
-                </div>
-            </nav>
-        </div>
-        <div id="layoutSidenav_content">
-            <main>
-                <div class="container-fluid px-4">
+<div class="container-fluid px-4">
                     <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
                         <h2 class="mb-0">Celebrations</h2>
                         <div class="d-flex gap-2">
@@ -703,18 +578,22 @@
         // Modal Functions
         function openAddCelebration() {
             document.getElementById('editing_celebration_id').value = '';
-            document.querySelector('.modal-title span').textContent = 'Create Celebration';
-            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Celebration';
+            const titleEl = document.querySelector('#addCelebrationModal .modal-title');
+            if (titleEl) titleEl.textContent = 'Create Celebration';
+            const submitBtn = document.getElementById('submitButton');
+            if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Celebration';
             document.getElementById('addCelebrationForm').reset();
         }
 
         function openEdit(id) {
-            fetch(`/celebrations/${id}`)
+            fetch(`/celebrations/${id}`, { headers: { 'Accept': 'application/json' } })
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('editing_celebration_id').value = id;
-                    document.querySelector('.modal-title span').textContent = 'Edit Celebration';
-                    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Update Celebration';
+                    const titleEl = document.querySelector('#addCelebrationModal .modal-title');
+                    if (titleEl) titleEl.textContent = 'Edit Celebration';
+                    const submitBtn = document.getElementById('submitButton');
+                    if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Celebration';
                     
                     document.getElementById('cel_title').value = data.title || '';
                     document.getElementById('cel_celebrant').value = data.celebrant_name || '';
@@ -731,7 +610,7 @@
                     
                     new bootstrap.Modal(document.getElementById('addCelebrationModal')).show();
                 })
-                .catch(err => {
+                .catch(() => {
                     Swal.fire('Error', 'Failed to load celebration details', 'error');
                 });
         }
@@ -740,6 +619,36 @@
             fetch(`/celebrations/${id}`)
                 .then(res => res.json())
                 .then(data => {
+                    // Time formatting function
+                    const formatTime = (timeStr) => {
+                        if (!timeStr || timeStr === 'TBD') return 'TBD';
+                        try {
+                            // Handle ISO format
+                            if (timeStr.includes('T')) {
+                                const time = new Date(timeStr);
+                                return time.toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            }
+                            // Handle HH:MM:SS format
+                            if (timeStr.includes(':')) {
+                                const [hours, minutes] = timeStr.split(':');
+                                const time = new Date();
+                                time.setHours(parseInt(hours), parseInt(minutes), 0);
+                                return time.toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            }
+                            return timeStr;
+                        } catch (e) {
+                            return 'TBD';
+                        }
+                    };
+
                     const body = document.getElementById('celebrationDetailsBody');
                     body.innerHTML = `
                         <div class="row">
@@ -753,7 +662,7 @@
                             <div class="col-md-6">
                                 <h6 class="text-primary mb-3"><i class="fas fa-clock me-2"></i>Date & Time</h6>
                                 <p><strong>Date:</strong> ${data.celebration_date ? new Date(data.celebration_date).toLocaleDateString() : '—'}</p>
-                                <p><strong>Time:</strong> ${data.start_time && data.end_time ? `${data.start_time} - ${data.end_time}` : data.start_time || '—'}</p>
+                                <p><strong>Time:</strong> ${data.start_time && data.end_time ? `${formatTime(data.start_time)} - ${formatTime(data.end_time)}` : data.start_time ? formatTime(data.start_time) : '—'}</p>
                                 <p><strong>Expected Guests:</strong> ${data.expected_guests || '—'}</p>
                                 <p><strong>Budget:</strong> ${data.budget ? `TZS ${parseFloat(data.budget).toLocaleString()}` : '—'}</p>
                             </div>
@@ -813,8 +722,10 @@
             formData.append('type', document.getElementById('cel_type').value);
             formData.append('venue', document.getElementById('cel_venue').value);
             formData.append('celebration_date', document.getElementById('cel_date').value);
-            formData.append('start_time', document.getElementById('cel_start').value);
-            formData.append('end_time', document.getElementById('cel_end').value);
+            const startVal = document.getElementById('cel_start').value;
+            const endVal = document.getElementById('cel_end').value;
+            if (startVal) formData.append('start_time', startVal);
+            if (endVal) formData.append('end_time', endVal);
             formData.append('expected_guests', document.getElementById('cel_guests').value);
             formData.append('budget', document.getElementById('cel_budget').value);
             formData.append('description', document.getElementById('cel_description').value);
@@ -822,9 +733,12 @@
             formData.append('notes', document.getElementById('cel_notes').value);
             formData.append('is_public', '1');
 
+            const submitBtn = document.getElementById('submitButton');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
             const url = editingId ? `/celebrations/${editingId}` : '/celebrations';
-            const method = editingId ? 'PUT' : 'POST';
-            
             if (editingId) {
                 formData.append('_method', 'PUT');
             }
@@ -832,22 +746,41 @@
             fetch(url, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 },
                 body: formData
             })
-            .then(res => res.json())
+            .then(async (res) => {
+                const contentType = res.headers.get('content-type') || '';
+                if (!res.ok) {
+                    let message = `HTTP ${res.status}`;
+                    if (contentType.includes('application/json')) {
+                        const err = await res.json().catch(() => null);
+                        if (err && err.message) message = err.message;
+                    } else {
+                        const text = await res.text().catch(() => '');
+                        if (text) message = text.substring(0, 200);
+                    }
+                    throw new Error(message);
+                }
+                if (contentType.includes('application/json')) {
+                    return res.json();
+                }
+                return { success: true, message: 'Saved' };
+            })
             .then(data => {
                 if (data.success) {
                     document.getElementById('addCelebrationForm').reset();
                     document.getElementById('editing_celebration_id').value = '';
-                    document.querySelector('.modal-title span').textContent = 'Create Celebration';
-                    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Celebration';
+                    const titleEl = document.querySelector('#addCelebrationModal .modal-title');
+                    if (titleEl) titleEl.textContent = 'Create Celebration';
+                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Celebration';
                     
                     Swal.fire({
                         icon: 'success',
                         title: editingId ? 'Updated' : 'Saved',
-                        text: data.message,
+                        text: data.message || 'Celebration saved',
                         timer: 1200,
                         showConfirmButton: false
                     }).then(() => location.reload());
@@ -855,8 +788,12 @@
                     Swal.fire('Error', data.message || 'Failed to save celebration', 'error');
                 }
             })
-            .catch(err => {
-                Swal.fire('Error', 'Failed to save celebration', 'error');
+            .catch((err) => {
+                Swal.fire('Error', err?.message || 'Failed to save celebration', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
             });
         });
     </script>
@@ -956,7 +893,9 @@
         }
     </style>
 
-    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
-    <script src="{{ asset('js/scripts.js') }}"></script>
-</body>
-</html>
+@endsection
+
+@section('scripts')
+<script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
+<script src="{{ asset('js/scripts.js') }}"></script>
+@endsection

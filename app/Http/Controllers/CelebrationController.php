@@ -52,12 +52,12 @@ class CelebrationController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'celebration_date' => 'required|date',
             'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i|after:start_time',
+            'end_time' => 'nullable|date_format:H:i', // add after conditionally below
             'venue' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:255',
             'celebrant_name' => 'nullable|string|max:255',
@@ -66,7 +66,12 @@ class CelebrationController extends Controller
             'special_requests' => 'nullable|string',
             'notes' => 'nullable|string',
             'is_public' => 'boolean'
-        ]);
+        ];
+        // Apply after:start_time only if both provided
+        if ($request->filled('start_time') && $request->filled('end_time')) {
+            $rules['end_time'] .= '|after:start_time';
+        }
+        $validated = $request->validate($rules);
 
         $celebration = Celebration::create($validated);
 
@@ -90,12 +95,12 @@ class CelebrationController extends Controller
      */
     public function update(Request $request, Celebration $celebration)
     {
-        $validated = $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'celebration_date' => 'required|date',
             'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i|after:start_time',
+            'end_time' => 'nullable|date_format:H:i', // add after conditionally below
             'venue' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:255',
             'celebrant_name' => 'nullable|string|max:255',
@@ -104,7 +109,11 @@ class CelebrationController extends Controller
             'special_requests' => 'nullable|string',
             'notes' => 'nullable|string',
             'is_public' => 'boolean'
-        ]);
+        ];
+        if ($request->filled('start_time') && $request->filled('end_time')) {
+            $rules['end_time'] .= '|after:start_time';
+        }
+        $validated = $request->validate($rules);
 
         $celebration->update($validated);
 

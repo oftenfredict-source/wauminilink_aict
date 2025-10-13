@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Offering extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'member_id',
+        'amount',
+        'offering_date',
+        'offering_type',
+        'service_type',
+        'service_id',
+        'payment_method',
+        'reference_number',
+        'notes',
+        'recorded_by',
+        'is_verified'
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'offering_date' => 'date',
+        'is_verified' => 'boolean',
+    ];
+
+    // Relationships
+    public function member()
+    {
+        return $this->belongsTo(Member::class);
+    }
+
+    // Scopes
+    public function scopeVerified($query)
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function scopeByDateRange($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('offering_date', [$startDate, $endDate]);
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('offering_type', $type);
+    }
+
+    public function scopeByServiceType($query, $serviceType)
+    {
+        return $query->where('service_type', $serviceType);
+    }
+
+    public function scopeAnonymous($query)
+    {
+        return $query->whereNull('member_id');
+    }
+}

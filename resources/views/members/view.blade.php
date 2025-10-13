@@ -1144,34 +1144,139 @@
             });
 
             function confirmDelete(id) {
-                Swal.fire({
-                    title: 'Delete member?',
-                    text: 'This action cannot be undone.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#dc3545'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`{{ url('/members') }}/${id}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            }
-                        })
-                        .then(r => r.json())
-                        .then(res => {
-                            if (res.success) {
-                                document.getElementById(`row-${id}`)?.remove();
-                                Swal.fire({ icon: 'success', title: 'Member deleted', text: 'The member was deleted successfully.', timer: 1200, showConfirmButton: false });
+                console.log('Attempting to delete member with ID:', id);
+                
+                // Check if we're in the archived tab
+                const isArchived = document.querySelector('.nav-link[href="#archived"]')?.classList.contains('active');
+                console.log('Is archived tab:', isArchived);
+                
+                // First, test if the member exists
+                fetch(`/test-member/${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            // If not found in active members, check if it's archived
+                            if (isArchived) {
+                                console.log('Member not found in active members, checking archived...');
+                                // For archived members, we'll proceed with deletion attempt
+                                // The controller will handle the archived member deletion
                             } else {
-                                Swal.fire({ icon: 'error', title: 'Delete failed', text: res.message || 'Please try again.' });
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Member Not Found',
+                                    text: 'The member you are trying to delete does not exist in active members.',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
                             }
-                        })
-                        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' }));
-                    }
-                });
+                        }
+                        
+                        console.log('Member found:', data.member);
+                        
+                        // Now proceed with deletion
+                        Swal.fire({
+                            title: 'Delete member?',
+                            text: `Are you sure you want to delete ${data.member.full_name}? This action cannot be undone.`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, delete',
+                            cancelButtonText: 'Cancel',
+                            confirmButtonColor: '#dc3545'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Show loading state
+                                Swal.fire({
+                                    title: 'Deleting...',
+                                    text: 'Please wait while we delete the member.',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+
+                                // Use different endpoint for archived vs active members
+                                const deleteUrl = isArchived ? `{{ url('/members/archived') }}/${id}` : `{{ url('/members') }}/${id}`;
+                                console.log('Delete URL:', deleteUrl);
+                                
+                                // Use a simple fetch request with proper error handling
+                                fetch(deleteUrl, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(response => {
+                                    console.log('Delete response status:', response.status);
+                                    if (response.ok) {
+                                        return response.json();
+                                    } else if (response.status === 404) {
+                                        throw new Error('Member not found');
+                                    } else if (response.status === 419) {
+                                        throw new Error('CSRF token mismatch. Please refresh the page.');
+                                    } else {
+                                        throw new Error(`Server error: ${response.status}`);
+                                    }
+                                })
+                                .then(data => {
+                                    console.log('Delete response data:', data);
+                                    if (data.success) {
+                                        // Remove the row from the table
+                                        const row = document.getElementById(`row-${id}`);
+                                        if (row) {
+                                            row.remove();
+                                        }
+                                        
+                                        // Also remove from card view if it exists
+                                        const card = document.querySelector(`[data-member-id="${id}"]`);
+                                        if (card) {
+                                            card.remove();
+                                        }
+                                        
+                                        Swal.fire({ 
+                                            icon: 'success', 
+                                            title: 'Member deleted', 
+                                            text: 'The member was deleted successfully.', 
+                                            timer: 2000, 
+                                            showConfirmButton: false 
+                                        });
+                                        
+                                        // Refresh the page after a short delay to update counts
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 2000);
+                                    } else {
+                                        Swal.fire({ 
+                                            icon: 'error', 
+                                            title: 'Delete failed', 
+                                            text: data.message || 'Please try again.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Delete error:', error);
+                                    Swal.fire({ 
+                                        icon: 'error', 
+                                        title: 'Error', 
+                                        text: error.message,
+                                        confirmButtonText: 'OK'
+                                    });
+                                });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Member check error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Unable to verify member. Please try again.',
+                            confirmButtonText: 'OK'
+                        });
+                    });
             }
 
             // Simple client-side, real-time filtering
@@ -1552,4 +1657,5 @@
         </script>
         
     </body>
+</html>
 </html>
