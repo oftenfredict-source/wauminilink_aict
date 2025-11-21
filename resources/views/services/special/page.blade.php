@@ -236,6 +236,8 @@
                         <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
                             <h2 class="mb-0">Special Events</h2>
                             <div class="d-flex gap-2">
+                                <a href="{{ route('attendance.index', ['service_type' => 'special_event']) }}" class="btn btn-info"><i class="fas fa-users me-2"></i>Record Attendance</a>
+                                <a href="{{ route('attendance.statistics') }}" class="btn btn-outline-info"><i class="fas fa-chart-bar me-2"></i>Statistics</a>
                                 <div class="btn-group" role="group" aria-label="View toggle">
                                     <button type="button" class="btn btn-outline-secondary active" id="listViewBtn" onclick="switchView('list')">
                                         <i class="fas fa-list me-1"></i>List View
@@ -504,174 +506,112 @@
 @section('modals')
         <!-- Add Event Modal -->
         <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden; animation: modalSlideIn 0.3s ease-out;">
-                    <!-- Enhanced Header with Gradient and Icons -->
-                    <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #940000 0%, #667eea 50%, #764ba2 100%); border: none; padding: 2rem;">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow-lg service-modal-content" style="border-radius: 20px; overflow: hidden;">
+                    <!-- Stylish Header -->
+                    <div class="modal-header border-0 service-modal-header" style="background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%); padding: 1.25rem 1.5rem;">
                         <div class="d-flex align-items-center">
-                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
-                                <i class="fas fa-calendar-plus fa-2x"></i>
+                            <div class="service-icon-wrapper me-3">
+                                <i class="fas fa-star"></i>
                             </div>
-                            <div>
-                                <h4 class="modal-title mb-1 fw-bold">Create Special Event</h4>
-                                <p class="mb-0 opacity-75">Plan and organize your special church events</p>
-                            </div>
+                            <h5 class="modal-title mb-0 fw-bold text-white">
+                                Create Special Event
+                            </h5>
                         </div>
-                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     
-                    <!-- Enhanced Body with Better Layout -->
-                    <div class="modal-body" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 2rem;">
+                    <!-- Stylish Body -->
+                    <div class="modal-body service-modal-body" style="padding: 1.75rem; background: #f8f9fa;">
                         <form id="addEventForm">
                             <input type="hidden" id="editing_event_id" value="">
+                            <div class="row g-3">
+                                <!-- Row 1: Title & Speaker -->
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-star me-1 text-warning"></i>Event Title
+                                    </label>
+                                    <input type="text" class="form-control service-input" id="ev_title" placeholder="Event title">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-user-tie me-1 text-primary"></i>Speaker
+                                    </label>
+                                    <input type="text" class="form-control service-input" id="ev_speaker" placeholder="Speaker name">
+                                </div>
+                                
+                                <!-- Row 2: Date & Time -->
+                                <div class="col-md-4">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-calendar-alt me-1 text-info"></i>Event Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control service-input" id="ev_date" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-clock me-1 text-success"></i>Start Time
+                                    </label>
+                                    <input type="time" class="form-control service-input" id="ev_start">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-clock me-1 text-danger"></i>End Time
+                                    </label>
+                                    <input type="time" class="form-control service-input" id="ev_end">
+                                </div>
+                                
+                                <!-- Row 3: Category & Venue -->
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-tags me-1 text-primary"></i>Category
+                                    </label>
+                                    <input type="text" class="form-control service-input" id="ev_category" placeholder="Event category">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-map-marker-alt me-1 text-danger"></i>Venue
+                                    </label>
+                                    <input type="text" class="form-control service-input" id="ev_venue" placeholder="Venue location">
+                                </div>
+                                
+                                <!-- Row 4: Attendance & Budget -->
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-users me-1 text-info"></i>Expected Attendance <small class="text-muted">(Optional)</small>
+                                    </label>
+                                    <input type="number" min="0" class="form-control service-input" id="ev_attendance" placeholder="Count">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-money-bill-wave me-1 text-success"></i>Budget (TZS) <small class="text-muted">(Optional)</small>
+                                    </label>
+                                    <input type="number" min="0" step="0.01" class="form-control service-input" id="ev_budget" placeholder="Amount">
+                                </div>
+                                
+                                <!-- Row 5: Description -->
+                                <div class="col-12">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-file-alt me-1 text-primary"></i>Description
+                                    </label>
+                                    <textarea class="form-control service-input" id="ev_description" rows="2" placeholder="Event description"></textarea>
+                                </div>
+                                
+                                <!-- Row 6: Notes -->
+                                <div class="col-12">
+                                    <label class="form-label service-label mb-2">
+                                        <i class="fas fa-sticky-note me-1 text-secondary"></i>Notes
+                                    </label>
+                                    <textarea class="form-control service-input" id="ev_notes" rows="2" placeholder="Additional notes"></textarea>
+                                </div>
+                            </div>
                             
-                            <!-- Event Basic Information Section -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                    <h6 class="mb-0 text-primary fw-bold">
-                                        <i class="fas fa-info-circle me-2"></i>Event Information
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ev_title" placeholder="Event Title" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_title" class="text-muted">
-                                                    <i class="fas fa-star me-1"></i>Event Title
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ev_speaker" placeholder="Speaker Name" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_speaker" class="text-muted">
-                                                    <i class="fas fa-user-tie me-1"></i>Speaker
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ev_category" placeholder="Event Category" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_category" class="text-muted">
-                                                    <i class="fas fa-tags me-1"></i>Category
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="text" class="form-control" id="ev_venue" placeholder="Venue Location" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_venue" class="text-muted">
-                                                    <i class="fas fa-map-marker-alt me-1"></i>Venue
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Date & Time Section -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                    <h6 class="mb-0 text-primary fw-bold">
-                                        <i class="fas fa-clock me-2"></i>Date & Time
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-4">
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="date" class="form-control" id="ev_date" required style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_date" class="text-muted">
-                                                    <i class="fas fa-calendar-alt me-1"></i>Event Date
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="time" class="form-control" id="ev_start" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_start" class="text-muted">
-                                                    <i class="fas fa-play me-1"></i>Start Time
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-floating">
-                                                <input type="time" class="form-control" id="ev_end" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_end" class="text-muted">
-                                                    <i class="fas fa-stop me-1"></i>End Time
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Budget & Attendance Section -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                    <h6 class="mb-0 text-primary fw-bold">
-                                        <i class="fas fa-chart-line me-2"></i>Budget & Attendance
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="number" min="0" class="form-control" id="ev_attendance" placeholder="Expected Attendance" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_attendance" class="text-muted">
-                                                    <i class="fas fa-users me-1"></i>Expected Attendance
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating">
-                                                <input type="number" min="0" step="0.01" class="form-control" id="ev_budget" placeholder="Budget Amount" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <label for="ev_budget" class="text-muted">
-                                                    <i class="fas fa-money-bill-wave me-1"></i>Budget (TZS)
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Description & Notes Section -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                    <h6 class="mb-0 text-primary fw-bold">
-                                        <i class="fas fa-align-left me-2"></i>Additional Details
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-4">
-                                        <div class="col-12">
-                                            <div class="form-floating">
-                                                <textarea class="form-control" id="ev_description" placeholder="Event Description" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                                <label for="ev_description" class="text-muted">
-                                                    <i class="fas fa-file-alt me-1"></i>Description
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="form-floating">
-                                                <textarea class="form-control" id="ev_notes" placeholder="Additional Notes" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                                <label for="ev_notes" class="text-muted">
-                                                    <i class="fas fa-sticky-note me-1"></i>Notes
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Enhanced Action Buttons -->
-                            <div class="d-flex justify-content-end gap-3 mt-4">
-                                <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                    <i class="fas fa-times me-2"></i>Cancel
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary service-btn-cancel" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary px-4 py-2" id="submitButton" style="border-radius: 25px; font-weight: 600; background: linear-gradient(135deg, #940000 0%, #667eea 100%); border: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(148, 0, 0, 0.3);">
-                                    <i class="fas fa-save me-2"></i>Save Event
+                                <button type="submit" class="btn service-btn-save" id="submitButton">
+                                    <i class="fas fa-save me-1"></i>Save Event
                                 </button>
                             </div>
                         </form>
@@ -681,16 +621,157 @@
         </div>
 
         <style>
-            /* Enhanced Modal Animations */
+            /* Service Modal Styling */
+            .service-modal-content {
+                animation: modalSlideIn 0.3s ease-out;
+            }
+            
             @keyframes modalSlideIn {
                 from {
                     opacity: 0;
-                    transform: translateY(-50px) scale(0.9);
+                    transform: translateY(-30px) scale(0.95);
                 }
                 to {
                     opacity: 1;
                     transform: translateY(0) scale(1);
                 }
+            }
+            
+            .service-modal-header {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .service-modal-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+                pointer-events: none;
+            }
+            
+            .service-icon-wrapper {
+                width: 45px;
+                height: 45px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                color: white;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            
+            .service-label {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #495057;
+                letter-spacing: 0.3px;
+            }
+            
+            .service-input {
+                border: 2px solid #e9ecef;
+                border-radius: 10px;
+                padding: 0.5rem 0.75rem;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+                background: white;
+            }
+            
+            .service-input:focus {
+                border-color: #17082d;
+                box-shadow: 0 0 0 0.2rem rgba(23, 8, 45, 0.15);
+                transform: translateY(-1px);
+                background: white;
+            }
+            
+            .service-input:hover {
+                border-color: #ced4da;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            
+            .service-btn-save {
+                background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%);
+                border: none;
+                border-radius: 10px;
+                padding: 0.5rem 1.5rem;
+                font-weight: 600;
+                color: white;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(23, 8, 45, 0.3);
+            }
+            
+            .service-btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(23, 8, 45, 0.4);
+                background: linear-gradient(180deg, #1f0d3d 0%, #1f0d3ddd 100%);
+                color: white;
+            }
+            
+            .service-btn-cancel {
+                border-radius: 10px;
+                padding: 0.5rem 1.5rem;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 2px solid #dee2e6;
+            }
+            
+            .service-btn-cancel:hover {
+                transform: translateY(-2px);
+                background: #f8f9fa;
+                border-color: #adb5bd;
+            }
+            
+            .service-modal-body {
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            
+            .service-modal-body::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .service-modal-body::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+            
+            .service-modal-body::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%);
+                border-radius: 10px;
+            }
+            
+            .service-modal-body::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(180deg, #1f0d3d 0%, #1f0d3ddd 100%);
+            }
+            
+            /* Form Select Styling */
+            .service-input.form-select {
+                cursor: pointer;
+            }
+            
+            .service-input.form-select:focus {
+                border-color: #17082d;
+            }
+            
+            /* Textarea Styling */
+            .service-input[rows] {
+                resize: vertical;
+                min-height: 60px;
+            }
+            
+            /* Modal Backdrop */
+            .modal-backdrop {
+                background: rgba(23, 8, 45, 0.4) !important;
+            }
+            
+            .modal-backdrop.show {
+                opacity: 1 !important;
             }
 
             /* Form Control Focus Effects */
@@ -988,8 +1069,50 @@
         </style>
 
         <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
-        <script src="{{ asset('assets/js/scripts.js') }}"></script>
+        <script src="{{ asset('js/scripts.js') }}"></script>
         <script>
+            // Define switchView function first so it's available for onclick handlers
+            window.switchView = function(view) {
+                console.log('switchView called with:', view);
+                try {
+                    const listView = document.getElementById('listView');
+                    const cardView = document.getElementById('cardView');
+                    const listBtn = document.getElementById('listViewBtn');
+                    const cardBtn = document.getElementById('cardViewBtn');
+                    
+                    console.log('Elements found:', { listView: !!listView, cardView: !!cardView, listBtn: !!listBtn, cardBtn: !!cardBtn });
+                    
+                    if (!listView || !cardView || !listBtn || !cardBtn) {
+                        console.error('View toggle elements not found:', { listView, cardView, listBtn, cardBtn });
+                        return false;
+                    }
+                    
+                    if (view === 'list') {
+                        listView.style.display = 'block';
+                        cardView.style.display = 'none';
+                        listBtn.classList.add('active');
+                        cardBtn.classList.remove('active');
+                        console.log('Switched to list view');
+                    } else if (view === 'card') {
+                        listView.style.display = 'none';
+                        cardView.style.display = 'block';
+                        listBtn.classList.remove('active');
+                        cardBtn.classList.add('active');
+                        console.log('Switched to card view');
+                    }
+                    
+                    // Save preference to localStorage
+                    localStorage.setItem('specialEventsView', view);
+                    return true;
+                } catch (error) {
+                    console.error('Error switching view:', error);
+                    return false;
+                }
+            };
+            
+            // Test if function is available
+            console.log('switchView function defined:', typeof window.switchView);
+            
             // Auto-open add modal if coming from dashboard
             document.addEventListener('DOMContentLoaded', function() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -999,30 +1122,86 @@
                 
                 // Load saved view preference
                 const savedView = localStorage.getItem('specialEventsView') || 'list';
-                switchView(savedView);
-            });
-
-            function switchView(view) {
-                const listView = document.getElementById('listView');
-                const cardView = document.getElementById('cardView');
+                window.switchView(savedView);
+                
+                // Add event listeners to toggle buttons - replace onclick handlers
                 const listBtn = document.getElementById('listViewBtn');
                 const cardBtn = document.getElementById('cardViewBtn');
+                console.log('Setting up toggle button listeners:', { listBtn: !!listBtn, cardBtn: !!cardBtn });
                 
-                if (view === 'list') {
-                    listView.style.display = 'block';
-                    cardView.style.display = 'none';
-                    listBtn.classList.add('active');
-                    cardBtn.classList.remove('active');
-                } else {
-                    listView.style.display = 'none';
-                    cardView.style.display = 'block';
-                    listBtn.classList.remove('active');
-                    cardBtn.classList.add('active');
+                if (listBtn) {
+                    // Remove onclick attribute and use event listener
+                    listBtn.onclick = null;
+                    listBtn.removeAttribute('onclick');
+                    listBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('List button clicked via event listener');
+                        window.switchView('list');
+                        return false;
+                    }, true); // Use capture phase
                 }
                 
-                // Save preference to localStorage
-                localStorage.setItem('specialEventsView', view);
-            }
+                if (cardBtn) {
+                    // Remove onclick attribute and use event listener
+                    cardBtn.onclick = null;
+                    cardBtn.removeAttribute('onclick');
+                    cardBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Card button clicked via event listener');
+                        window.switchView('card');
+                        return false;
+                    }, true); // Use capture phase
+                }
+                
+                // Fix aria-hidden accessibility issue for modals
+                const addEventModal = document.getElementById('addEventModal');
+                if (addEventModal) {
+                    // Ensure aria-hidden is properly managed
+                    addEventModal.addEventListener('show.bs.modal', function() {
+                        this.setAttribute('aria-hidden', 'false');
+                    });
+                    addEventModal.addEventListener('shown.bs.modal', function() {
+                        this.setAttribute('aria-hidden', 'false');
+                        // Focus on first input for accessibility
+                        const firstInput = this.querySelector('input:not([type="hidden"]), textarea, select');
+                        if (firstInput) {
+                            setTimeout(() => firstInput.focus(), 100);
+                        }
+                    });
+                    addEventModal.addEventListener('hide.bs.modal', function() {
+                        this.setAttribute('aria-hidden', 'true');
+                    });
+                    addEventModal.addEventListener('hidden.bs.modal', function() {
+                        this.setAttribute('aria-hidden', 'true');
+                        // Reset form and button state when modal is closed
+                        const form = document.getElementById('addEventForm');
+                        if (form) {
+                            form.reset();
+                            document.getElementById('editing_event_id').value = '';
+                        }
+                        const submitBtn = document.getElementById('submitButton');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Event';
+                        }
+                        // Reset modal title and button text
+                        const titleEl = document.querySelector('#addEventModal .modal-title');
+                        if (titleEl) titleEl.textContent = 'Create Special Event';
+                        
+                        // Ensure modal backdrop is removed and page is interactive
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.remove();
+                        }
+                        // Remove modal-open class from body if it exists
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    });
+                }
+            });
             function viewEvent(id){
                 fetch(`{{ url('/special-events') }}/${id}`, { headers: { 'Accept': 'application/json' } })
                     .then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -1215,6 +1394,7 @@
                         new bootstrap.Modal(document.getElementById('addEventModal')).show();
                     });
             }
+
 
             document.getElementById('addEventForm').addEventListener('submit', function(e){
                 e.preventDefault();

@@ -30,7 +30,7 @@ return [
             'validation_rules' => ['required', 'string']
         ],
         'church_name' => [
-            'value' => 'Waumini Church',
+            'value' => 'AIC Moshi Kilimanjaro',
             'type' => 'string',
             'category' => 'general',
             'group' => 'basic',
@@ -249,6 +249,62 @@ return [
             'description' => 'Enable SMS notifications',
             'validation_rules' => ['boolean']
         ],
+        'sms_api_url' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS provider API endpoint URL',
+            'validation_rules' => ['nullable', 'url']
+        ],
+        'sms_api_key' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS provider API key/token',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'sms_username' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS provider username (for basic GET APIs)',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'sms_password' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS provider password (for basic GET APIs)',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'sms_sender_id' => [
+            'value' => 'WAUMINI',
+            'type' => 'string',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS sender ID/name',
+            'validation_rules' => ['nullable', 'string', 'max:11']
+        ],
+        'sms_leader_appointment_template' => [
+            'value' => "Hongera {{name}}! Umechaguliwa rasmi kuwa {{position}} wa kanisa la {{church_name}}.\n\nMungu akupe hekima, ujasiri na neema katika kutimiza wajibu huu wa kiroho.\n\nTunakuombea uongozi wenye upendo, umoja na maendeleo katika huduma ya Bwana.",
+            'type' => 'text',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS template for leader appointment notifications. Use {{name}}, {{position}}, and {{church_name}} as placeholders.',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'sms_payment_approval_template' => [
+            'value' => "Hongera {{name}}! {{payment_type}} yako ya TZS {{amount}} tarehe {{date}} imethibitishwa na imepokelewa kikamilifu.\nAsante kwa mchango wako wa kiroho. Mungu akubariki!",
+            'type' => 'text',
+            'category' => 'notifications',
+            'group' => 'advanced',
+            'description' => 'SMS template for payment approval notifications. Use {{name}}, {{payment_type}}, {{amount}}, and {{date}} as placeholders.',
+            'validation_rules' => ['nullable', 'string']
+        ],
         'notification_email' => [
             'value' => '',
             'type' => 'string',
@@ -331,14 +387,15 @@ return [
 
         // Appearance Settings
         'theme_color' => [
-            'value' => 'primary',
+            'value' => 'waumini',
             'type' => 'string',
             'category' => 'appearance',
             'group' => 'basic',
             'description' => 'Primary theme color',
-            'validation_rules' => ['required', 'in:primary,secondary,success,danger,warning,info'],
+            'validation_rules' => ['required', 'in:waumini,primary,secondary,success,danger,warning,info'],
             'options' => [
-                'primary' => 'Blue (Primary)',
+                'waumini' => 'Waumini Purple (Primary)',
+                'primary' => 'Blue',
                 'secondary' => 'Gray (Secondary)',
                 'success' => 'Green (Success)',
                 'danger' => 'Red (Danger)',

@@ -668,25 +668,25 @@
 
             <div class="form-group">
                 <i class="fa-solid fa-envelope"></i>
-                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="Email" value="{{ old('email') }}" required>
+                <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="Email or Member ID" value="{{ old('email') }}" required>
                 @error('email')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @else
-                    <div class="invalid-feedback">Please provide a valid email address.</div>
+                    <div class="invalid-feedback">Please provide your email or member ID.</div>
                     <div class="valid-feedback">Looks good!</div>
                 @enderror
             </div>
 
             <div class="form-group">
                 <i class="fa-solid fa-lock"></i>
-                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" placeholder="Password" required minlength="6">
+                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" placeholder="Password" required>
                 <button type="button" class="password-toggle" id="passwordToggle">
                     <i class="fa-solid fa-eye"></i>
                 </button>
                 @error('password')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @else
-                    <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                    <div class="invalid-feedback">Please enter your password.</div>
                     <div class="valid-feedback">Looks good!</div>
                 @enderror
                 <div class="password-strength">
@@ -828,10 +828,9 @@
             });
         });
         
-        // Email validation function
+        // Email or Member ID validation function
         function validateEmail() {
             const emailValue = emailInput.value.trim();
-            const isValid = isValidEmail(emailValue);
             
             if (emailValue === '') {
                 emailInput.classList.remove('is-valid');
@@ -839,21 +838,16 @@
                 return false;
             }
             
-            if (isValid) {
-                emailInput.classList.remove('is-invalid');
-                emailInput.classList.add('is-valid');
-                return true;
-            } else {
-                emailInput.classList.remove('is-valid');
-                emailInput.classList.add('is-invalid');
-                return false;
-            }
+            // Accept any non-empty value - server will validate if it's email or member ID
+            emailInput.classList.remove('is-invalid');
+            emailInput.classList.add('is-valid');
+            return true;
         }
         
         // Password validation function
         function validatePassword() {
             const passwordValue = passwordInput.value;
-            const isValid = passwordValue.length >= 6;
+            const isValid = passwordValue.length > 0; // Just check if password is not empty
             
             if (passwordValue === '') {
                 passwordInput.classList.remove('is-valid');
@@ -878,12 +872,13 @@
             return re.test(email);
         }
         
-        // Password strength indicator
+        // Password strength indicator (optional, doesn't block login)
         function updatePasswordStrength(password) {
             let strength = 0;
             
+            if (password.length > 0) strength += 20;
+            if (password.length >= 4) strength += 20;
             if (password.length >= 6) strength += 20;
-            if (password.length >= 8) strength += 20;
             if (/[A-Z]/.test(password)) strength += 20;
             if (/[0-9]/.test(password)) strength += 20;
             if (/[^A-Za-z0-9]/.test(password)) strength += 20;
@@ -924,6 +919,28 @@
                 toast.remove();
             });
         }
+        
+        // Clear authentication flag when on login page
+        if (sessionStorage.getItem('isAuthenticated')) {
+            sessionStorage.removeItem('isAuthenticated');
+        }
+        
+        // Prevent back navigation to login page after login
+        // Clear browser history when page loads
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function(event) {
+                window.history.pushState(null, null, window.location.href);
+            });
+        }
+        
+        // Prevent page from being cached
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page was loaded from cache, reload it
+                window.location.reload();
+            }
+        });
     });
 </script>
 </body>

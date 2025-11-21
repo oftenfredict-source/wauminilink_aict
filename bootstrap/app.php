@@ -38,6 +38,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
+
+        /**
+         * Register middleware aliases
+         */
+        $middleware->alias([
+            'treasurer' => \App\Http\Middleware\TreasurerMiddleware::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
+
+        /**
+         * Append ActivityLogMiddleware to web group to track all activities
+         */
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\ActivityLogMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Optional custom exception handling

@@ -1,0 +1,279 @@
+@extends('layouts.index')
+
+@section('content')
+<div class="container-fluid px-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm dashboard-header" style="background:white;">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center border border-primary border-2" style="width:48px; height:48px; background:rgba(0,123,255,.1);">
+                                <i class="fas fa-wallet text-primary"></i>
+                            </div>
+                            <div class="lh-sm">
+                                <h5 class="mb-0 fw-semibold text-dark">My Finance</h5>
+                                <small class="text-muted">Financial contributions and records</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                    <h6>Total Tithes</h6>
+                    <h4>TZS {{ number_format($financialSummary['total_tithes'], 2) }}</h4>
+                    <small>This Month: TZS {{ number_format($financialSummary['monthly_tithes'], 2) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-donate fa-2x mb-2"></i>
+                    <h6>Total Offerings</h6>
+                    <h4>TZS {{ number_format($financialSummary['total_offerings'], 2) }}</h4>
+                    <small>This Month: TZS {{ number_format($financialSummary['monthly_offerings'], 2) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-gift fa-2x mb-2"></i>
+                    <h6>Total Donations</h6>
+                    <h4>TZS {{ number_format($financialSummary['total_donations'], 2) }}</h4>
+                    <small>This Month: TZS {{ number_format($financialSummary['monthly_donations'], 2) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-contract fa-2x mb-2"></i>
+                    <h6>Pledges</h6>
+                    <h4>TZS {{ number_format($financialSummary['total_pledges'], 2) }}</h4>
+                    <small>Remaining: TZS {{ number_format($financialSummary['remaining_pledges'], 2) }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pledges Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>My Pledges</h6>
+                </div>
+                <div class="card-body">
+                    @if(isset($pledges) && $pledges->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Pledge Amount</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Amount Paid</th>
+                                        <th>Remaining Amount</th>
+                                        <th>Status</th>
+                                        <th>Payment History</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pledges as $pledge)
+                                        <tr>
+                                            <td><strong>TZS {{ number_format($pledge->pledge_amount, 2) }}</strong></td>
+                                            <td>{{ $pledge->pledge_date ? $pledge->pledge_date->format('M d, Y') : 'N/A' }}</td>
+                                            <td>{{ $pledge->due_date ? $pledge->due_date->format('M d, Y') : 'No due date' }}</td>
+                                            <td>TZS {{ number_format($pledge->amount_paid, 2) }}</td>
+                                            <td><strong class="text-danger">TZS {{ number_format($pledge->remaining_amount, 2) }}</strong></td>
+                                            <td>
+                                                @if($pledge->status == 'completed')
+                                                    <span class="badge bg-success">Completed</span>
+                                                @elseif($pledge->status == 'active')
+                                                    <span class="badge bg-primary">Active</span>
+                                                @elseif($pledge->status == 'overdue')
+                                                    <span class="badge bg-danger">Overdue</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($pledge->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($pledge->payments && $pledge->payments->count() > 0)
+                                                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#payments{{ $pledge->id }}" aria-expanded="false">
+                                                        <i class="fas fa-list me-1"></i>View Payments ({{ $pledge->payments->count() }})
+                                                    </button>
+                                                @else
+                                                    <span class="text-muted">No payments yet</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        @if($pledge->payments && $pledge->payments->count() > 0)
+                                            <tr>
+                                                <td colspan="7" class="p-0">
+                                                    <div class="collapse" id="payments{{ $pledge->id }}">
+                                                        <div class="card card-body border-0 bg-light">
+                                                            <h6 class="mb-3">Payment History:</h6>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-bordered">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Payment Date</th>
+                                                                            <th>Amount</th>
+                                                                            <th>Payment Method</th>
+                                                                            <th>Reference Number</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach($pledge->payments as $payment)
+                                                                            <tr>
+                                                                                <td>{{ $payment->payment_date->format('M d, Y') }}</td>
+                                                                                <td><strong>TZS {{ number_format($payment->amount, 2) }}</strong></td>
+                                                                                <td>{{ ucfirst($payment->payment_method ?? 'N/A') }}</td>
+                                                                                <td>{{ $payment->reference_number ?? 'N/A' }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-muted text-center py-4">No pledges recorded</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offerings Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-donate me-2"></i>My Offerings</h6>
+                </div>
+                <div class="card-body">
+                    @if(isset($allOfferings) && $allOfferings->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Day</th>
+                                        <th>Purpose/Type</th>
+                                        <th>Service Type</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($allOfferings as $offering)
+                                        <tr>
+                                            <td><strong>TZS {{ number_format($offering->amount, 2) }}</strong></td>
+                                            <td>{{ $offering->offering_date->format('M d, Y') }}</td>
+                                            <td>{{ $offering->offering_date->format('l') }}</td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    {{ ucfirst(str_replace('_', ' ', $offering->offering_type ?? 'General')) }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $offering->service_type ? ucfirst(str_replace('_', ' ', $offering->service_type)) : 'N/A' }}</td>
+                                            <td>
+                                                @if($offering->approval_status == 'approved')
+                                                    <span class="badge bg-success">Approved</span>
+                                                @elseif($offering->approval_status == 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @else
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-muted text-center py-4">No offerings recorded</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Recent Tithes</h6>
+                </div>
+                <div class="card-body">
+                    @if($financialSummary['recent_tithes']->count() > 0)
+                        <div class="list-group">
+                            @foreach($financialSummary['recent_tithes'] as $tithe)
+                                <div class="list-group-item border-0 mb-2 shadow-sm">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>TZS {{ number_format($tithe->amount, 2) }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ $tithe->tithe_date->format('M d, Y') }}</small>
+                                        </div>
+                                        <span class="badge bg-success">Approved</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted text-center">No tithes recorded</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Recent Donations</h6>
+                </div>
+                <div class="card-body">
+                    @if($financialSummary['recent_donations']->count() > 0)
+                        <div class="list-group">
+                            @foreach($financialSummary['recent_donations'] as $donation)
+                                <div class="list-group-item border-0 mb-2 shadow-sm">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>TZS {{ number_format($donation->amount, 2) }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ $donation->donation_date->format('M d, Y') }}</small>
+                                        </div>
+                                        <span class="badge bg-success">Approved</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted text-center">No donations recorded</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+

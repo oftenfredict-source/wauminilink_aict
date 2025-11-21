@@ -130,47 +130,279 @@
 
         /* Footer */
         footer {
-            background-color: #111;
+            background: linear-gradient(135deg, #0a1929 0%, #001529 100%);
             color: #fff;
-            padding: 50px 0 20px;
+            padding: 60px 0 0;
+            position: relative;
+            overflow: hidden;
         }
+        
+        /* Footer Top Bar */
+        .footer-top-bar {
+            height: 5px;
+            background: linear-gradient(90deg, #0084d6 0%, #006aad 50%, #0084d6 100%);
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0, 132, 214, 0.3);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
         .footer-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
             max-width: 1200px;
-            margin: auto;
+            margin: 0 auto;
+            padding: 0 20px;
         }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
         .footer-section {
-            flex: 1 1 300px;
-            margin: 15px;
+            position: relative;
         }
+        
         .footer-section h5 {
-            font-weight: bold;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 1.2rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-section h5::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #0084d6 0%, #006aad 100%);
+            border-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0, 132, 214, 0.4);
+        }
+        
+        .footer-section p {
+            color: #b0b0b0;
+            line-height: 1.8;
             margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .footer-logo {
+            margin-bottom: 20px;
+        }
+        
+        .footer-logo img {
+            height: 50px;
+            filter: brightness(0) invert(1);
+            transition: transform 0.3s ease;
+        }
+        
+        .footer-logo:hover img {
+            transform: scale(1.05);
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: #b0b0b0;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .footer-links a i {
+            margin-right: 10px;
+            width: 20px;
+            color: #0084d6;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #0084d6;
+            transform: translateX(5px);
+        }
+        
+        .footer-links a:hover i {
+            transform: scale(1.2);
             color: #25D71B;
         }
-        .footer-section p {
-            color: #ccc;
+        
+        .footer-contact-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #b0b0b0;
+        }
+        
+        .footer-contact-item i {
+            margin-right: 12px;
+            margin-top: 5px;
+            color: #0084d6;
+            font-size: 1.1rem;
+            width: 20px;
+            flex-shrink: 0;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .footer-contact-item:hover i {
+            color: #25D71B;
+            transform: scale(1.1);
+        }
+        
+        .footer-contact-item span {
             line-height: 1.6;
         }
-        .footer-section a {
-            color: #ccc;
+        
+        .footer-contact-item span a {
+            color: inherit;
             text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-            transition: color 0.3s;
+            transition: color 0.3s ease;
         }
-        .footer-section a:hover {
-            color: #25D71B;
+        
+        .footer-contact-item span a:hover {
+            color: #0084d6;
         }
+        
+        .footer-social {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .footer-social a {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 132, 214, 0.15);
+            border-radius: 50%;
+            color: #0084d6;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(0, 132, 214, 0.3);
+        }
+        
+        .footer-social a:hover {
+            background: linear-gradient(135deg, #0084d6 0%, #006aad 100%);
+            color: #fff;
+            transform: translateY(-5px) scale(1.1);
+            border-color: #0084d6;
+            box-shadow: 0 5px 20px rgba(0, 132, 214, 0.5);
+        }
+        
+        .footer-social a i {
+            font-size: 1.2rem;
+        }
+        
         .footer-bottom {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px 0;
             text-align: center;
-            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+        }
+        
+        .footer-bottom-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .footer-bottom p {
+            color: #b0b0b0;
+            margin: 0;
             font-size: 0.9rem;
-            color: #aaa;
-            border-top: 1px solid #333;
-            padding-top: 15px;
+        }
+        
+        .footer-bottom .powered-by {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+        
+        .footer-bottom .powered-by img {
+            height: 25px;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-bottom .powered-by:hover img {
+            opacity: 1;
+        }
+        
+        .footer-bottom .powered-by:hover {
+            color: #0084d6;
+        }
+        
+        /* Decorative Elements */
+        .footer-decoration {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 132, 214, 0.15) 0%, rgba(0, 132, 214, 0.05) 50%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, 30%);
+            pointer-events: none;
+        }
+        
+        /* Primary Color Accents */
+        .footer-section h5 {
+            text-shadow: 0 0 10px rgba(0, 132, 214, 0.2);
+        }
+        
+        .footer-logo img {
+            filter: brightness(0) invert(1);
+            opacity: 0.9;
+        }
+        
+        .footer-logo:hover img {
+            filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(0, 132, 214, 0.6));
+        }
+        
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .footer-bottom-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-social {
+                justify-content: center;
+            }
         }
 
         @keyframes fadeIn {
@@ -188,9 +420,20 @@
             .navbar-custom .navbar-brand img {
                 height: 40px;
             }
-            .footer-container {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .footer-bottom-content {
                 flex-direction: column;
-                align-items: center;
+                text-align: center;
+            }
+            .footer-social {
+                justify-content: center;
+            }
+            .footer-decoration {
+                width: 200px;
+                height: 200px;
             }
         }
     </style>
@@ -253,19 +496,83 @@
 
     <!-- Footer -->
     <footer>
+        <div class="footer-top-bar"></div>
+        <div class="footer-decoration"></div>
+        
         <div class="footer-container">
-            <div class="footer-section">
-                <h5>Waumini Link</h5>
-                <p>Your central system to manage all church members efficiently.</p>
-            </div>
-            <div class="footer-section">
-                <h5>Contact</h5>
-                <p>Email: info@emcatech.com</p>
-                <p>Phone: +255 7XX XXX XXX</p>
+            <div class="footer-content">
+                <!-- About Section -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+                    </div>
+                    <h5>About Waumini Link</h5>
+                    <p>Your comprehensive church management system designed to streamline member administration, financial tracking, and community engagement.</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links Section -->
+                <div class="footer-section">
+                    <h5>Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ route('landing_page') }}"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="{{ route('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                        <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
+                        <li><a href="#"><i class="fas fa-question-circle"></i> Help & Support</a></li>
+                        <li><a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                        <li><a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Section -->
+                <div class="footer-section">
+                    <h5>Contact Us</h5>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span><a href="mailto:emca@emca.tech" style="color: inherit; text-decoration: none;">emca@emca.tech</a></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span><a href="tel:+255749719998" style="color: inherit; text-decoration: none;">+255 749 719 998</a></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Moshi, Kilimanjaro</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
+                    </div>
+                </div>
+                
+                <!-- Services Section -->
+                <div class="footer-section">
+                    <h5>Our Services</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-users"></i> Member Management</a></li>
+                        <li><a href="#"><i class="fas fa-chart-line"></i> Financial Reports</a></li>
+                        <li><a href="#"><i class="fas fa-calendar-check"></i> Attendance Tracking</a></li>
+                        <li><a href="#"><i class="fas fa-bullhorn"></i> Announcements</a></li>
+                        <li><a href="#"><i class="fas fa-id-card"></i> Identity Cards</a></li>
+                        <li><a href="#"><i class="fas fa-bell"></i> SMS Notifications</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
+        
         <div class="footer-bottom">
-            Powered by EmCa Technologies &copy; 2025
+            <div class="footer-bottom-content">
+                <p>&copy; {{ date('Y') }} Waumini Link. All rights reserved.</p>
+                <div class="powered-by">
+                    <span>Powered by</span>
+                    <img src="{{ asset('assets/images/emca_logo.png') }}" alt="EmCa Technologies">
+                </div>
+            </div>
         </div>
     </footer>
 

@@ -22,5 +22,8 @@ class DatabaseSeeder extends Seeder
         
         // Seed the secretary user
         $this->call(SecretarySeeder::class);
+        
+        // Seed administrator account and permissions
+        $this->call(AdminUserSeeder::class);
     }
 }

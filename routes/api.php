@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SettingsApiController;
+use App\Http\Controllers\Api\AuthApiController;
+use App\Http\Controllers\Api\MemberApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +19,19 @@ use App\Http\Controllers\Api\SettingsApiController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// Mobile App Authentication Routes (Public)
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthApiController::class, 'login']);
+    Route::post('/logout', [AuthApiController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/me', [AuthApiController::class, 'me'])->middleware('auth:sanctum');
+});
+
+// Member Dashboard API Routes (Protected)
+Route::prefix('member')->middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard', [MemberApiController::class, 'dashboard']);
+    Route::post('/announcements/{announcementId}/read', [MemberApiController::class, 'markAnnouncementAsRead']);
 });
 
 // Settings API Routes

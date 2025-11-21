@@ -14,7 +14,7 @@
             </h5>
         </div>
         @foreach($permanentMembers as $member)
-            <div class="col-lg-4 col-md-6" id="card-{{ $member->id }}">
+            <div class="col-12 col-sm-6 col-lg-4 col-md-6 card-view-item" id="card-{{ $member->id }}">
                 <div class="card h-100 border-0 shadow-lg member-card">
                     <!-- Member Header -->
                     <div class="card-header member-header" style="background: linear-gradient(90deg, #940000 0%, #667eea 50%, #764ba2 100%); border: none; padding: 0.75rem;">
@@ -123,7 +123,12 @@
                             <button class="btn btn-outline-primary btn-sm action-btn" onclick="openEdit({{ $member->id }})" title="Edit Member">
                                 <i class="fas fa-edit me-1"></i>Edit
                             </button>
-                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="openArchiveModal({{ $member->id }})" title="Archive Member">
+                            @if(auth()->user()->isAdmin())
+                                <button class="btn btn-outline-success btn-sm action-btn" onclick="resetPassword({{ $member->id }})" title="Reset Password">
+                                    <i class="fas fa-key me-1"></i>Reset
+                                </button>
+                            @endif
+                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="confirmDelete({{ $member->id }})" title="Archive Member">
                                 <i class="fas fa-archive me-1"></i>Archive
                             </button>
                         </div>
@@ -141,7 +146,7 @@
             </h5>
         </div>
         @foreach($temporaryMembers as $member)
-            <div class="col-lg-4 col-md-6" id="card-{{ $member->id }}">
+            <div class="col-12 col-sm-6 col-lg-4 col-md-6 card-view-item" id="card-{{ $member->id }}">
                 <div class="card h-100 border-0 shadow-lg member-card">
                     <!-- Member Header -->
                     <div class="card-header member-header" style="background: linear-gradient(90deg, #940000 0%, #667eea 50%, #764ba2 100%); border: none; padding: 0.75rem;">
@@ -236,7 +241,12 @@
                             <button class="btn btn-outline-primary btn-sm action-btn" onclick="openEdit({{ $member->id }})" title="Edit Member">
                                 <i class="fas fa-edit me-1"></i>Edit
                             </button>
-                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="openArchiveModal({{ $member->id }})" title="Archive Member">
+                            @if(auth()->user()->isAdmin())
+                                <button class="btn btn-outline-success btn-sm action-btn" onclick="resetPassword({{ $member->id }})" title="Reset Password">
+                                    <i class="fas fa-key me-1"></i>Reset
+                                </button>
+                            @endif
+                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="confirmDelete({{ $member->id }})" title="Archive Member">
                                 <i class="fas fa-archive me-1"></i>Archive
                             </button>
                         </div>
@@ -255,7 +265,7 @@
         </div>
         @foreach($archivedMembers as $member)
             @php $snap = $member->member_snapshot ?? []; @endphp
-            <div class="col-lg-4 col-md-6" id="card-{{ $member->member_id }}">
+            <div class="col-12 col-sm-6 col-lg-4 col-md-6 card-view-item" id="card-{{ $member->member_id }}">
                 <div class="card h-100 border-0 shadow-lg member-card archived-card">
                     <!-- Member Header -->
                     <div class="card-header member-header" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border: none; padding: 0.75rem;">
@@ -331,8 +341,8 @@
                             <button class="btn btn-outline-info btn-sm action-btn" onclick="viewDetails({{ $member->member_id }})" title="View Details">
                                 <i class="fas fa-eye me-1"></i>View
                             </button>
-                            <button class="btn btn-outline-success btn-sm action-btn" onclick="openEdit({{ $member->member_id }})" title="Edit Member">
-                                <i class="fas fa-edit me-1"></i>Edit
+                            <button class="btn btn-outline-success btn-sm action-btn" onclick="restoreMember({{ $member->member_id }})" title="Restore Member">
+                                <i class="fas fa-undo me-1"></i>Restore
                             </button>
                         </div>
                     </div>

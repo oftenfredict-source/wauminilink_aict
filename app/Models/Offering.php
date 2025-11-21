@@ -20,13 +20,19 @@ class Offering extends Model
         'reference_number',
         'notes',
         'recorded_by',
-        'is_verified'
+        'is_verified',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
+        'rejection_reason'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'offering_date' => 'date',
         'is_verified' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     // Relationships
@@ -35,10 +41,30 @@ class Offering extends Model
         return $this->belongsTo(Member::class);
     }
 
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     // Scopes
     public function scopeVerified($query)
     {
         return $query->where('is_verified', true);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('approval_status', 'rejected');
     }
 
     public function scopeByDateRange($query, $startDate, $endDate)

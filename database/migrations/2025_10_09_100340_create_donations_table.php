@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('donor_phone')->nullable();
             $table->decimal('amount', 10, 2);
             $table->date('donation_date');
-            $table->string('donation_type')->default('general'); // general, building, missions, charity, special_project
+            $table->string('donation_type')->default('general'); // general, building, mission, special, other (custom)
             $table->string('payment_method')->default('cash');
             $table->string('reference_number')->nullable();
             $table->text('purpose')->nullable(); // Specific purpose for the donation

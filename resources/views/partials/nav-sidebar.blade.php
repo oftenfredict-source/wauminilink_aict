@@ -1,5 +1,5 @@
 <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
+    <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
         <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
     </a>
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
@@ -28,7 +28,7 @@
         <div class="sb-sidenav-menu">
           <div class="nav">
             <div class="sb-sidenav-menu-heading">Main</div>
-            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
+            <a class="nav-link" href="{{ route('dashboard') }}">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
               Dashboard
             </a>
@@ -40,6 +40,10 @@
             <a class="nav-link" href="{{ route('members.add') }}">
               <div class="sb-nav-link-icon"><i class="fas fa-user-plus"></i></div>
               Add Member
+            </a>
+            <a class="nav-link" href="{{ route('leaders.index') }}">
+              <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
+              Leadership
             </a>
             <div class="sb-sidenav-menu-heading">Settings</div>
             <a class="nav-link" href="{{ route('settings.index') }}">

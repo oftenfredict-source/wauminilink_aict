@@ -16,15 +16,19 @@
             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#auditModal">
                 <i class="fas fa-history me-1"></i>Audit Log
             </button>
+            @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
             <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
                 <i class="fas fa-upload me-1"></i>Import
             </button>
+            @endif
             <a href="{{ route('settings.export') }}" class="btn btn-outline-success">
                 <i class="fas fa-download me-1"></i>Export
             </a>
+            @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
             <button type="button" class="btn btn-outline-warning" onclick="resetSettings()">
                 <i class="fas fa-undo me-1"></i>Reset to Defaults
             </button>
+            @endif
         </div>
     </div>
 
@@ -155,7 +159,7 @@
                                                                                name="{{ $setting->key }}" 
                                                                                value="1"
                                                                                {{ $setting->value ? 'checked' : '' }}
-                                                                               {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                               {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                         <label class="form-check-label" for="{{ $setting->key }}">
                                                                             {{ $setting->value ? 'Enabled' : 'Disabled' }}
                                                                         </label>
@@ -164,7 +168,7 @@
                                                                     <select class="form-select" 
                                                                             id="{{ $setting->key }}" 
                                                                             name="{{ $setting->key }}"
-                                                                            {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                            {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                         @foreach($setting->options as $value => $label)
                                                                             <option value="{{ $value }}" {{ $setting->value == $value ? 'selected' : '' }}>
                                                                                 {{ $label }}
@@ -175,7 +179,7 @@
                                                                     <select class="form-select" 
                                                                             id="{{ $setting->key }}" 
                                                                             name="{{ $setting->key }}"
-                                                                            {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                            {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                         @foreach($setting->options as $value => $label)
                                                                             <option value="{{ $value }}" {{ $setting->value == $value ? 'selected' : '' }}>
                                                                                 {{ $label }}
@@ -187,14 +191,14 @@
                                                                               id="{{ $setting->key }}" 
                                                                               name="{{ $setting->key }}" 
                                                                               rows="3"
-                                                                              {{ !$setting->is_editable ? 'disabled' : '' }}>{{ $setting->value }}</textarea>
+                                                                              {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>{{ $setting->value }}</textarea>
                                                                 @elseif($setting->type === 'integer')
                                                                     <input type="number" 
                                                                            class="form-control" 
                                                                            id="{{ $setting->key }}" 
                                                                            name="{{ $setting->key }}" 
                                                                            value="{{ $setting->value }}"
-                                                                           {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                           {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                 @elseif($setting->type === 'float')
                                                                     <input type="number" 
                                                                            class="form-control" 
@@ -202,14 +206,14 @@
                                                                            name="{{ $setting->key }}" 
                                                                            value="{{ $setting->value }}" 
                                                                            step="0.01"
-                                                                           {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                           {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                 @else
                                                                     <input type="text" 
                                                                            class="form-control" 
                                                                            id="{{ $setting->key }}" 
                                                                            name="{{ $setting->key }}" 
                                                                            value="{{ $setting->value }}"
-                                                                           {{ !$setting->is_editable ? 'disabled' : '' }}>
+                                                                           {{ (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) || !$setting->is_editable ? 'disabled' : '' }}>
                                                                 @endif
                                                                 
                                                                 @if($setting->description)
@@ -220,11 +224,17 @@
                                                     @endforeach
                                                 </div>
                                                 
+                                                @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
                                                 <div class="d-flex justify-content-end mt-3">
                                                     <button type="submit" class="btn btn-{{ $categories[$categoryKey]['color'] }}">
                                                         <i class="fas fa-save me-2"></i>Save {{ $categories[$categoryKey]['name'] }}
                                                     </button>
                                                 </div>
+                                                @else
+                                                <div class="alert alert-info mt-3">
+                                                    <i class="fas fa-info-circle me-2"></i>You have view-only access. You cannot edit settings.
+                                                </div>
+                                                @endif
                                             </form>
                                         </div>
                                     </div>
@@ -259,9 +269,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-upload me-2"></i>Import Settings
                     </button>
+                    @endif
                             </div>
                         </form>
         </div>

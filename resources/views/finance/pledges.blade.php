@@ -1,6 +1,15 @@
 @extends('layouts.index')
 
 @section('content')
+<style>
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    #due_date_error {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mt-4"><i class="fas fa-handshake me-2"></i>Pledges Management</h1>
@@ -11,8 +20,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Filters
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-filter me-1"></i><strong>Filters</strong>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('finance.pledges') }}">
@@ -60,8 +69,8 @@
 
     <!-- Pledges Table -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>Pledges List
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-table me-1"></i><strong>Pledges List</strong>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -75,6 +84,7 @@
                             <th>Progress</th>
                             <th>Due Date</th>
                             <th>Status</th>
+                            <th>Approval</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -95,7 +105,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ $pledge->due_date ? $pledge->due_date->format('M d, Y') : '-' }}</td>
+                            <td>{{ $pledge->due_date ? \Carbon\Carbon::parse($pledge->due_date)->format('M d, Y') : '-' }}</td>
                             <td>
                                 @if($pledge->status == 'completed')
                                     <span class="badge bg-success">Completed</span>
@@ -106,8 +116,47 @@
                                 @endif
                             </td>
                             <td>
+                                @if($pledge->approval_status == 'approved')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Approved
+                                    </span>
+                                @elseif($pledge->approval_status == 'rejected')
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Rejected
+                                    </span>
+                                @else
+                                    @php
+                                        $pastorFirst = $pastor ? explode(' ', $pastor->name)[0] : null;
+                                        if ($pastorFirst && strpos(strtolower($pastorFirst), 'pastor') === 0) {
+                                            $pastorFirst = str_replace('pastor', '', strtolower($pastorFirst));
+                                            $pastorFirst = trim($pastorFirst);
+                                        }
+                                    @endphp
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Awaiting Pastor {{ $pastorFirst ?? 'Approval' }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewPledge({{ $pledge->id }})">
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="viewPledge(this)"
+                                        data-id="{{ $pledge->id }}"
+                                        data-member="{{ $pledge->member->full_name ?? 'Unknown' }}"
+                                        data-type="{{ ucfirst($pledge->pledge_type) }}"
+                                        data-amount="{{ number_format($pledge->pledge_amount, 2) }}"
+                                        data-paid="{{ number_format($pledge->amount_paid, 2) }}"
+                                        data-remaining="{{ number_format($pledge->remaining_amount, 2) }}"
+                                        data-amount-raw="{{ $pledge->pledge_amount }}"
+                                        data-paid-raw="{{ $pledge->amount_paid }}"
+                                        data-progress="{{ $pledge->progress_percentage }}"
+                                        data-due="{{ $pledge->due_date ? \Carbon\Carbon::parse($pledge->due_date)->format('M d, Y') : '-' }}"
+                                        data-status="{{ ucfirst($pledge->status) }}"
+                                        data-purpose="{{ $pledge->purpose }}"
+                                        data-notes="{{ $pledge->notes }}"
+                                    >
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-success" onclick="addPayment({{ $pledge->id }})">
@@ -205,6 +254,7 @@
                             <div class="mb-3">
                                 <label for="due_date" class="form-label">Due Date</label>
                                 <input type="date" class="form-control" id="due_date" name="due_date">
+                                <div id="due_date_error" class="text-danger small mt-1" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -257,6 +307,26 @@
     </div>
 </div>
 
+<!-- View Pledge Modal -->
+<div class="modal fade" id="viewPledgeModal" tabindex="-1" aria-labelledby="viewPledgeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="viewPledgeModalLabel">
+                    <i class="fas fa-handshake me-2"></i>Pledge Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="viewPledgeBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Initialize Select2 for member dropdowns
 document.addEventListener('DOMContentLoaded', function() {
@@ -274,11 +344,293 @@ document.addEventListener('DOMContentLoaded', function() {
         width: '100%',
         dropdownParent: $('#addPledgeModal')
     });
+    
+    // Reset validation when modal is opened
+    $('#addPledgeModal').on('show.bs.modal', function() {
+        const dueDate = document.getElementById('due_date');
+        const dueDateError = document.getElementById('due_date_error');
+        if (dueDate) {
+            dueDate.classList.remove('is-invalid');
+        }
+        if (dueDateError) {
+            dueDateError.style.display = 'none';
+            dueDateError.textContent = '';
+        }
+    });
+    
+    // Validation for payment frequency and due date
+    const paymentFrequency = document.getElementById('payment_frequency');
+    const pledgeDate = document.getElementById('pledge_date');
+    const dueDate = document.getElementById('due_date');
+    const dueDateError = document.getElementById('due_date_error');
+    const addPledgeForm = document.querySelector('#addPledgeModal form');
+    
+    // Function to validate due date based on payment frequency
+    function validateDueDate() {
+        const frequency = paymentFrequency.value;
+        const pledgeDateValue = pledgeDate.value;
+        const dueDateValue = dueDate.value;
+        
+        // Clear previous error
+        dueDateError.style.display = 'none';
+        dueDateError.textContent = '';
+        dueDate.classList.remove('is-invalid');
+        
+        // Only validate if frequency is monthly and both dates are provided
+        if (frequency === 'monthly' && pledgeDateValue && dueDateValue) {
+            const pledgeDateObj = new Date(pledgeDateValue);
+            const dueDateObj = new Date(dueDateValue);
+            
+            // Calculate the difference in days
+            const timeDifference = dueDateObj.getTime() - pledgeDateObj.getTime();
+            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            
+            // Check if due date is within 30 days from pledge date
+            if (daysDifference < 0) {
+                // Due date is before pledge date
+                dueDateError.textContent = 'The due date cannot be before the pledge date.';
+                dueDateError.style.display = 'block';
+                dueDate.classList.add('is-invalid');
+                return false;
+            } else if (daysDifference > 30) {
+                // Due date exceeds 30 days from pledge date
+                const maxDueDate = new Date(pledgeDateObj);
+                maxDueDate.setDate(maxDueDate.getDate() + 30);
+                const maxDueDateStr = maxDueDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                dueDateError.textContent = `For monthly payment frequency, the due date must be within 30 days from the pledge date (maximum due date: ${maxDueDateStr}).`;
+                dueDateError.style.display = 'block';
+                dueDate.classList.add('is-invalid');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Add event listeners
+    if (paymentFrequency) {
+        paymentFrequency.addEventListener('change', function() {
+            validateDueDate();
+        });
+    }
+    
+    if (pledgeDate) {
+        pledgeDate.addEventListener('change', function() {
+            validateDueDate();
+        });
+    }
+    
+    if (dueDate) {
+        dueDate.addEventListener('change', function() {
+            validateDueDate();
+        });
+    }
+    
+    // Prevent form submission if validation fails
+    if (addPledgeForm) {
+        addPledgeForm.addEventListener('submit', function(e) {
+            if (!validateDueDate()) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Show SweetAlert error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please correct the due date. For monthly payment frequency, the due date must be within 30 days from the pledge date.',
+                    confirmButtonText: 'OK'
+                });
+                
+                return false;
+            }
+        });
+    }
 });
 
-function viewPledge(id) {
-    // Implementation for viewing pledge details
-    console.log('View pledge:', id);
+function viewPledge(button) {
+    if (!button) return;
+    const data = button.dataset;
+
+    // Calculate remaining amount
+    let remainingDisplay = data.remaining;
+    if (!remainingDisplay) {
+        const amountRaw = parseFloat(data.amountRaw || data.amountRaw === '0' ? data.amountRaw : (data.amount || '0').toString().replace(/,/g, ''));
+        const paidRaw = parseFloat(data.paidRaw || data.paidRaw === '0' ? data.paidRaw : (data.paid || '0').toString().replace(/,/g, ''));
+        const rem = (isNaN(amountRaw) ? 0 : amountRaw) - (isNaN(paidRaw) ? 0 : paidRaw);
+        remainingDisplay = rem.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Calculate progress
+    const progress = parseFloat(data.progress || '0');
+    const pct = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
+    const progressClass = pct >= 100 ? 'success' : (pct >= 75 ? 'info' : 'warning');
+
+    // Status styling
+    const statusClass = data.status.toLowerCase() === 'completed' ? 'success' : 
+                       data.status.toLowerCase() === 'active' ? 'primary' : 
+                       data.status.toLowerCase() === 'overdue' ? 'danger' : 'secondary';
+
+    // Pledge type styling
+    const typeClass = data.type.toLowerCase() === 'building' ? 'primary' :
+                     data.type.toLowerCase() === 'mission' ? 'info' :
+                     data.type.toLowerCase() === 'special' ? 'warning' :
+                     data.type.toLowerCase() === 'general' ? 'success' : 'secondary';
+
+    const html = `
+        <div class="row g-4">
+            <!-- Pledge Overview Cards -->
+            <div class="col-12">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-handshake fa-2x mb-2"></i>
+                                <h6 class="card-title">Pledge Amount</h6>
+                                <h4 class="mb-0">TZS ${data.amount || '0.00'}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <h6 class="card-title">Amount Paid</h6>
+                                <h4 class="mb-0">TZS ${data.paid || '0.00'}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-piggy-bank fa-2x mb-2"></i>
+                                <h6 class="card-title">Remaining</h6>
+                                <h4 class="mb-0">TZS ${remainingDisplay}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-${progressClass} text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                                <h6 class="card-title">Progress</h6>
+                                <h4 class="mb-0">${pct.toFixed(1)}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Pledge Progress</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-${progressClass}" style="width: ${pct}%" role="progressbar">
+                                <span class="fw-bold">${pct.toFixed(1)}% Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pledge Details -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Pledge Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user text-primary me-3"></i>
+                                    <div>
+                                        <small class="text-muted">Member</small>
+                                        <div class="fw-bold">${data.member || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-tag text-${typeClass} me-3"></i>
+                                    <div>
+                                        <small class="text-muted">Pledge Type</small>
+                                        <div class="fw-bold">
+                                            <span class="badge bg-${typeClass}">${data.type || '-'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calendar text-warning me-3"></i>
+                                    <div>
+                                        <small class="text-muted">Due Date</small>
+                                        <div class="fw-bold">${data.due || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-flag text-${statusClass} me-3"></i>
+                                    <div>
+                                        <small class="text-muted">Status</small>
+                                        <div class="fw-bold">
+                                            <span class="badge bg-${statusClass}">${data.status || '-'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Purpose and Notes -->
+            ${(data.purpose && data.purpose !== '-') || (data.notes && data.notes !== '-') ? `
+            <div class="col-12">
+                <div class="row g-3">
+                    ${data.purpose && data.purpose !== '-' ? `
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>Purpose</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">${data.purpose}</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${data.notes && data.notes !== '-' ? `
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Notes</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">${data.notes}</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('viewPledgeBody').innerHTML = html;
+    const modal = new bootstrap.Modal(document.getElementById('viewPledgeModal'));
+    modal.show();
 }
 
 function addPayment(id) {
@@ -300,5 +652,34 @@ setTimeout(function() {
         bsAlert.close();
     });
 }, 5000);
+
+// SweetAlert for success messages
+@if(session('success'))
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('success') }}',
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+@endif
+
+@if(session('error'))
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '{{ session('error') }}',
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+@endif
 </script>
 @endsection

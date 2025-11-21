@@ -1,6 +1,38 @@
 @extends('layouts.index')
 
 @section('content')
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    </script>
+@endif
+
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mt-4"><i class="fas fa-coins me-2"></i>Tithes Management</h1>
@@ -11,8 +43,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Filters
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-filter me-1"></i><strong>Filters</strong>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('finance.tithes') }}">
@@ -61,15 +93,24 @@
 
     <!-- Tithes Table -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header bg-primary text-white">
             <i class="fas fa-table me-1"></i>
-            Tithes Records
-            <span class="badge bg-primary ms-2">{{ $tithes->total() }} records</span>
+            <strong>Tithes Records</strong>
+            <span class="badge bg-white text-primary ms-2 fw-bold">{{ $tithes->total() }} {{ $tithes->total() == 1 ? 'record' : 'records' }}</span>
         </div>
         <div class="card-body">
+            @if($tithes->total() > 0 && $tithes->count() == 0)
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Note:</strong> There are {{ $tithes->total() }} total record(s), but none are displayed on this page. 
+                    @if($tithes->hasPages())
+                        Try navigating to <a href="{{ $tithes->url(1) }}" class="alert-link">page 1</a> or check your filters.
+                    @endif
+                </div>
+            @endif
             @if($tithes->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                <div class="table-responsive" style="min-height: 200px;">
+                    <table class="table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>Member</th>
@@ -91,8 +132,8 @@
                                                 <i class="fas fa-user text-white small"></i>
                                             </div>
                                             <div>
-                                                <div class="fw-bold">{{ $tithe->member->full_name ?? 'Unknown' }}</div>
-                                                <small class="text-muted">{{ $tithe->member->member_id ?? 'N/A' }}</small>
+                                                <div class="fw-bold">{{ $tithe->member ? $tithe->member->full_name : 'Unknown Member' }}</div>
+                                                <small class="text-muted">{{ $tithe->member ? $tithe->member->member_id : ($tithe->member_id ? 'ID: ' . $tithe->member_id : 'N/A') }}</small>
                                             </div>
                                         </div>
                                     </td>
@@ -107,13 +148,17 @@
                                     </td>
                                     <td>{{ $tithe->reference_number ?? 'N/A' }}</td>
                                     <td>
-                                        @if($tithe->is_verified)
+                                        @if($tithe->approval_status == 'approved')
                                             <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i>Verified
+                                                <i class="fas fa-check me-1"></i>Approved
+                                            </span>
+                                        @elseif($tithe->approval_status == 'rejected')
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Rejected
                                             </span>
                                         @else
                                             <span class="badge bg-warning">
-                                                <i class="fas fa-clock me-1"></i>Pending
+                                                <i class="fas fa-clock me-1"></i>Pending Approval
                                             </span>
                                         @endif
                                     </td>
@@ -123,11 +168,6 @@
                                             <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewTitheModal{{ $tithe->id }}">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            @if(!$tithe->is_verified)
-                                                <button type="button" class="btn btn-outline-success" onclick="verifyTithe({{ $tithe->id }})">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -156,13 +196,23 @@
 
 <!-- Add Tithe Modal -->
 <div class="modal fade" id="addTitheModal" tabindex="-1" aria-labelledby="addTitheModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content stylish-modal">
             <form action="{{ route('finance.tithes.store') }}" method="POST">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addTitheModalLabel">Add New Tithe</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header stylish-modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex align-items-center">
+                        <div class="modal-icon-wrapper me-3">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title text-white mb-0" id="addTitheModalLabel">
+                                <strong>Add New Tithe</strong>
+                            </h5>
+                            <small class="text-white-50">Record a member's tithe payment</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
@@ -209,7 +259,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="tithe_reference_group">
                             <label for="reference_number" class="form-label">Reference Number</label>
                             <input type="text" class="form-control @error('reference_number') is-invalid @enderror" id="reference_number" name="reference_number" 
                                    value="{{ old('reference_number') }}" placeholder="e.g., Check #123, Transaction ID">
@@ -235,9 +285,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                <div class="modal-footer stylish-modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary stylish-submit-btn">
                         <i class="fas fa-save me-1"></i>Save Tithe
                     </button>
                 </div>
@@ -259,7 +311,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Member</label>
-                        <p>{{ $tithe->member->full_name ?? 'Unknown' }} ({{ $tithe->member->member_id ?? 'N/A' }})</p>
+                        <p>{{ $tithe->member ? $tithe->member->full_name : 'Unknown Member' }} ({{ $tithe->member ? $tithe->member->member_id : ($tithe->member_id ? 'ID: ' . $tithe->member_id : 'N/A') }})</p>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Amount</label>
@@ -284,13 +336,17 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Status</label>
                         <p>
-                            @if($tithe->is_verified)
+                            @if($tithe->approval_status == 'approved')
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check me-1"></i>Verified
+                                    <i class="fas fa-check me-1"></i>Approved
+                                </span>
+                            @elseif($tithe->approval_status == 'rejected')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Rejected
                                 </span>
                             @else
                                 <span class="badge bg-warning">
-                                    <i class="fas fa-clock me-1"></i>Pending Verification
+                                    <i class="fas fa-clock me-1"></i>Pending Approval
                                 </span>
                             @endif
                         </p>
@@ -398,16 +454,200 @@ document.addEventListener('DOMContentLoaded', function() {
             // Always try init on modal show (handles late asset load)
             initSelect2Now();
         });
+
+        // Toggle reference number visibility based on payment method
+        var methodEl = titheModal.querySelector('#payment_method');
+        var refGroup = titheModal.querySelector('#tithe_reference_group');
+        var refInput = titheModal.querySelector('#reference_number');
+        function updateTitheRefVisibility() {
+            var method = methodEl ? methodEl.value : '';
+            var hide = method === 'cash' || method === '';
+            if (refGroup) {
+                refGroup.style.display = hide ? 'none' : '';
+            }
+            if (refInput) {
+                refInput.required = !hide;
+                if (hide) refInput.value = '';
+            }
+        }
+        if (methodEl) {
+            methodEl.addEventListener('change', updateTitheRefVisibility);
+        }
+        titheModal.addEventListener('shown.bs.modal', updateTitheRefVisibility);
+        // Initialize on load
+        updateTitheRefVisibility();
     }
 });
 
-function verifyTithe(titheId) {
-    if (confirm('Are you sure you want to verify this tithe?')) {
-        // This would typically be an AJAX call to verify the tithe
-        // For now, we'll just show a success message
-        alert('Tithe verification functionality will be implemented with AJAX');
-    }
-}
 </script>
+@endsection
+
+@section('styles')
+<style>
+    /* Stylish Modal Styles */
+    .stylish-modal {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+    
+    .stylish-modal-header {
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+    
+    .modal-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stylish-modal .modal-body {
+        padding: 2rem;
+        background: #f8f9fa;
+    }
+    
+    .stylish-modal .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .stylish-modal .form-control,
+    .stylish-modal .form-select {
+        border-radius: 8px;
+        border: 1.5px solid #e0e0e0;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .stylish-modal .form-control:focus,
+    .stylish-modal .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        transform: translateY(-1px);
+    }
+    
+    .stylish-modal .form-control:hover,
+    .stylish-modal .form-select:hover {
+        border-color: #667eea;
+    }
+    
+    .stylish-modal-footer {
+        padding: 1.25rem 2rem;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+    
+    .stylish-submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stylish-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    
+    .stylish-modal .btn-light {
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stylish-modal .btn-light:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .stylish-modal .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 6px;
+        border: 2px solid #667eea;
+        cursor: pointer;
+    }
+    
+    .stylish-modal .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .stylish-modal textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    /* Animation for modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: translate(0, -50px);
+    }
+    
+    .modal.show .modal-dialog {
+        transform: none;
+    }
+    
+    /* Input group styling */
+    .stylish-modal .input-group-text {
+        background: #f8f9fa;
+        border: 1.5px solid #e0e0e0;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+    }
+    
+    /* Select2 styling in modal */
+    .stylish-modal .select2-container--default .select2-selection--single {
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        height: auto;
+        padding: 0.5rem;
+    }
+    
+    .stylish-modal .select2-container--default .select2-selection--single:focus {
+        border-color: #667eea;
+    }
+    
+    /* Prevent scrolling */
+    .stylish-modal .modal-body {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .stylish-modal .modal-body {
+            padding: 1.5rem;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .stylish-modal-header {
+            padding: 1.25rem;
+        }
+        
+        .modal-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+    }
+</style>
 @endsection
 

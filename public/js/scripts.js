@@ -12,15 +12,43 @@ window.addEventListener('DOMContentLoaded', event => {
     // Toggle the side navigation
     const sidebarToggle = document.body.querySelector('#sidebarToggle');
     if (sidebarToggle) {
-        // Uncomment Below to persist sidebar toggle between refreshes
-        // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
-        //     document.body.classList.toggle('sb-sidenav-toggled');
-        // }
-        sidebarToggle.addEventListener('click', event => {
-            event.preventDefault();
-            document.body.classList.toggle('sb-sidenav-toggled');
-            localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
-        });
+        // Check if handler is already attached (to avoid duplicate handlers)
+        if (!sidebarToggle.hasAttribute('data-toggle-handler-attached')) {
+            sidebarToggle.setAttribute('data-toggle-handler-attached', 'true');
+            
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const layoutSidenav = document.getElementById('layoutSidenav');
+                
+                // Toggle on the main container
+                if (layoutSidenav) {
+                    layoutSidenav.classList.toggle('sb-sidenav-toggled');
+                }
+                
+                // Also toggle on body as fallback
+                document.body.classList.toggle('sb-sidenav-toggled');
+                
+                // Save state to localStorage (as string 'true' or 'false' to match layout handler)
+                const isToggled = layoutSidenav ? layoutSidenav.classList.contains('sb-sidenav-toggled') : document.body.classList.contains('sb-sidenav-toggled');
+                localStorage.setItem('sb|sidebar-toggle', isToggled ? 'true' : 'false');
+                
+                console.log('Sidebar toggled:', isToggled);
+                
+                return false;
+            });
+            
+            // Restore sidebar state from localStorage
+            const savedState = localStorage.getItem('sb|sidebar-toggle');
+            if (savedState === 'true') {
+                const layoutSidenav = document.getElementById('layoutSidenav');
+                if (layoutSidenav) {
+                    layoutSidenav.classList.add('sb-sidenav-toggled');
+                }
+                document.body.classList.add('sb-sidenav-toggled');
+            }
+        }
     }
 
 });

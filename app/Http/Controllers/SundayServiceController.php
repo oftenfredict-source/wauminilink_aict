@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SundayService;
 use App\Models\Member;
+use App\Models\Offering;
+use App\Models\WeeklyAssignment;
 use Illuminate\Http\Request;
 
 class SundayServiceController extends Controller
@@ -28,7 +30,7 @@ class SundayServiceController extends Controller
             $query->whereDate('service_date', '<=', $request->date('to'));
         }
 
-        $services = $query->orderBy('service_date', 'desc')->paginate(10);
+        $services = $query->with(['coordinator', 'churchElder'])->orderBy('service_date', 'desc')->paginate(10);
         $services->appends($request->query());
 
         if ($request->wantsJson()) {
@@ -41,32 +43,98 @@ class SundayServiceController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'service_date' => 'required|date|unique:sunday_services,service_date',
-            'theme' => 'nullable|string|max:255',
-            'preacher' => 'nullable|string|max:255',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i|after:start_time',
-            'venue' => 'nullable|string|max:255',
-            'attendance_count' => 'nullable|integer|min:0',
-            'offerings_amount' => 'nullable|numeric|min:0',
-            'scripture_readings' => 'nullable|string',
-            'choir' => 'nullable|string|max:255',
-            'announcements' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            \Log::info('Sunday Service Store Request:', $request->all());
+            
+            $validated = $request->validate([
+                'service_date' => 'required|date|unique:sunday_services,service_date',
+                'service_type' => 'required|string|max:255',
+                'theme' => 'nullable|string|max:255',
+                'preacher' => 'nullable|string|max:255',
+                'coordinator_id' => 'nullable|exists:members,id',
+                'church_elder_id' => 'nullable|exists:members,id',
+                'start_time' => 'nullable|date_format:H:i',
+                'end_time' => 'nullable|date_format:H:i',
+                'venue' => 'nullable|string|max:255',
+                'attendance_count' => 'nullable|integer|min:0',
+                'guests_count' => 'nullable|integer|min:0',
+                'offerings_amount' => 'nullable|numeric|min:0',
+                'scripture_readings' => 'nullable|string',
+                'choir' => 'nullable|string|max:255',
+                'announcements' => 'nullable|string',
+                'notes' => 'nullable|string',
+            ], [
+                'service_date.unique' => 'A service already exists for this date. Please choose a different date.',
+                'service_date.required' => 'Service date is required.',
+                'service_date.date' => 'Please enter a valid date.',
+                'service_type.required' => 'Service type is required.',
+                'service_type.in' => 'Please select a valid service type.',
+                'start_time.date_format' => 'Start time must be in HH:MM format.',
+                'end_time.date_format' => 'End time must be in HH:MM format.',
+                'attendance_count.integer' => 'Attendance count must be a whole number.',
+                'attendance_count.min' => 'Attendance count cannot be negative.',
+                'offerings_amount.numeric' => 'Offerings amount must be a number.',
+                'offerings_amount.min' => 'Offerings amount cannot be negative.',
+            ]);
 
-        $service = SundayService::create($validated);
+            // Set status based on whether attendance/offerings are provided
+            $validated['status'] = ($request->has('attendance_count') || $request->has('offerings_amount')) 
+                ? 'completed' 
+                : 'scheduled';
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Sunday service saved successfully',
-            'service' => $service,
-        ], 201);
+            \Log::info('Validated data:', $validated);
+
+            $service = SundayService::create($validated);
+
+            // Send SMS notifications to coordinator and church elder
+            $this->sendServiceNotifications($service);
+
+            // If offerings amount is provided, create an Offering record for pastor approval
+            if ($request->has('offerings_amount') && $validated['offerings_amount'] > 0) {
+                $offering = Offering::create([
+                    'member_id' => null, // General member offering from Sunday service
+                    'amount' => $validated['offerings_amount'],
+                    'offering_date' => $validated['service_date'],
+                    'offering_type' => 'general',
+                    'service_type' => 'sunday_service',
+                    'service_id' => $service->id,
+                    'payment_method' => 'cash',
+                    'reference_number' => 'SS-' . $service->id . '-' . time(),
+                    'notes' => 'Sunday Service Offering - ' . ($validated['theme'] ?? 'General Service'),
+                    'recorded_by' => auth()->user()->name ?? 'System',
+                    'approval_status' => 'pending',
+                    'is_verified' => false
+                ]);
+
+                // Send notification to pastors about pending offering
+                $this->sendFinancialApprovalNotification('offering', $offering);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sunday service saved successfully' . ($request->has('offerings_amount') && $validated['offerings_amount'] > 0 ? ' and offering sent for pastor approval' : ''),
+                'service' => $service,
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Store error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving the service',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(SundayService $sundayService)
     {
+        $sundayService->load(['coordinator', 'churchElder']);
         return response()->json($sundayService);
     }
 
@@ -74,12 +142,16 @@ class SundayServiceController extends Controller
     {
         $validated = $request->validate([
             'service_date' => 'sometimes|required|date|unique:sunday_services,service_date,' . $sundayService->id,
+            'service_type' => 'sometimes|required|string|max:255',
             'theme' => 'nullable|string|max:255',
             'preacher' => 'nullable|string|max:255',
+            'coordinator_id' => 'nullable|exists:members,id',
+            'church_elder_id' => 'nullable|exists:members,id',
             'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i|after:start_time',
+            'end_time' => 'nullable|date_format:H:i',
             'venue' => 'nullable|string|max:255',
             'attendance_count' => 'nullable|integer|min:0',
+            'guests_count' => 'nullable|integer|min:0',
             'offerings_amount' => 'nullable|numeric|min:0',
             'scripture_readings' => 'nullable|string',
             'choir' => 'nullable|string|max:255',
@@ -87,9 +159,68 @@ class SundayServiceController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $sundayService->update($validated);
+        // Update status based on whether attendance/offerings are provided
+        $validated['status'] = ($request->has('attendance_count') || $request->has('offerings_amount')) 
+            ? 'completed' 
+            : 'scheduled';
 
-        return response()->json(['success' => true, 'message' => 'Sunday service updated successfully', 'service' => $sundayService]);
+        // Check if coordinator is being changed
+        $coordinatorChanged = $request->has('coordinator_id') && 
+                             $sundayService->coordinator_id != $request->coordinator_id;
+
+        $sundayService->update($validated);
+        
+        // Refresh relationships to ensure updated data is available
+        $sundayService->refresh();
+        $sundayService->load(['coordinator', 'churchElder']);
+
+        // Send SMS notification if coordinator was changed or newly assigned
+        if ($coordinatorChanged && $sundayService->coordinator_id) {
+            $this->sendCoordinatorSms($sundayService);
+        }
+
+        // Handle offerings changes
+        if ($request->has('offerings_amount') && $validated['offerings_amount'] > 0) {
+            // Check if there's already an offering record for this service
+            $existingOffering = Offering::where('service_id', $sundayService->id)
+                ->where('service_type', 'sunday_service')
+                ->first();
+
+            if ($existingOffering) {
+                // Update existing offering
+                $existingOffering->update([
+                    'amount' => $validated['offerings_amount'],
+                    'notes' => 'Sunday Service Offering - ' . ($validated['theme'] ?? 'General Service'),
+                    'approval_status' => 'pending', // Reset to pending for re-approval
+                    'is_verified' => false
+                ]);
+            } else {
+                // Create new offering record
+                $offering = Offering::create([
+                    'member_id' => null, // General member offering from Sunday service
+                    'amount' => $validated['offerings_amount'],
+                    'offering_date' => $validated['service_date'],
+                    'offering_type' => 'general',
+                    'service_type' => 'sunday_service',
+                    'service_id' => $sundayService->id,
+                    'payment_method' => 'cash',
+                    'reference_number' => 'SS-' . $sundayService->id . '-' . time(),
+                    'notes' => 'Sunday Service Offering - ' . ($validated['theme'] ?? 'General Service'),
+                    'recorded_by' => auth()->user()->name ?? 'System',
+                    'approval_status' => 'pending',
+                    'is_verified' => false
+                ]);
+
+                // Send notification to pastors about pending offering
+                $this->sendFinancialApprovalNotification('offering', $offering);
+            }
+        }
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Sunday service updated successfully' . ($request->has('offerings_amount') && $validated['offerings_amount'] > 0 ? ' and offering sent for pastor approval' : ''),
+            'service' => $sundayService
+        ]);
     }
 
     public function destroy(SundayService $sundayService)
@@ -98,22 +229,141 @@ class SundayServiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Sunday service deleted successfully']);
     }
 
+    public function getChurchElders()
+    {
+        // Get current date for comparison
+        $today = now()->toDateString();
+        
+        // Query for active church elders with proper date filtering
+        // Use distinct to avoid duplicates if a member has multiple records
+        $churchElders = Member::whereHas('leadershipPositions', function($query) use ($today) {
+            $query->where('position', 'elder')
+                  ->where('is_active', true)
+                  ->where(function($q) use ($today) {
+                      $q->whereNull('end_date')
+                         ->orWhere('end_date', '>=', $today);
+                  })
+                  ->where('appointment_date', '<=', $today); // Must be appointed before or on today
+        })
+        ->distinct()
+        ->orderBy('full_name')
+        ->get(['id', 'full_name', 'member_id']);
+
+        \Log::info('Church Elders Query Result', [
+            'count' => $churchElders->count(),
+            'elders' => $churchElders->map(function($m) {
+                return ['id' => $m->id, 'name' => $m->full_name, 'member_id' => $m->member_id];
+            })->toArray()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'church_elders' => $churchElders->map(function($member) {
+                return [
+                    'id' => $member->id,
+                    'full_name' => $member->full_name,
+                    'member_id' => $member->member_id,
+                    'display_text' => $member->full_name . ' (' . $member->member_id . ')'
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Get weekly assignment for a specific date (for church elder auto-population)
+     */
+    public function getWeeklyAssignmentForDate(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date'
+        ]);
+
+        $date = $request->date;
+        
+        \Log::info('Checking weekly assignment for date', ['date' => $date]);
+        
+        // Find active weekly assignment for elder position that covers this date
+        $assignment = WeeklyAssignment::with(['leader.member'])
+            ->where('position', 'elder')
+            ->where('is_active', true)
+            ->where('week_start_date', '<=', $date)
+            ->where('week_end_date', '>=', $date)
+            ->first();
+
+        \Log::info('Weekly assignment query result', [
+            'found' => $assignment ? true : false,
+            'assignment_id' => $assignment ? $assignment->id : null,
+            'leader_id' => $assignment && $assignment->leader ? $assignment->leader->id : null,
+            'member_id' => $assignment && $assignment->leader && $assignment->leader->member ? $assignment->leader->member->id : null
+        ]);
+
+        if ($assignment && $assignment->leader && $assignment->leader->member) {
+            $member = $assignment->leader->member;
+            
+            // Verify the member is actually an active church elder
+            $today = now()->toDateString();
+            $isActiveElder = Member::where('id', $member->id)
+                ->whereHas('leadershipPositions', function($query) use ($today) {
+                    $query->where('position', 'elder')
+                          ->where('is_active', true)
+                          ->where(function($q) use ($today) {
+                              $q->whereNull('end_date')
+                                 ->orWhere('end_date', '>=', $today);
+                          })
+                          ->where('appointment_date', '<=', $today);
+                })->exists();
+
+            \Log::info('Member elder status', [
+                'member_id' => $member->id,
+                'member_name' => $member->full_name,
+                'member_code' => $member->member_id,
+                'is_active_elder' => $isActiveElder,
+                'date_checked' => $date
+            ]);
+
+            // Return the member ID (which is what the church elders dropdown uses)
+            return response()->json([
+                'success' => true,
+                'has_assignment' => true,
+                'is_active_elder' => $isActiveElder,
+                'assignment' => [
+                    'leader_id' => $assignment->leader->id,
+                    'member_id' => $member->id, // This is the member's primary key ID
+                    'member_name' => $member->full_name,
+                    'member_code' => $member->member_id, // This is the member's code/identifier
+                    'display_text' => $member->full_name . ' (' . $member->member_id . ')',
+                    'duties' => $assignment->duties
+                ]
+            ]);
+        }
+
+        \Log::info('No weekly assignment found for date', ['date' => $date]);
+
+        return response()->json([
+            'success' => true,
+            'has_assignment' => false
+        ]);
+    }
+
     public function exportCsv(Request $request)
     {
         $filename = 'sunday_services_' . now()->format('Ymd_His') . '.csv';
-        $services = SundayService::orderBy('service_date', 'desc')->get();
+        $services = SundayService::with(['coordinator', 'churchElder'])->orderBy('service_date', 'desc')->get();
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         $callback = function() use ($services) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Service Date','Theme','Preacher','Start Time','End Time','Venue','Attendance','Offerings','Scripture Readings','Choir','Announcements','Notes']);
+            fputcsv($handle, ['Service Date','Service Type','Theme','Preacher','Coordinator','Church Elder','Start Time','End Time','Venue','Attendance','Offerings','Scripture Readings','Choir','Announcements','Notes']);
             foreach ($services as $s) {
                 fputcsv($handle, [
                     optional($s->service_date)->format('Y-m-d'),
+                    $s->service_type,
                     $s->theme,
                     $s->preacher,
+                    $s->coordinator ? $s->coordinator->full_name : '',
+                    $s->churchElder ? $s->churchElder->full_name : '',
                     $s->start_time,
                     $s->end_time,
                     $s->venue,
@@ -128,6 +378,233 @@ class SundayServiceController extends Controller
             fclose($handle);
         };
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Send notification to pastors about pending financial approval
+     */
+    private function sendFinancialApprovalNotification($type, $record)
+    {
+        try {
+            // Get all users who can approve finances (pastors)
+            $pastors = \App\Models\User::where('can_approve_finances', true)
+                ->orWhere('role', 'pastor')
+                ->orWhere('role', 'admin')
+                ->get();
+
+            if ($pastors->isEmpty()) {
+                \Log::warning('No pastors found to send financial approval notification');
+                return;
+            }
+
+            // Create notification data
+            $notificationData = [
+                'type' => $type,
+                'record_id' => $record->id,
+                'amount' => $record->amount,
+                'date' => $record->offering_date ?? $record->tithe_date ?? $record->donation_date ?? $record->expense_date ?? $record->created_at,
+                'recorded_by' => $record->recorded_by ?? 'System',
+                'member_name' => $record->member->full_name ?? 'General Member',
+                'created_at' => now()
+            ];
+
+            // Send notification to each pastor
+            foreach ($pastors as $pastor) {
+                try {
+                    $pastor->notify(new \App\Notifications\FinancialApprovalNotification($notificationData));
+                    \Log::info("Financial approval notification sent to pastor", [
+                        'pastor_id' => $pastor->id,
+                        'pastor_name' => $pastor->name,
+                        'type' => $type,
+                        'record_id' => $record->id
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error("Failed to send financial approval notification to pastor {$pastor->id}: " . $e->getMessage());
+                }
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send financial approval notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS notification to coordinator only
+     */
+    private function sendCoordinatorSms($service)
+    {
+        try {
+            $smsEnabled = \App\Services\SettingsService::get('enable_sms_notifications', false);
+            if (!$smsEnabled) {
+                \Log::info('SMS notifications disabled, skipping coordinator notification');
+                return;
+            }
+
+            // Load the coordinator relationship
+            $service->load('coordinator');
+
+            // Notify Coordinator with custom message
+            if ($service->coordinator_id && $service->coordinator) {
+                // Format date and day in Swahili
+                $dayNames = [
+                    'Monday' => 'Jumatatu',
+                    'Tuesday' => 'Jumanne',
+                    'Wednesday' => 'Jumatano',
+                    'Thursday' => 'Alhamisi',
+                    'Friday' => 'Ijumaa',
+                    'Saturday' => 'Jumamosi',
+                    'Sunday' => 'Jumapili'
+                ];
+                $dayName = $dayNames[$service->service_date->format('l')] ?? $service->service_date->format('l');
+                $serviceDate = $service->service_date->format('d/m/Y');
+                $dateWithDay = $serviceDate . ' / ' . $dayName;
+                
+                // Custom coordinator message as requested
+                $coordinatorName = $service->coordinator->full_name;
+                $coordinatorMessage = "Shalom {$coordinatorName}, tunakujulisha kuwa umepangwa kuratibu ibada ya {$dateWithDay}. Tafadhali jiandae ipasavyo na thibitisha kupokea ujumbe huu. Mungu akutie nguvu katika utumishi wako.";
+                
+                $coordinatorResp = app(\App\Services\SmsService::class)->sendDebug($service->coordinator->phone_number, $coordinatorMessage);
+                \Log::info('Service coordinator SMS sent', [
+                    'coordinator_id' => $service->coordinator_id,
+                    'coordinator_name' => $service->coordinator->full_name,
+                    'coordinator_phone' => $service->coordinator->phone_number,
+                    'sms_response' => $coordinatorResp
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send coordinator SMS: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS notifications to coordinator, church elder, and all members
+     */
+    private function sendServiceNotifications($service)
+    {
+        try {
+            $smsEnabled = \App\Services\SettingsService::get('enable_sms_notifications', false);
+            if (!$smsEnabled) {
+                \Log::info('SMS notifications disabled, skipping service notifications');
+                return;
+            }
+
+            // Load the relationships to ensure we have the data
+            $service->load(['coordinator', 'churchElder']);
+
+            $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Church');
+            $serviceDate = $service->service_date->format('d/m/Y');
+            $serviceTime = $service->start_time ? $service->start_time->format('H:i') : 'TBA';
+            
+            // Notify Coordinator using the dedicated method
+            $this->sendCoordinatorSms($service);
+
+            // Notify Church Elder
+            if ($service->church_elder_id && $service->churchElder) {
+                $coordinatorName = $service->coordinator ? $service->coordinator->full_name : 'TBA';
+                $elderMessage = "Taarifa ya Huduma:\n{$service->service_type} imepangwa tarehe {$serviceDate}\nMratibu: {$coordinatorName}\nMada: {$service->theme}\nMuda: {$serviceTime}\n\nTafadhali pata msaada wa kusimamia huduma hii.\n- {$churchName}";
+                
+                $elderResp = app(\App\Services\SmsService::class)->sendDebug($service->churchElder->phone_number, $elderMessage);
+                \Log::info('Service church elder SMS sent', [
+                    'elder_id' => $service->church_elder_id,
+                    'elder_name' => $service->churchElder->full_name,
+                    'elder_phone' => $service->churchElder->phone_number,
+                    'sms_response' => $elderResp
+                ]);
+            }
+
+            // Send SMS to all members about the scheduled service
+            $this->sendServiceNotificationToMembers($service);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send service notifications: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS notification to all members about scheduled service
+     */
+    private function sendServiceNotificationToMembers($service)
+    {
+        try {
+            $smsService = app(\App\Services\SmsService::class);
+            
+            // Format date and day in Swahili
+            $dayNames = [
+                'Monday' => 'Jumatatu',
+                'Tuesday' => 'Jumanne',
+                'Wednesday' => 'Jumatano',
+                'Thursday' => 'Alhamisi',
+                'Friday' => 'Ijumaa',
+                'Saturday' => 'Jumamosi',
+                'Sunday' => 'Jumapili'
+            ];
+            $dayName = $dayNames[$service->service_date->format('l')] ?? $service->service_date->format('l');
+            $serviceDate = $service->service_date->format('d/m/Y');
+            $dateWithDay = $serviceDate . ' (' . $dayName . ')';
+            
+            // Format time
+            $serviceTime = $service->start_time ? $service->start_time->format('H:i') : 'TBA';
+            
+            // Get all active members with phone numbers
+            $members = Member::where('membership_type', 'permanent')
+                ->whereNotNull('phone_number')
+                ->where('phone_number', '!=', '')
+                ->get();
+            
+            $sentCount = 0;
+            $failedCount = 0;
+            
+            foreach ($members as $member) {
+                try {
+                    // Format date for message (without day name in parentheses)
+                    $formattedDate = $service->service_date->format('d/m/Y');
+                    
+                    // Format time
+                    $formattedTime = $serviceTime !== 'TBA' ? $serviceTime : 'TBA';
+                    
+                    // Build personalized message using the specified template
+                    $message = "Shalom {$member->full_name}, ibada yetu ya {$formattedDate} saa {$formattedTime} inakaribia.\n";
+                    $message .= "Jitayarishe kuonana na Bwana kwa sifa, maombi na neno lenye nguvu.\n";
+                    $message .= "Usikose, Mungu ana jambo maalum kwa ajili yako.";
+                    
+                    // Send SMS
+                    $result = $smsService->send($member->phone_number, $message);
+                    
+                    if ($result) {
+                        $sentCount++;
+                    } else {
+                        $failedCount++;
+                        \Log::warning('Failed to send service notification SMS', [
+                            'member_id' => $member->id,
+                            'member_name' => $member->full_name,
+                            'phone' => $member->phone_number
+                        ]);
+                    }
+                    
+                    // Small delay to avoid overwhelming the SMS service
+                    usleep(100000); // 0.1 second delay
+                    
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::error('Error sending service notification to member', [
+                        'member_id' => $member->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            \Log::info('Service notification SMS sent to members', [
+                'service_id' => $service->id,
+                'service_date' => $service->service_date->format('Y-m-d'),
+                'total_members' => $members->count(),
+                'sent_count' => $sentCount,
+                'failed_count' => $failedCount
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send service notifications to members: ' . $e->getMessage());
+        }
     }
 }
 

@@ -23,7 +23,12 @@ class Donation extends Model
         'notes',
         'recorded_by',
         'is_verified',
-        'is_anonymous'
+        'is_anonymous',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -31,6 +36,7 @@ class Donation extends Model
         'donation_date' => 'date',
         'is_verified' => 'boolean',
         'is_anonymous' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     // Relationships
@@ -39,10 +45,30 @@ class Donation extends Model
         return $this->belongsTo(Member::class);
     }
 
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     // Scopes
     public function scopeVerified($query)
     {
         return $query->where('is_verified', true);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('approval_status', 'rejected');
     }
 
     public function scopeByDateRange($query, $startDate, $endDate)

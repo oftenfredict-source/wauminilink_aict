@@ -16,8 +16,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Report Filters
+        <div class="card-header report-header-neutral py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-filter me-1"></i>Report Filters</h6>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('reports.budget-performance') }}">
@@ -122,8 +122,8 @@
 
     <!-- Budget Information -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-info-circle me-1"></i>Budget Information
+        <div class="card-header report-header-primary py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-info-circle me-1"></i>Budget Information</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -157,8 +157,8 @@
 
     <!-- Monthly Performance Chart -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-line me-1"></i>Monthly Budget Performance
+        <div class="card-header report-header-info py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-chart-line me-1"></i>Monthly Budget Performance</h6>
         </div>
         <div class="card-body">
             <canvas id="monthlyChart" width="100%" height="50"></canvas>
@@ -167,8 +167,8 @@
 
     <!-- Expenses by Category -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-bar me-1"></i>Expenses by Category
+        <div class="card-header report-header-warning py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-chart-bar me-1"></i>Expenses by Category</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -206,8 +206,8 @@
 
     <!-- Recent Expenses -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-receipt me-1"></i>Recent Expenses
+        <div class="card-header report-header-neutral py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-receipt me-1"></i>Recent Expenses</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -255,8 +255,8 @@
     @else
     <!-- Budget Selection -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-wallet me-1"></i>Select a Budget to View Performance
+        <div class="card-header report-header-primary py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-wallet me-1"></i>Select a Budget to View Performance</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -359,3 +359,23 @@ function exportReport(format) {
 </script>
 @endsection
 
+<style>
+.report-header-primary{
+    background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%) !important;
+}
+.report-header-info{
+    background: linear-gradient(135deg, #36b9cc 0%, #2aa2b3 100%) !important;
+}
+.report-header-warning{
+    background: linear-gradient(135deg, #f6c23e 0%, #d6a62f 100%) !important;
+}
+.report-header-neutral{
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+}
+.report-header-primary, .report-header-info, .report-header-warning, .report-header-neutral{
+    color: #fff !important;
+}
+.report-header-primary h6, .report-header-info h6, .report-header-warning h6, .report-header-neutral h6{
+    color: #fff !important;
+}
+</style>

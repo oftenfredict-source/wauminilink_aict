@@ -20,7 +20,13 @@ class Pledge extends Model
         'purpose',
         'notes',
         'status',
-        'recorded_by'
+        'recorded_by',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
+        'rejection_reason',
+        'last_reminder_sent_at'
     ];
 
     protected $casts = [
@@ -28,12 +34,23 @@ class Pledge extends Model
         'amount_paid' => 'decimal:2',
         'pledge_date' => 'date',
         'due_date' => 'date',
+        'last_reminder_sent_at' => 'datetime',
     ];
 
     // Relationships
     public function member()
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(PledgePayment::class);
     }
 
     // Scopes
@@ -60,6 +77,21 @@ class Pledge extends Model
     public function scopeByMember($query, $memberId)
     {
         return $query->where('member_id', $memberId);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('approval_status', 'rejected');
     }
 
     // Accessors

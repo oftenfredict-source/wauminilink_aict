@@ -16,8 +16,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Report Filters
+        <div class="card-header report-header-neutral py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-filter me-1"></i>Report Filters</h6>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('reports.member-giving') }}">
@@ -128,8 +128,8 @@
 
     <!-- Member Information -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-user me-1"></i>Member Information
+        <div class="card-header report-header-primary py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-user me-1"></i>Member Information</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -150,8 +150,8 @@
 
     <!-- Monthly Breakdown Chart -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-bar me-1"></i>Monthly Giving Breakdown
+        <div class="card-header report-header-info py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-chart-bar me-1"></i>Monthly Giving Breakdown</h6>
         </div>
         <div class="card-body">
             <canvas id="monthlyChart" width="100%" height="50"></canvas>
@@ -162,8 +162,8 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-coins me-1"></i>Tithes
+                <div class="card-header report-header-primary py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-coins me-1"></i>Tithes</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -196,8 +196,8 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-gift me-1"></i>Offerings
+                <div class="card-header report-header-success py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-gift me-1"></i>Offerings</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -232,8 +232,8 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-heart me-1"></i>Donations
+                <div class="card-header report-header-info py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-heart me-1"></i>Donations</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -266,8 +266,8 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-handshake me-1"></i>Pledges
+                <div class="card-header report-header-warning py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-handshake me-1"></i>Pledges</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -283,7 +283,7 @@
                             <tbody>
                                 @forelse($pledges as $pledge)
                                 <tr>
-                                    <td>{{ $pledge->pledge_date->format('M d, Y') }}</td>
+                                    <td>{{ $pledge->pledge_date ? \Carbon\Carbon::parse($pledge->pledge_date)->format('M d, Y') : '-' }}</td>
                                     <td>TZS {{ number_format($pledge->pledge_amount, 0) }}</td>
                                     <td>TZS {{ number_format($pledge->amount_paid, 0) }}</td>
                                     <td>
@@ -311,8 +311,8 @@
     @else
     <!-- Member Selection -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-users me-1"></i>Select a Member to View Report
+        <div class="card-header report-header-primary py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-users me-1"></i>Select a Member to View Report</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -424,3 +424,11 @@ function exportReport(format) {
 }
 </script>
 @endsection
+<style>
+.report-header-primary{ background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%) !important; color:#fff !important; }
+.report-header-success{ background: linear-gradient(135deg, #1cc88a 0%, #16a36f 100%) !important; color:#fff !important; }
+.report-header-info{ background: linear-gradient(135deg, #36b9cc 0%, #2aa2b3 100%) !important; color:#fff !important; }
+.report-header-warning{ background: linear-gradient(135deg, #f6c23e 0%, #d6a62f 100%) !important; color:#fff !important; }
+.report-header-neutral{ background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important; color:#fff !important; }
+.report-header-primary h6, .report-header-success h6, .report-header-info h6, .report-header-warning h6, .report-header-neutral h6{ color:#fff !important; }
+</style>

@@ -1,3 +1,14 @@
+@php
+    use App\Services\SettingsService;
+    try {
+        $themeColor = SettingsService::get('theme_color', 'waumini');
+        $sidebarStyle = SettingsService::get('sidebar_style', 'dark');
+    } catch (\Exception $e) {
+        // Fallback to defaults if settings can't be loaded
+        $themeColor = 'waumini';
+        $sidebarStyle = 'dark';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -15,13 +26,440 @@
         <!-- SweetAlert2 CDN -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
+            /* Dynamic theme color application */
+            @php
+                $themeColors = [
+                    'waumini' => '#17082d',
+                    'primary' => '#0d6efd',
+                    'secondary' => '#6c757d',
+                    'success' => '#198754',
+                    'danger' => '#dc3545',
+                    'warning' => '#ffc107',
+                    'info' => '#0dcaf0'
+                ];
+                $selectedColor = $themeColors[$themeColor] ?? $themeColors['waumini'];
+                // Use a different color for cards/buttons, but keep sidebar as #17082d
+                $cardColor = '#4a5568'; // Nice gray-blue color for cards
+            @endphp
+            
+            /* Apply card color to primary elements (cards, buttons) */
+            .btn-primary,
+            .bg-primary,
+            .card-header.bg-primary {
+                background-color: {{ $cardColor }} !important;
+                border-color: {{ $cardColor }} !important;
+                color: white !important;
+            }
+            
+            .btn-outline-primary {
+                border-color: {{ $cardColor }} !important;
+                color: {{ $cardColor }} !important;
+            }
+            
+            .btn-outline-primary:hover {
+                background-color: {{ $cardColor }} !important;
+                color: white !important;
+            }
+            
+            .text-primary {
+                color: {{ $cardColor }} !important;
+            }
+            
+            .border-primary {
+                border-color: {{ $cardColor }} !important;
+            }
+            
+            /* Sidebar theme color - keep original #17082d */
+            .sb-sidenav {
+                background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%) !important;
+            }
+            
+            /* Top navigation bar style based on sidebar_style setting */
+            @if($sidebarStyle === 'light')
+                .sb-topnav {
+                    background-color: #f8f9fa !important;
+                    border-bottom: 1px solid #dee2e6 !important;
+                }
+                .sb-topnav .navbar-text,
+                .sb-topnav .navbar-brand,
+                .sb-topnav .nav-link,
+                .sb-topnav .navbar-text strong {
+                    color: #212529 !important;
+                    text-shadow: none !important;
+                }
+                .sb-topnav .btn-link {
+                    color: #212529 !important;
+                }
+            @elseif($sidebarStyle === 'primary')
+                .sb-topnav {
+                    background: linear-gradient(180deg, {{ $selectedColor }} 0%, {{ $selectedColor }}dd 100%) !important;
+                }
+            @else
+                .sb-topnav {
+                    background-color: #212529 !important;
+                }
+            @endif
+            
+            /* Ensure card headers are visible */
+            .card-header.bg-primary {
+                padding: 0.75rem 1.25rem !important;
+                border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+            }
+            .card-header.bg-primary .badge {
+                background-color: #f8f9fa !important;
+                color: #0d6efd !important;
+            }
+            .card-header.bg-primary i {
+                color: white !important;
+            }
+            .card-header.bg-primary strong {
+                color: white !important;
+                font-weight: 600 !important;
+            }
+            
+            /* Ensure all card headers have proper visibility */
+            .card-header:not(.bg-primary):not(.bg-success):not(.bg-info):not(.bg-warning):not(.bg-danger):not(.bg-secondary):not(.report-header-primary):not(.report-header-success):not(.report-header-info):not(.report-header-warning):not(.report-header-neutral) {
+                min-height: 3rem !important;
+                display: flex !important;
+                align-items: center !important;
+                position: relative !important;
+                z-index: 1 !important;
+                background-color: #f8f9fa !important;
+                color: #495057 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                padding: 0.75rem 1.25rem !important;
+            }
+            
+            /* Ensure card header text and icons are visible for default headers */
+            .card-header:not(.bg-primary):not(.bg-success):not(.bg-info):not(.bg-warning):not(.bg-danger):not(.bg-secondary):not(.report-header-primary):not(.report-header-success):not(.report-header-info):not(.report-header-warning):not(.report-header-neutral) h5,
+            .card-header:not(.bg-primary):not(.bg-success):not(.bg-info):not(.bg-warning):not(.bg-danger):not(.bg-secondary):not(.report-header-primary):not(.report-header-success):not(.report-header-info):not(.report-header-warning):not(.report-header-neutral) h6,
+            .card-header:not(.bg-primary):not(.bg-success):not(.bg-info):not(.bg-warning):not(.bg-danger):not(.bg-secondary):not(.report-header-primary):not(.report-header-success):not(.report-header-info):not(.report-header-warning):not(.report-header-neutral) .mb-0 {
+                position: relative !important;
+                z-index: 2 !important;
+                color: #495057 !important;
+                font-weight: 600 !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .card-header:not(.bg-primary):not(.bg-success):not(.bg-info):not(.bg-warning):not(.bg-danger):not(.bg-secondary):not(.report-header-primary):not(.report-header-success):not(.report-header-info):not(.report-header-warning):not(.report-header-neutral) i {
+                position: relative !important;
+                z-index: 2 !important;
+                color: #6c757d !important;
+            }
+            
+            /* Card headers with colored backgrounds - ensure they maintain their colors */
+            .card-header.bg-primary,
+            .card-header.bg-success,
+            .card-header.bg-info,
+            .card-header.bg-warning,
+            .card-header.bg-danger,
+            .card-header.bg-secondary {
+                min-height: 3rem !important;
+                display: flex !important;
+                align-items: center !important;
+                position: relative !important;
+                z-index: 1 !important;
+                padding: 0.75rem 1.25rem !important;
+            }
+            
+            /* Ensure colored card headers keep their background colors */
+            .card-header.bg-primary {
+                background-color: #0d6efd !important;
+            }
+            .card-header.bg-success {
+                background-color: #198754 !important;
+            }
+            .card-header.bg-info {
+                background-color: #0dcaf0 !important;
+            }
+            .card-header.bg-warning {
+                background-color: #ffc107 !important;
+            }
+            .card-header.bg-danger {
+                background-color: #dc3545 !important;
+            }
+            .card-header.bg-secondary {
+                background-color: #6c757d !important;
+            }
+            
+            .card-header.bg-primary h5,
+            .card-header.bg-primary h6,
+            .card-header.bg-primary strong,
+            .card-header.bg-success h5,
+            .card-header.bg-success h6,
+            .card-header.bg-success strong,
+            .card-header.bg-info h5,
+            .card-header.bg-info h6,
+            .card-header.bg-info strong,
+            .card-header.bg-warning h5,
+            .card-header.bg-warning h6,
+            .card-header.bg-warning strong,
+            .card-header.bg-danger h5,
+            .card-header.bg-danger h6,
+            .card-header.bg-danger strong,
+            .card-header.bg-secondary h5,
+            .card-header.bg-secondary h6,
+            .card-header.bg-secondary strong {
+                position: relative !important;
+                z-index: 2 !important;
+                color: white !important;
+                font-weight: 600 !important;
+            }
+            
+            .card-header.bg-primary i,
+            .card-header.bg-success i,
+            .card-header.bg-info i,
+            .card-header.bg-warning i,
+            .card-header.bg-danger i,
+            .card-header.bg-secondary i {
+                position: relative !important;
+                z-index: 2 !important;
+                color: white !important;
+            }
+            
+            /* Text white class for colored headers - ensure all child elements are white */
+            .card-header.bg-primary.text-white,
+            .card-header.bg-success.text-white,
+            .card-header.bg-info.text-white,
+            .card-header.bg-warning.text-white,
+            .card-header.bg-danger.text-white,
+            .card-header.bg-secondary.text-white {
+                color: white !important;
+            }
+            
+            .card-header.bg-primary.text-white *,
+            .card-header.bg-success.text-white *,
+            .card-header.bg-info.text-white *,
+            .card-header.bg-warning.text-white *,
+            .card-header.bg-danger.text-white *,
+            .card-header.bg-secondary.text-white *,
+            .card-header.bg-primary.text-white strong,
+            .card-header.bg-success.text-white strong,
+            .card-header.bg-info.text-white strong,
+            .card-header.bg-warning.text-white strong,
+            .card-header.bg-danger.text-white strong,
+            .card-header.bg-secondary.text-white strong {
+                color: white !important;
+            }
+            
+            /* Badges on colored headers - ensure visibility */
+            .card-header.bg-primary .badge,
+            .card-header.bg-success .badge,
+            .card-header.bg-info .badge,
+            .card-header.bg-warning .badge,
+            .card-header.bg-danger .badge,
+            .card-header.bg-secondary .badge {
+                position: relative !important;
+                z-index: 2 !important;
+            }
+            
+            .card-header.bg-primary .badge.bg-white,
+            .card-header.bg-success .badge.bg-white,
+            .card-header.bg-info .badge.bg-white,
+            .card-header.bg-warning .badge.bg-white,
+            .card-header.bg-danger .badge.bg-white,
+            .card-header.bg-secondary .badge.bg-white {
+                background-color: white !important;
+                color: #0d6efd !important;
+                font-weight: 700 !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            }
+            
+            /* Custom btn-white class for better visibility on colored backgrounds */
+            .btn-white {
+                background-color: white !important;
+                color: #0d6efd !important;
+                border: 1px solid rgba(0,0,0,0.1) !important;
+            }
+            
+            .btn-white:hover {
+                background-color: #f8f9fa !important;
+                color: #0a58ca !important;
+                border-color: rgba(0,0,0,0.2) !important;
+            }
+            
+            /* Buttons on colored headers - ensure visibility */
+            .card-header.bg-primary .btn,
+            .card-header.bg-success .btn,
+            .card-header.bg-info .btn,
+            .card-header.bg-warning .btn,
+            .card-header.bg-danger .btn,
+            .card-header.bg-secondary .btn {
+                position: relative !important;
+                z-index: 2 !important;
+            }
+            
+            .card-header.bg-primary .btn-white,
+            .card-header.bg-success .btn-white,
+            .card-header.bg-info .btn-white,
+            .card-header.bg-warning .btn-white,
+            .card-header.bg-danger .btn-white,
+            .card-header.bg-secondary .btn-white {
+                background-color: white !important;
+                color: #0d6efd !important;
+                border-color: rgba(255,255,255,0.3) !important;
+                font-weight: 600 !important;
+            }
+            
+            .card-header.bg-primary .btn-white:hover,
+            .card-header.bg-success .btn-white:hover,
+            .card-header.bg-info .btn-white:hover,
+            .card-header.bg-warning .btn-white:hover,
+            .card-header.bg-danger .btn-white:hover,
+            .card-header.bg-secondary .btn-white:hover {
+                background-color: rgba(255,255,255,0.9) !important;
+                color: #0d6efd !important;
+            }
+            
+            /* Dropdown menus in colored headers - ensure text is visible */
+            .card-header.bg-primary .dropdown-menu,
+            .card-header.bg-success .dropdown-menu,
+            .card-header.bg-info .dropdown-menu,
+            .card-header.bg-warning .dropdown-menu,
+            .card-header.bg-danger .dropdown-menu,
+            .card-header.bg-secondary .dropdown-menu {
+                background-color: white !important;
+                border: 1px solid rgba(0,0,0,0.15) !important;
+                box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+            }
+            
+            .card-header.bg-primary .dropdown-item,
+            .card-header.bg-success .dropdown-item,
+            .card-header.bg-info .dropdown-item,
+            .card-header.bg-warning .dropdown-item,
+            .card-header.bg-danger .dropdown-item,
+            .card-header.bg-secondary .dropdown-item {
+                color: #212529 !important;
+            }
+            
+            .card-header.bg-primary .dropdown-item:hover,
+            .card-header.bg-success .dropdown-item:hover,
+            .card-header.bg-info .dropdown-item:hover,
+            .card-header.bg-warning .dropdown-item:hover,
+            .card-header.bg-danger .dropdown-item:hover,
+            .card-header.bg-secondary .dropdown-item:hover {
+                color: #1e2125 !important;
+                background-color: #e9ecef !important;
+            }
+            
+            .card-header.bg-primary .dropdown-item i,
+            .card-header.bg-success .dropdown-item i,
+            .card-header.bg-info .dropdown-item i,
+            .card-header.bg-warning .dropdown-item i,
+            .card-header.bg-danger .dropdown-item i,
+            .card-header.bg-secondary .dropdown-item i {
+                color: #0d6efd !important;
+            }
+            
+            /* Fix report header overlays */
+            .report-header-primary,
+            .report-header-success,
+            .report-header-info,
+            .report-header-warning,
+            .report-header-neutral {
+                position: relative !important;
+                z-index: 1 !important;
+            }
+            
+            .report-header-primary::before,
+            .report-header-success::before,
+            .report-header-info::before,
+            .report-header-warning::before,
+            .report-header-neutral::before {
+                position: absolute !important;
+                inset: 0 !important;
+                z-index: 0 !important;
+                border-top-left-radius: inherit !important;
+                border-top-right-radius: inherit !important;
+            }
+            
+            .report-header-primary h5,
+            .report-header-primary h6,
+            .report-header-primary strong,
+            .report-header-primary .mb-0,
+            .report-header-success h5,
+            .report-header-success h6,
+            .report-header-success strong,
+            .report-header-success .mb-0,
+            .report-header-info h5,
+            .report-header-info h6,
+            .report-header-info strong,
+            .report-header-info .mb-0,
+            .report-header-warning h5,
+            .report-header-warning h6,
+            .report-header-warning strong,
+            .report-header-warning .mb-0,
+            .report-header-neutral h5,
+            .report-header-neutral h6,
+            .report-header-neutral strong,
+            .report-header-neutral .mb-0 {
+                position: relative !important;
+                z-index: 2 !important;
+                color: white !important;
+            }
+            
+            .report-header-primary i,
+            .report-header-success i,
+            .report-header-info i,
+            .report-header-warning i,
+            .report-header-neutral i {
+                position: relative !important;
+                z-index: 2 !important;
+                color: white !important;
+            }
+            
+            /* Fix card headers inside modals */
+            .modal .card-header.bg-light {
+                background-color: #f8f9fa !important;
+                color: #495057 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                padding: 0.75rem 1.25rem !important;
+            }
+            .modal .card-header.bg-light h6 {
+                color: #495057 !important;
+                font-weight: 600 !important;
+                margin-bottom: 0 !important;
+            }
+            .modal .card-header.bg-light i {
+                color: #6c757d !important;
+            }
+            
+            /* Ensure modal card headers are visible */
+            .modal .card-header {
+                background-color: #f8f9fa !important;
+                color: #495057 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                min-height: 3rem !important;
+                display: flex !important;
+                align-items: center !important;
+                padding: 0.75rem 1.25rem !important;
+            }
+            
+            /* Additional modal card header styling for better visibility */
+            .modal .card {
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+                border: 1px solid #dee2e6 !important;
+            }
+            .modal .card-header h6 {
+                font-size: 0.95rem !important;
+                font-weight: 600 !important;
+                color: #495057 !important;
+            }
+            .modal .card-header i {
+                font-size: 0.9rem !important;
+                color: #6c757d !important;
+            }
+            
             .logo-white-section {
                 background-color: white !important;
-                border-radius: 8px;
+                border-radius: 0;
                 margin: 8px 0;
                 padding: 8px 16px !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 transition: all 0.3s ease;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
             .logo-white-section:hover {
                 transform: translateY(-1px);
@@ -37,6 +475,7 @@
                 min-height: 60px;
                 display: flex !important;
                 align-items: center !important;
+                justify-content: center !important;
             }
             
             /* Notification Dropdown Styles */
@@ -283,6 +722,19 @@
                 overflow: hidden !important;
             }
             
+            /* Desktop styles - ensure normal behavior */
+            @media (min-width: 769px) {
+                .notification-dropdown {
+                    width: 400px !important;
+                    max-width: 400px !important;
+                    position: absolute !important;
+                    left: auto !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    margin: 0 !important;
+                }
+            }
+            
             .notification-content {
                 scrollbar-width: thin;
                 scrollbar-color: #667eea #f1f1f1;
@@ -477,6 +929,231 @@
                 font-weight: 500;
             }
             
+            /* Mobile Responsive Styles for Notifications */
+            @media (max-width: 768px) {
+                /* Fix dropdown positioning on mobile - only apply on mobile */
+                .notification-dropdown {
+                    width: calc(100vw - 1rem) !important;
+                    max-width: calc(100vw - 1rem) !important;
+                    margin: 0.5rem !important;
+                    left: 0.5rem !important;
+                    right: auto !important;
+                    transform: none !important;
+                    position: fixed !important;
+                    top: 60px !important;
+                    max-height: calc(100vh - 120px) !important;
+                    border-radius: 12px !important;
+                    z-index: 1055 !important;
+                }
+                
+                /* Override Bootstrap dropdown positioning on mobile */
+                #notificationDropdown.show .notification-dropdown {
+                    position: fixed !important;
+                    left: 0.5rem !important;
+                    right: auto !important;
+                    top: 60px !important;
+                    transform: none !important;
+                }
+                
+                .notification-dropdown .dropdown-header {
+                    padding: 0.75rem 1rem !important;
+                    border-radius: 12px 12px 0 0 !important;
+                }
+                
+                .notification-dropdown .dropdown-header h6 {
+                    font-size: 0.9rem !important;
+                }
+                
+                .notification-dropdown .dropdown-header small {
+                    font-size: 0.7rem !important;
+                }
+                
+                .notification-content {
+                    padding: 0.75rem 1rem !important;
+                    max-height: calc(100vh - 180px) !important;
+                }
+                
+                .notification-section {
+                    margin-bottom: 1rem !important;
+                }
+                
+                .notification-section .section-header {
+                    margin-bottom: 0.75rem !important;
+                }
+                
+                .notification-section .section-header h6 {
+                    font-size: 0.85rem !important;
+                }
+                
+                .notification-count-badge {
+                    padding: 0.2rem 0.5rem !important;
+                    font-size: 0.7rem !important;
+                    min-width: 20px !important;
+                }
+                
+                .notification-item {
+                    margin-bottom: 0.75rem !important;
+                    border-radius: 10px !important;
+                }
+                
+                .notification-item-content {
+                    padding: 0.75rem !important;
+                    gap: 0.75rem !important;
+                    flex-wrap: wrap;
+                }
+                
+                .notification-icon {
+                    width: 40px !important;
+                    height: 40px !important;
+                    font-size: 1rem !important;
+                    border-radius: 10px !important;
+                }
+                
+                .notification-details {
+                    flex: 1;
+                    min-width: 0;
+                }
+                
+                .notification-title {
+                    font-size: 0.85rem !important;
+                    margin-bottom: 0.375rem !important;
+                    line-height: 1.2 !important;
+                }
+                
+                .notification-meta {
+                    gap: 0.5rem !important;
+                    margin-bottom: 0.375rem !important;
+                    flex-wrap: wrap;
+                }
+                
+                .meta-item {
+                    font-size: 0.75rem !important;
+                    gap: 0.2rem !important;
+                }
+                
+                .meta-item i {
+                    font-size: 0.65rem !important;
+                }
+                
+                .notification-info {
+                    gap: 0.5rem !important;
+                    margin-bottom: 0.375rem !important;
+                    flex-wrap: wrap;
+                }
+                
+                .info-item {
+                    font-size: 0.75rem !important;
+                    gap: 0.2rem !important;
+                }
+                
+                .info-item i {
+                    font-size: 0.65rem !important;
+                }
+                
+                .notification-theme {
+                    font-size: 0.75rem !important;
+                    padding: 0.2rem 0.4rem !important;
+                    margin-bottom: 0.375rem !important;
+                }
+                
+                .notification-badge {
+                    font-size: 0.7rem !important;
+                    padding: 0.15rem 0.4rem !important;
+                }
+                
+                .notification-arrow {
+                    font-size: 1rem !important;
+                    display: none; /* Hide arrow on mobile to save space */
+                }
+                
+                .empty-notification-state {
+                    padding: 1.5rem 1rem !important;
+                }
+                
+                .empty-notification-state i {
+                    font-size: 2rem !important;
+                }
+                
+                .empty-notification-state span {
+                    font-size: 0.85rem !important;
+                }
+                
+                /* Adjust notification bell icon and badge on mobile */
+                #notificationDropdown .nav-link {
+                    padding: 0.5rem !important;
+                }
+                
+                #notificationDropdown .nav-link svg {
+                    width: 20px !important;
+                    height: 20px !important;
+                }
+                
+                #notificationBadge {
+                    font-size: 0.65rem !important;
+                    padding: 0.15rem 0.4rem !important;
+                    min-width: 18px !important;
+                    height: 18px !important;
+                    line-height: 1.2 !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    transform: translate(25%, -25%) !important;
+                }
+                
+                /* Ensure dropdown doesn't overflow */
+                .notification-dropdown.show {
+                    display: block !important;
+                }
+            }
+            
+            @media (max-width: 576px) {
+                .notification-dropdown {
+                    width: calc(100vw - 0.5rem) !important;
+                    max-width: calc(100vw - 0.5rem) !important;
+                    margin: 0.25rem !important;
+                    left: 0.25rem !important;
+                    right: auto !important;
+                    transform: none !important;
+                    position: fixed !important;
+                    top: 60px !important;
+                    max-height: calc(100vh - 100px) !important;
+                    border-radius: 10px !important;
+                    z-index: 1055 !important;
+                }
+                
+                .notification-dropdown .dropdown-header {
+                    padding: 0.6rem 0.75rem !important;
+                }
+                
+                .notification-content {
+                    padding: 0.6rem 0.75rem !important;
+                    max-height: calc(100vh - 160px) !important;
+                }
+                
+                .notification-item-content {
+                    padding: 0.6rem !important;
+                    gap: 0.6rem !important;
+                }
+                
+                .notification-icon {
+                    width: 36px !important;
+                    height: 36px !important;
+                    font-size: 0.9rem !important;
+                }
+                
+                .notification-title {
+                    font-size: 0.8rem !important;
+                }
+                
+                .meta-item,
+                .info-item {
+                    font-size: 0.7rem !important;
+                }
+                
+                .notification-theme {
+                    font-size: 0.7rem !important;
+                }
+            }
+            
             /* Animations */
             @keyframes slideInUp {
                 from {
@@ -502,32 +1179,48 @@
         </style>
     </head>
     <body class="sb-nav-fixed">
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+        @php
+            $navClasses = 'sb-topnav navbar navbar-expand ';
+            $navStyle = '';
+            
+            if ($sidebarStyle === 'light') {
+                $navClasses .= 'navbar-light bg-light';
+            } elseif ($sidebarStyle === 'primary') {
+                $navClasses .= 'navbar-dark';
+                $navStyle = "background: linear-gradient(180deg, {$selectedColor} 0%, {$selectedColor}dd 100%) !important;";
+            } elseif ($sidebarStyle === 'transparent') {
+                $navClasses .= 'navbar-dark';
+                $navStyle = "background: linear-gradient(180deg, {$selectedColor} 0%, {$selectedColor}dd 100%) !important;";
+            } else {
+                $navClasses .= 'navbar-dark bg-dark';
+            }
+        @endphp
+        <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
             <!-- Navbar Brand-->
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
+            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
             </a>
             <!-- Sidebar Toggle-->
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!" style="font-size: 1.5rem;"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
             <!-- Welcome Message -->
-            <div class="navbar-text me-auto ms-3" style="font-size: 1.1rem; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); font-weight: 600;">
-                <strong>Welcome to Waumini Link</strong>
+            <div class="navbar-text me-auto ms-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <strong>AIC Moshi Kilimanjaro</strong>
             </div>
-            <!-- Navbar Search-->
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-                <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
-                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+            <!-- Date and Time Display -->
+            <div class="d-none d-md-flex align-items-center ms-auto me-0 me-md-3">
+                <div class="text-end" style="color: #ffffff !important;">
+                    <div id="currentDate" style="font-size: 0.9rem; font-weight: 500; color: #ffffff !important;"></div>
+                    <div id="currentTime" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important;"></div>
                 </div>
-            </form>
+            </div>
 
             <!-- Navbar-->
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 <!-- Notification Icon -->
                 <li class="nav-item dropdown me-3" id="notificationDropdown">
-                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" style="color: #ffffff !important;">
                         <!-- Inline SVG bell to avoid external icon dependency -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" class="align-text-top">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ffffff" viewBox="0 0 16 16" class="align-text-top" style="color: #ffffff !important;">
                             <path d="M8 16a2 2 0 0 0 1.985-1.75H6.015A2 2 0 0 0 8 16m.104-14.983a1 1 0 1 0-.208 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 3.06-1.638 4.723-.2.29-.295.63-.295.977 0 .713.54 1.3 1.207 1.3h11.452c.667 0 1.207-.587 1.207-1.3 0-.347-.095-.687-.295-.977C13.5 9.06 13 7.098 13 6a5.002 5.002 0 0 0-4.896-4.983"/>
                         </svg>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
@@ -567,11 +1260,11 @@
                                 </div>
                             </div>
                             
-                            <!-- Upcoming Sunday Services -->
+                            <!-- Upcoming Services -->
                             <div class="notification-section mb-3">
                                 <div class="section-header d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="mb-0 fw-bold text-success">
-                                        <i class="fas fa-church me-2"></i>Sunday Services
+                                        <i class="fas fa-church me-2"></i>Services
                                     </h6>
                                     <span class="notification-count-badge bg-success" id="servicesCount">0</span>
                                 </div>
@@ -579,6 +1272,36 @@
                                     <!-- Services will be loaded here -->
                                 </div>
                             </div>
+                            
+                            <!-- Pending Financial Approvals (for Secretary, Pastor, Admin) -->
+                            @if(auth()->user() && (auth()->user()->isSecretary() || auth()->user()->isPastor() || auth()->user()->isAdmin() || auth()->user()->canApproveFinances()))
+                            <div class="notification-section mb-3">
+                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-warning">
+                                        <i class="fas fa-clock me-2"></i>Pending Approvals
+                                    </h6>
+                                    <span class="notification-count-badge bg-warning" id="pendingApprovalsCount">0</span>
+                                </div>
+                                <div id="pendingApprovalsList" class="notification-list">
+                                    <!-- Pending approvals will be loaded here -->
+                                </div>
+                            </div>
+                            @endif
+                            
+                            <!-- Payments Needing Verification (for Treasurer) -->
+                            @if(auth()->user() && (auth()->user()->isTreasurer() || auth()->user()->isAdmin()))
+                            <div class="notification-section mb-3">
+                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-success">
+                                        <i class="fas fa-dollar-sign me-2"></i>Payments Needing Verification
+                                    </h6>
+                                    <span class="notification-count-badge bg-success" id="paymentsNeedingVerificationCount">0</span>
+                                </div>
+                                <div id="paymentsNeedingVerificationList" class="notification-list">
+                                    <!-- Payments needing verification will be loaded here -->
+                                </div>
+                            </div>
+                            @endif
                             
                             <div class="text-center py-2 pb-3">
                                 <small class="text-muted">
@@ -589,7 +1312,7 @@
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff !important;"><i class="fas fa-user fa-fw" style="color: #ffffff !important;"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="#!">Settings</a></li>
                         <li><a class="dropdown-item" href="#!">Activity Log</a></li>
@@ -612,11 +1335,94 @@
                 <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                     <div class="sb-sidenav-menu">
                         <div class="nav">
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
+                            @if(auth()->user()->isAdmin())
+                            {{-- Admin Menu --}}
+                            <div class="sb-sidenav-menu-heading">Administration</div>
+                            <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-shield-alt"></i></div>
+                                Admin Dashboard
+                            </a>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseAdmin" aria-expanded="false" aria-controls="collapseAdmin">
+                                <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>
+                                System Management
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseAdmin" aria-labelledby="headingAdmin" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="{{ route('admin.activity-logs') }}">
+                                        <i class="fas fa-list me-2"></i>Activity Logs
+                                    </a>
+                                    <a class="nav-link" href="{{ route('admin.sessions') }}">
+                                        <i class="fas fa-user-check me-2"></i>User Sessions
+                                    </a>
+                                    <a class="nav-link" href="{{ route('admin.users') }}">
+                                        <i class="fas fa-users me-2"></i>Manage Users
+                                    </a>
+                                    <a class="nav-link" href="{{ route('admin.roles-permissions') }}">
+                                        <i class="fas fa-shield-alt me-2"></i>Roles & Permissions
+                                    </a>
+                                </nav>
+                            </div>
+                            @endif
+                            
+                            @if(auth()->user()->isMember())
+                            {{-- Member Menu --}}
+                            <div class="sb-sidenav-menu-heading">Member Portal</div>
+                            <a class="nav-link" href="{{ route('member.dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Dashboard
                             </a>
+                            <a class="nav-link" href="{{ route('member.information') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-circle"></i></div>
+                                My Information
+                            </a>
+                            <a class="nav-link" href="{{ route('member.finance') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
+                                My Finance
+                            </a>
+                            <a class="nav-link" href="{{ route('member.announcements') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
+                                Announcements
+                                @php
+                                    $member = auth()->user()->member ?? null;
+                                    if ($member) {
+                                        $activeAnnouncements = \App\Models\Announcement::active()->pluck('id');
+                                        $viewedAnnouncementIds = \App\Models\AnnouncementView::where('member_id', $member->id)
+                                            ->whereIn('announcement_id', $activeAnnouncements)
+                                            ->pluck('announcement_id');
+                                        $unreadCount = $activeAnnouncements->diff($viewedAnnouncementIds)->count();
+                                    } else {
+                                        $unreadCount = 0;
+                                    }
+                                @endphp
+                                @if($unreadCount > 0)
+                                    <span class="badge bg-danger ms-2">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                            <a class="nav-link" href="{{ route('member.leaders') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-users-cog"></i></div>
+                                Leaders
+                            </a>
+                            <a class="nav-link" href="{{ route('member.change-password') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
+                                Change Password
+                            </a>
+                            @elseif(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin())
+                            <div class="sb-sidenav-menu-heading">Main</div>
+                            <a class="nav-link" href="{{ route('dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            @elseif(auth()->user()->isAdmin())
+                            <div class="sb-sidenav-menu-heading">Main</div>
+                            <a class="nav-link" href="{{ route('dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            @endif
+                            
+                            @if(!auth()->user()->isTreasurer() || auth()->user()->isAdmin())
+                            @if(!auth()->user()->isMember())
                             
                             <div class="sb-sidenav-menu-heading">Management</div>
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
@@ -626,15 +1432,44 @@
                             </a>
                             <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-
+                                    @if(auth()->user()->hasPermission('members.create') || auth()->user()->isAdmin())
                                     <a class="nav-link" href="{{ route('members.add') }}">
-            <i class="fas fa-user-plus me-2"></i>Add New Member
-        </a>
-                                    <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
-                                    
+                                        <i class="fas fa-user-plus me-2"></i>Add New Member
+                                    </a>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('members.view') || auth()->user()->isAdmin())
+                                    <a class="nav-link" href="{{ route('members.view') }}">
+                                        <i class="fas fa-list me-2"></i>All Members
+                                    </a>
+                                    @endif
                                 </nav>
                             </div>
                             
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLeadership" aria-expanded="false" aria-controls="collapseLeadership">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
+                                Leadership
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLeadership" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="{{ route('leaders.index') }}">
+                                        <i class="fas fa-list me-2"></i>All Leaders
+                                    </a>
+                                    <a class="nav-link" href="{{ route('leaders.reports') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>Reports
+                                    </a>
+                                    @if(auth()->user()->canManageLeadership())
+                                        <a class="nav-link" href="{{ route('leaders.create') }}">
+                                            <i class="fas fa-plus me-2"></i>Assign Position
+                                        </a>
+                                    @endif
+                                </nav>
+                            </div>
+                            
+                            <a class="nav-link" href="{{ route('announcements.index') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
+                                Announcements
+                            </a>
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
                                 <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
                                 Events & Services
@@ -642,12 +1477,60 @@
                             </a>
                             <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Sunday Services</a>
+                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Services</a>
                                     <a class="nav-link" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
+                                    <a class="nav-link" href="{{ route('attendance.index') }}"><i class="fas fa-users me-2"></i>Record Attendance</a>
+                                    <a class="nav-link" href="{{ route('attendance.statistics') }}"><i class="fas fa-chart-bar me-2"></i>Attendance Statistics</a>
+                                    <a class="nav-link" href="{{ route('promise-guests.index') }}"><i class="fas fa-user-check me-2"></i>Promise Guests</a>
                                     <a class="nav-link" href="{{ route('celebrations.index') }}"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
+                                    <a class="nav-link" href="{{ route('bereavement.index') }}"><i class="fas fa-heart-broken me-2"></i>Bereavement</a>
                                 </nav>
                             </div>
+                            @endif
+                            @endif
                             
+                            @if(auth()->user()->isTreasurer())
+                            {{-- For Treasurer: Show finance menu items directly without dropdown --}}
+                            <a class="nav-link" href="{{ route('finance.dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            @if(auth()->user()->canApproveFinances())
+                            <a class="nav-link" href="{{ route('finance.approval.dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-check-circle"></i></div>
+                                Approval Dashboard
+                            </a>
+                            @endif
+                            <a class="nav-link" href="{{ route('finance.tithes') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-coins"></i></div>
+                                Tithes
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.offerings') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>
+                                Offerings
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.donations') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-heart"></i></div>
+                                Donations
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.pledges') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-handshake"></i></div>
+                                Pledges
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.budgets') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
+                                Budgets
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.expenses') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
+                                Expenses
+                            </a>
+                            <a class="nav-link" href="{{ route('reports.index') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-pie"></i></div>
+                                Reports
+                            </a>
+                            @elseif(!auth()->user()->isMember())
+                            {{-- For other users (not treasurer, not member): Show finance menu as collapsed dropdown --}}
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Finance
@@ -656,6 +1539,9 @@
                             <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
                                     <a class="nav-link" href="{{ route('finance.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+                                    @if(auth()->user()->canApproveFinances())
+                                    <a class="nav-link" href="{{ route('finance.approval.dashboard') }}"><i class="fas fa-check-circle me-2"></i>Approval Dashboard</a>
+                                    @endif
                                     <a class="nav-link" href="{{ route('finance.tithes') }}"><i class="fas fa-coins me-2"></i>Tithes</a>
                                     <a class="nav-link" href="{{ route('finance.offerings') }}"><i class="fas fa-gift me-2"></i>Offerings</a>
                                     <a class="nav-link" href="{{ route('finance.donations') }}"><i class="fas fa-heart me-2"></i>Donations</a>
@@ -665,22 +1551,27 @@
                                     <a class="nav-link" href="{{ route('reports.index') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a>
                                 </nav>
                             </div>
+                            @endif
                             
+                            @if((!auth()->user()->isTreasurer() || auth()->user()->isAdmin()) && !auth()->user()->isMember())
                             <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{ route('analytics.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Analytics
                             </a>
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{ route('reports.overview') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                Reports
+                                All Reports
                             </a>
                             
+                            @if(auth()->user()->isAdmin())
                             <div class="sb-sidenav-menu-heading">Settings</div>
                             <a class="nav-link" href="{{ route('settings.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
                                 System Settings
                             </a>
+                            @endif
+                            @endif
                         </div>
                     </div>
                     <div class="sb-sidenav-footer">
@@ -736,8 +1627,15 @@
                     second: '2-digit' 
                 };
                 
-                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
-                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+                const dateElement = document.getElementById('current-date');
+                const timeElement = document.getElementById('current-time');
+                
+                if (dateElement) {
+                    dateElement.textContent = now.toLocaleDateString('en-US', dateOptions);
+                }
+                if (timeElement) {
+                    timeElement.textContent = now.toLocaleTimeString('en-US', timeOptions);
+                }
             }
             
             // Update date and time every second
@@ -771,16 +1669,22 @@
                             const eventsCountEl = document.getElementById('eventsCount');
                             const celebrationsCountEl = document.getElementById('celebrationsCount');
                             const servicesCountEl = document.getElementById('servicesCount');
+                            const pendingApprovalsCountEl = document.getElementById('pendingApprovalsCount');
+                            const paymentsNeedingVerificationCountEl = document.getElementById('paymentsNeedingVerificationCount');
                             
                             console.log('Elements found:', {
                                 eventsCount: !!eventsCountEl,
                                 celebrationsCount: !!celebrationsCountEl,
-                                servicesCount: !!servicesCountEl
+                                servicesCount: !!servicesCountEl,
+                                pendingApprovalsCount: !!pendingApprovalsCountEl,
+                                paymentsNeedingVerificationCount: !!paymentsNeedingVerificationCountEl
                             });
                             
                             if (eventsCountEl) eventsCountEl.textContent = data.counts.events || 0;
                             if (celebrationsCountEl) celebrationsCountEl.textContent = data.counts.celebrations || 0;
                             if (servicesCountEl) servicesCountEl.textContent = data.counts.services || 0;
+                            if (pendingApprovalsCountEl) pendingApprovalsCountEl.textContent = data.counts.pending_approvals || 0;
+                            if (paymentsNeedingVerificationCountEl) paymentsNeedingVerificationCountEl.textContent = data.counts.payments_needing_verification || 0;
                             
                             // Update total notification count
                             const totalCount = data.counts.total || 0;
@@ -827,6 +1731,18 @@
                                 servicesList.innerHTML = generateServiceList(data.services);
                                 console.log('Services list updated');
                             }
+                            
+                            // Update pending approvals list
+                            const pendingApprovalsList = document.getElementById('pendingApprovalsList');
+                            if (pendingApprovalsList && data.pending_approvals) {
+                                pendingApprovalsList.innerHTML = generatePendingApprovalsList(data.pending_approvals);
+                            }
+                            
+                            // Update payments needing verification list
+                            const paymentsNeedingVerificationList = document.getElementById('paymentsNeedingVerificationList');
+                            if (paymentsNeedingVerificationList && data.payments_needing_verification) {
+                                paymentsNeedingVerificationList.innerHTML = generatePaymentsNeedingVerificationList(data.payments_needing_verification);
+                            }
                         } else {
                             console.log('No data or success false:', response);
                         }
@@ -834,9 +1750,18 @@
                     .catch(error => {
                         console.error('Error loading notifications:', error);
                         // Fallback: show test data
-                        document.getElementById('eventsCount').textContent = '0';
-                        document.getElementById('celebrationsCount').textContent = '0';
-                        document.getElementById('servicesCount').textContent = '0';
+                        const eventsCountEl = document.getElementById('eventsCount');
+                        const celebrationsCountEl = document.getElementById('celebrationsCount');
+                        const servicesCountEl = document.getElementById('servicesCount');
+                        const pendingApprovalsCountEl = document.getElementById('pendingApprovalsCount');
+                        
+                        if (eventsCountEl) eventsCountEl.textContent = '0';
+                        if (celebrationsCountEl) celebrationsCountEl.textContent = '0';
+                        if (servicesCountEl) servicesCountEl.textContent = '0';
+                        if (pendingApprovalsCountEl) pendingApprovalsCountEl.textContent = '0';
+                        
+                        const paymentsNeedingVerificationCountEl = document.getElementById('paymentsNeedingVerificationCount');
+                        if (paymentsNeedingVerificationCountEl) paymentsNeedingVerificationCountEl.textContent = '0';
                         
                         const badge = document.getElementById('notificationBadge');
                         if (badge) {
@@ -1105,6 +2030,158 @@
                 }).join('');
             }
             
+            // Generate HTML for pending approvals list
+            function generatePendingApprovalsList(pendingApprovals) {
+                if (!pendingApprovals || pendingApprovals.total === 0) {
+                    return '<div class="empty-notification-state"><i class="fas fa-check-circle"></i><span>No pending approvals</span></div>';
+                }
+                
+                const items = [];
+                
+                if (pendingApprovals.tithes > 0) {
+                    items.push({
+                        type: 'Tithes',
+                        count: pendingApprovals.tithes,
+                        icon: 'fa-coins',
+                        color: 'success',
+                        url: '/finance/approval/dashboard#tithes'
+                    });
+                }
+                
+                if (pendingApprovals.offerings > 0) {
+                    items.push({
+                        type: 'Offerings',
+                        count: pendingApprovals.offerings,
+                        icon: 'fa-gift',
+                        color: 'primary',
+                        url: '/finance/approval/dashboard#offerings'
+                    });
+                }
+                
+                if (pendingApprovals.donations > 0) {
+                    items.push({
+                        type: 'Donations',
+                        count: pendingApprovals.donations,
+                        icon: 'fa-heart',
+                        color: 'info',
+                        url: '/finance/approval/dashboard#donations'
+                    });
+                }
+                
+                if (pendingApprovals.expenses > 0) {
+                    items.push({
+                        type: 'Expenses',
+                        count: pendingApprovals.expenses,
+                        icon: 'fa-receipt',
+                        color: 'danger',
+                        url: '/finance/approval/dashboard#expenses'
+                    });
+                }
+                
+                if (pendingApprovals.budgets > 0) {
+                    items.push({
+                        type: 'Budgets',
+                        count: pendingApprovals.budgets,
+                        icon: 'fa-wallet',
+                        color: 'warning',
+                        url: '/finance/approval/dashboard#budgets'
+                    });
+                }
+                
+                if (pendingApprovals.pledge_payments > 0) {
+                    items.push({
+                        type: 'Pledge Payments',
+                        count: pendingApprovals.pledge_payments,
+                        icon: 'fa-handshake',
+                        color: 'secondary',
+                        url: '/finance/approval/dashboard#pledge-payments'
+                    });
+                }
+                
+                return items.map((item, index) => {
+                    return `
+                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="window.location.href='${item.url}'">
+                            <div class="notification-item-content">
+                                <div class="notification-icon bg-${item.color}">
+                                    <i class="fas ${item.icon}"></i>
+                                </div>
+                                <div class="notification-details">
+                                    <div class="notification-title">${item.type}</div>
+                                    <div class="notification-meta">
+                                        <span class="meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            Pending Approval
+                                        </span>
+                                    </div>
+                                    <div class="notification-badge">
+                                        <span class="time-badge bg-${item.color}">${item.count} ${item.count === 1 ? 'record' : 'records'}</span>
+                                    </div>
+                                </div>
+                                <div class="notification-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Generate HTML for payments needing verification list
+            function generatePaymentsNeedingVerificationList(payments) {
+                if (!payments || payments.length === 0) {
+                    return '<div class="empty-notification-state"><i class="fas fa-check-circle"></i><span>No payments needing verification</span></div>';
+                }
+                
+                return payments.map((payment, index) => {
+                    const date = new Date(payment.expense_date);
+                    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const formattedAmount = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'TZS',
+                        minimumFractionDigits: 0
+                    }).format(payment.amount);
+                    
+                    return `
+                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="window.location.href='/finance/expenses'">
+                            <div class="notification-item-content">
+                                <div class="notification-icon bg-success">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="notification-details">
+                                    <div class="notification-title">${payment.expense_name}</div>
+                                    <div class="notification-info">
+                                        <span class="info-item">
+                                            <i class="fas fa-wallet"></i>
+                                            ${payment.budget_name}
+                                        </span>
+                                        <span class="info-item">
+                                            <i class="fas fa-tag"></i>
+                                            ${payment.category}
+                                        </span>
+                                    </div>
+                                    <div class="notification-info">
+                                        <span class="info-item">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            ${formattedAmount}
+                                        </span>
+                                        <span class="info-item">
+                                            <i class="fas fa-calendar"></i>
+                                            ${formattedDate}
+                                        </span>
+                                    </div>
+                                    <div class="notification-badge">
+                                        <span class="time-badge bg-success">Needs Verification</span>
+                                    </div>
+                                </div>
+                                <div class="notification-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
             // Function to show event details in a modal
             function showEventDetails(id, type) {
                 console.log('Showing details for', type, 'with ID:', id);
@@ -1328,20 +2405,183 @@
                 
                 // Refresh notifications every 5 minutes
                 setInterval(loadNotifications, 300000);
+                
+                // Handle mobile dropdown positioning
+                const notificationDropdown = document.getElementById('notificationDropdown');
+                if (notificationDropdown) {
+                    const dropdownMenu = notificationDropdown.querySelector('.notification-dropdown');
+                    if (dropdownMenu) {
+                        // Handle dropdown show event for mobile positioning
+                        notificationDropdown.addEventListener('show.bs.dropdown', function() {
+                            if (window.innerWidth <= 768) {
+                                // On mobile, position dropdown fixed
+                                setTimeout(() => {
+                                    const rect = notificationDropdown.getBoundingClientRect();
+                                    dropdownMenu.style.position = 'fixed';
+                                    dropdownMenu.style.top = (rect.bottom + 5) + 'px';
+                                    dropdownMenu.style.left = '0.5rem';
+                                    dropdownMenu.style.right = 'auto';
+                                    dropdownMenu.style.width = 'calc(100vw - 1rem)';
+                                    dropdownMenu.style.maxWidth = 'calc(100vw - 1rem)';
+                                    dropdownMenu.style.transform = 'none';
+                                    dropdownMenu.style.zIndex = '1055';
+                                }, 10);
+                            } else {
+                                // On desktop, ensure normal Bootstrap positioning
+                                dropdownMenu.style.position = '';
+                                dropdownMenu.style.top = '';
+                                dropdownMenu.style.left = '';
+                                dropdownMenu.style.right = '';
+                                dropdownMenu.style.width = '';
+                                dropdownMenu.style.maxWidth = '';
+                                dropdownMenu.style.transform = '';
+                                dropdownMenu.style.zIndex = '';
+                            }
+                        });
+                        
+                        // Handle window resize
+                        window.addEventListener('resize', function() {
+                            if (window.innerWidth > 768) {
+                                // Reset to desktop styles
+                                dropdownMenu.style.position = '';
+                                dropdownMenu.style.top = '';
+                                dropdownMenu.style.left = '';
+                                dropdownMenu.style.right = '';
+                                dropdownMenu.style.width = '';
+                                dropdownMenu.style.maxWidth = '';
+                                dropdownMenu.style.transform = '';
+                                dropdownMenu.style.zIndex = '';
+                            }
+                        });
+                        
+                        // Handle dropdown hide to reset styles
+                        notificationDropdown.addEventListener('hide.bs.dropdown', function() {
+                            if (window.innerWidth > 768) {
+                                dropdownMenu.style.position = '';
+                                dropdownMenu.style.top = '';
+                                dropdownMenu.style.left = '';
+                                dropdownMenu.style.right = '';
+                                dropdownMenu.style.width = '';
+                                dropdownMenu.style.maxWidth = '';
+                                dropdownMenu.style.transform = '';
+                                dropdownMenu.style.zIndex = '';
+                            }
+                        });
+                    }
+                }
+            });
+            
+            // Update date and time display
+            function updateDateTime() {
+                const now = new Date();
+                const dateElement = document.getElementById('currentDate');
+                const timeElement = document.getElementById('currentTime');
+                
+                if (dateElement) {
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    dateElement.textContent = now.toLocaleDateString('en-US', options);
+                }
+                
+                if (timeElement) {
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    const seconds = now.getSeconds().toString().padStart(2, '0');
+                    timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+                }
+            }
+            
+            // Update date and time immediately and then every second
+            document.addEventListener('DOMContentLoaded', function() {
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
             });
             
             // Toggle sidebar functionality
             document.addEventListener('DOMContentLoaded', function() {
                 const sidebarToggle = document.getElementById('sidebarToggle');
                 const layoutSidenav = document.getElementById('layoutSidenav');
+                const layoutSidenavNav = document.getElementById('layoutSidenav_nav');
                 
-                if (sidebarToggle && layoutSidenav) {
-                    sidebarToggle.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        layoutSidenav.classList.toggle('sb-sidenav-toggled');
-                    });
+                if (sidebarToggle) {
+                    // Remove any existing onclick handlers
+                    sidebarToggle.onclick = null;
+                    sidebarToggle.removeAttribute('onclick');
+                    
+                    // Check if handler is already attached (to avoid duplicate handlers from scripts.js)
+                    if (!sidebarToggle.hasAttribute('data-layout-toggle-handler')) {
+                        sidebarToggle.setAttribute('data-layout-toggle-handler', 'true');
+                        
+                        sidebarToggle.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Toggle on the main container
+                            if (layoutSidenav) {
+                                layoutSidenav.classList.toggle('sb-sidenav-toggled');
+                            }
+                            
+                            // Also toggle on body as fallback
+                            document.body.classList.toggle('sb-sidenav-toggled');
+                            
+                            // Save state to localStorage (as string to match scripts.js)
+                            const isToggled = layoutSidenav ? layoutSidenav.classList.contains('sb-sidenav-toggled') : document.body.classList.contains('sb-sidenav-toggled');
+                            localStorage.setItem('sb|sidebar-toggle', isToggled ? 'true' : 'false');
+                            
+                            console.log('Sidebar toggled (layout handler):', isToggled);
+                            
+                            return false;
+                        }, true); // Use capture phase to ensure it runs first
+                        
+                        // Restore sidebar state from localStorage
+                        const savedState = localStorage.getItem('sb|sidebar-toggle');
+                        if (savedState === 'true') {
+                            if (layoutSidenav) {
+                                layoutSidenav.classList.add('sb-sidenav-toggled');
+                            }
+                            document.body.classList.add('sb-sidenav-toggled');
+                        }
+                    }
+                } else {
+                    console.warn('Sidebar toggle button not found');
                 }
             });
         </script>
+        
+        {{-- Prevent back navigation to login page --}}
+        <script>
+            (function() {
+                // Store that we're on a dashboard/authenticated page
+                sessionStorage.setItem('isAuthenticated', 'true');
+                
+                // Prevent back navigation to login page
+                if (window.history && window.history.pushState) {
+                    // Replace the login page in history with current dashboard page
+                    // This removes login from browser history
+                    window.history.replaceState({ page: 'dashboard', preventBack: true }, '', window.location.href);
+                    
+                    // Add a new state to prevent going back
+                    window.history.pushState({ page: 'dashboard', preventBack: true }, '', window.location.href);
+                    
+                    // Listen for back button
+                    window.addEventListener('popstate', function(event) {
+                        // If we're authenticated and trying to go back
+                        if (sessionStorage.getItem('isAuthenticated') === 'true') {
+                            // Check if the state we're going to is login-related
+                            const state = event.state;
+                            
+                            // If no state or state indicates we should prevent back, push forward
+                            if (!state || state.preventBack) {
+                                // Push current page forward again to prevent going back
+                                window.history.pushState({ page: 'dashboard', preventBack: true }, '', window.location.href);
+                            }
+                        }
+                    });
+                }
+            })();
+        </script>
+        
+        @yield('modals')
+        
+        @yield('scripts')
     </body>
 </html>

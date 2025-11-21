@@ -4,14 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Budget extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'budget_name',
         'budget_type',
+        'purpose',
+        'primary_offering_type',
+        'requires_approval',
         'fiscal_year',
         'start_date',
         'end_date',
@@ -20,7 +24,12 @@ class Budget extends Model
         'spent_amount',
         'description',
         'status',
-        'created_by'
+        'created_by',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -30,6 +39,8 @@ class Budget extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'fiscal_year' => 'integer',
+        'approved_at' => 'datetime',
+        'requires_approval' => 'boolean',
     ];
 
     // Relationships
@@ -38,10 +49,45 @@ class Budget extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function offeringAllocations()
+    {
+        return $this->hasMany(BudgetOfferingAllocation::class);
+    }
+
+    public function primaryOfferingAllocation()
+    {
+        return $this->hasOne(BudgetOfferingAllocation::class)->where('is_primary', true);
+    }
+
+    public function lineItems()
+    {
+        return $this->hasMany(BudgetLineItem::class)->orderBy('order');
+    }
+
     // Scopes
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('approval_status', 'rejected');
     }
 
     public function scopeByFiscalYear($query, $year)
@@ -83,5 +129,40 @@ class Budget extends Model
     {
         $threshold = $this->total_budget * 0.9; // 90% threshold
         return $this->spent_amount >= $threshold && $this->spent_amount < $this->total_budget;
+    }
+
+    // Funding-related methods
+    public function getTotalAllocatedFromOfferingsAttribute()
+    {
+        return $this->offeringAllocations()->sum('allocated_amount');
+    }
+
+    public function getTotalUsedFromOfferingsAttribute()
+    {
+        return $this->offeringAllocations()->sum('used_amount');
+    }
+
+    public function getRemainingFromOfferingsAttribute()
+    {
+        return $this->total_allocated_from_offerings - $this->total_used_from_offerings;
+    }
+
+    public function isFullyFunded()
+    {
+        return $this->total_allocated_from_offerings >= $this->total_budget;
+    }
+
+    public function getFundingPercentageAttribute()
+    {
+        if ($this->total_budget == 0) return 0;
+        return round(($this->total_allocated_from_offerings / $this->total_budget) * 100, 2);
+    }
+
+    public function getOfferingTypeBreakdown()
+    {
+        return $this->offeringAllocations()
+            ->selectRaw('offering_type, SUM(allocated_amount) as total_allocated, SUM(used_amount) as total_used')
+            ->groupBy('offering_type')
+            ->get();
     }
 }

@@ -2,23 +2,30 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <!-- Welcome Section -->
-    <div class="row mb-4">
+    <!-- Compact, interactive header -->
+    <div class="row mb-3">
         <div class="col-12">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h2 class="card-title mb-1">Welcome back, Secretary!</h2>
-                            <p class="card-text mb-0">Here's what's happening with your church management system today.</p>
-                            <div class="mt-2">
-                                <small class="text-white-50">
-                                    <span id="current-date"></span> - <span id="current-time"></span>
-                                </small>
+            <div class="card border-0 shadow-sm dashboard-header" style="background:white;">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center border border-primary border-2" style="width:48px; height:48px; background:rgba(0,123,255,.1);">
+                                <i class="fas fa-tachometer-alt text-primary"></i>
+                            </div>
+                            <div class="lh-sm">
+                                <h5 class="mb-0 fw-semibold text-dark">Secretary Dashboard</h5>
+                                <small class="text-muted">Overview and quick insights</small>
                             </div>
                         </div>
-                        <div class="ms-3">
-                            <i class="fas fa-user-tie fa-3x text-white-50"></i>
+                        <div class="d-flex align-items-center gap-3 header-widgets">
+                            <div class="widget d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-primary text-white">
+                                <i class="fas fa-clock text-white"></i>
+                                <span id="current-time" class="fw-bold text-white" style="font-family:'Courier New',monospace;"></span>
+                            </div>
+                            <div class="widget d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-primary text-white">
+                                <i class="fas fa-calendar-day text-white"></i>
+                                <span id="current-date" class="text-white"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -27,6 +34,22 @@
     </div>
     
     <style>
+        /* Header widgets */
+        .dashboard-header .widget{
+            transition: transform .2s ease, background .2s ease;
+        }
+
+        .dashboard-header .widget:hover{
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .dashboard-header h5{ font-weight:600; }
+
+        @media (max-width: 576px){
+            .dashboard-header .header-widgets{ width:100%; }
+            .dashboard-header .widget{ flex:1; justify-content:center; }
+        }
         /* Fix dashboard card header visibility */
         .card-header {
             background-color: #f8f9fa !important;
@@ -101,12 +124,17 @@
     </style>
     
 
-    <h1 class="mt-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item active">Dashboard</li>
-    </ol>
-
     <!-- Dashboard Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="fas fa-eye me-1"></i>
+                    Overview
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xl-3 col-md-6">
             <div class="card bg-primary text-white mb-4">
@@ -388,27 +416,78 @@
         </div>
     </div>
 
-    <!-- Welcome Message -->
+    <!-- Latest Announcements + Upcoming Events lists -->
     <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
+        <div class="col-lg-6">
+            <div class="card mb-4 border-0 shadow-sm">
                 <div class="card-header">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Welcome to Waumini Link
+                    <i class="fas fa-bullhorn me-1"></i>
+                    Latest Announcements
                 </div>
                 <div class="card-body">
-                    <h5>Church Management System</h5>
-                    <p class="mb-0">
-                        Welcome to the Waumini Link church management system. Use the navigation menu on the left to access different sections:
-                    </p>
-                    <ul class="mt-3">
-                        <li><strong>Members:</strong> Manage church members, add new members, view member details, and export member data.</li>
-                        <li><strong>Services:</strong> Manage Sunday services and special events.</li>
-                        <li><strong>Celebrations:</strong> Track member birthdays, anniversaries, and other celebrations.</li>
-                        <li><strong>Finance:</strong> Manage church finances including tithes, offerings, donations, pledges, budgets, and expenses.</li>
-                        <li><strong>Reports:</strong> Generate various financial and membership reports.</li>
-                        <li><strong>Settings:</strong> Configure system settings and preferences.</li>
-                    </ul>
+                    @if(isset($latestAnnouncements) && $latestAnnouncements->count())
+                        <ul class="list-group list-group-flush">
+                            @foreach($latestAnnouncements as $announcement)
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            @if($announcement->is_pinned)
+                                                <span class="badge bg-warning mb-1">
+                                                    <i class="fas fa-thumbtack me-1"></i>Pinned
+                                                </span>
+                                            @endif
+                                            <h6 class="mb-1">{{ $announcement->title }}</h6>
+                                            <p class="mb-1 text-muted small">
+                                                {{ Str::limit($announcement->content, 100) }}
+                                            </p>
+                                            @if($announcement->type)
+                                                <small class="badge bg-info">{{ ucfirst($announcement->type) }}</small>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @if($announcement->start_date && $announcement->end_date)
+                                                {{ $announcement->start_date->format('M d') }} - {{ $announcement->end_date->format('M d, Y') }}
+                                            @elseif($announcement->start_date)
+                                                Starts: {{ $announcement->start_date->format('M d, Y') }}
+                                            @else
+                                                {{ $announcement->created_at->format('M d, Y') }}
+                                            @endif
+                                        </small>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="mb-0 text-muted">No announcements available.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    Upcoming Events
+                </div>
+                <div class="card-body">
+                    @if(isset($upcomingEvents) && $upcomingEvents->count())
+                        <ul class="list-group list-group-flush">
+                            @foreach($upcomingEvents as $event)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {{ $event->title }}
+                                        <small class="text-muted">— {{ $event->venue }}</small>
+                                    </span>
+                                    <small class="text-muted">{{ optional($event->event_date)->format('M d, Y') }}</small>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="mb-0 text-muted">No upcoming events scheduled.</p>
+                    @endif
                 </div>
             </div>
         </div>

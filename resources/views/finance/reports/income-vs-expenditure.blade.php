@@ -16,24 +16,35 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Report Filters
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-filter me-1"></i><strong>Report Filters</strong>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('reports.income-vs-expenditure') }}">
+            <form method="GET" action="{{ route('reports.income-vs-expenditure') }}" id="reportForm">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label for="filter_type" class="form-label">Filter Type</label>
+                        <select class="form-select" id="filter_type" name="filter_type" onchange="toggleFilterType()">
+                            <option value="date_range" {{ !request('filter_type') || request('filter_type') == 'date_range' ? 'selected' : '' }}>Date Range</option>
+                            <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Specific Month</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="month_filter" style="display: {{ request('filter_type') == 'month' ? 'block' : 'none' }};">
+                        <label for="month" class="form-label">Select Month</label>
+                        <input type="month" class="form-control" id="month" name="month" value="{{ request('month', date('Y-m')) }}">
+                    </div>
+                    <div class="col-md-3" id="start_date_filter" style="display: {{ !request('filter_type') || request('filter_type') == 'date_range' ? 'block' : 'none' }};">
                         <label for="start_date" class="form-label">Start Date</label>
                         <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request('start_date', date('Y-01-01')) }}">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3" id="end_date_filter" style="display: {{ !request('filter_type') || request('filter_type') == 'date_range' ? 'block' : 'none' }};">
                         <label for="end_date" class="form-label">End Date</label>
                         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request('end_date', date('Y-12-31')) }}">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Generate Report</button>
+                            <button type="submit" class="btn btn-primary" id="generateBtn">Generate Report</button>
                         </div>
                     </div>
                 </div>
@@ -112,8 +123,8 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>Income Sources
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-pie me-1"></i><strong>Income Sources</strong>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -141,6 +152,11 @@
                                     <td class="text-end">TZS {{ number_format($donations, 0) }}</td>
                                     <td class="text-end">{{ $totalIncome > 0 ? number_format(($donations / $totalIncome) * 100, 1) : 0 }}%</td>
                                 </tr>
+                                <tr>
+                                    <td><i class="fas fa-handshake text-warning me-2"></i>Pledge Payments</td>
+                                    <td class="text-end">TZS {{ number_format($pledgePayments, 0) }}</td>
+                                    <td class="text-end">{{ $totalIncome > 0 ? number_format(($pledgePayments / $totalIncome) * 100, 1) : 0 }}%</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -150,8 +166,8 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-bar me-1"></i>Expenses by Category
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-bar me-1"></i><strong>Expenses by Category</strong>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -185,8 +201,8 @@
 
     <!-- Monthly Trend Chart -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-line me-1"></i>Monthly Income vs Expenditure Trend
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-chart-line me-1"></i><strong>Monthly Income vs Expenditure Trend</strong>
         </div>
         <div class="card-body">
             <canvas id="monthlyTrendChart" width="100%" height="50"></canvas>
@@ -197,8 +213,8 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>Income Distribution
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-pie me-1"></i><strong>Income Distribution</strong>
                 </div>
                 <div class="card-body">
                     <canvas id="incomeChart" width="100%" height="50"></canvas>
@@ -208,8 +224,8 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>Expense Distribution
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-pie me-1"></i><strong>Expense Distribution</strong>
                 </div>
                 <div class="card-body">
                     <canvas id="expenseChart" width="100%" height="50"></canvas>
@@ -220,8 +236,8 @@
 
     <!-- Financial Health Indicators -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-heartbeat me-1"></i>Financial Health Indicators
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-heartbeat me-1"></i><strong>Financial Health Indicators</strong>
         </div>
         <div class="card-body">
             <div class="row">
@@ -392,11 +408,63 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-function exportReport(format) {
-    const startDate = '{{ $startDate }}';
-    const endDate = '{{ $endDate }}';
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    const form = document.getElementById('reportForm');
+    const generateBtn = document.getElementById('generateBtn');
     
-    const url = `/reports/export/${format}?report_type=income-vs-expenditure&start_date=${startDate}&end_date=${endDate}`;
+    if (form && generateBtn) {
+        form.addEventListener('submit', function(e) {
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+            generateBtn.disabled = true;
+            
+            // Re-enable button after 3 seconds in case of issues
+            setTimeout(function() {
+                generateBtn.innerHTML = 'Generate Report';
+                generateBtn.disabled = false;
+            }, 3000);
+        });
+    }
+});
+
+function toggleFilterType() {
+    const filterType = document.getElementById('filter_type').value;
+    const monthFilter = document.getElementById('month_filter');
+    const startDateFilter = document.getElementById('start_date_filter');
+    const endDateFilter = document.getElementById('end_date_filter');
+    
+    if (filterType === 'month') {
+        monthFilter.style.display = 'block';
+        startDateFilter.style.display = 'none';
+        endDateFilter.style.display = 'none';
+        document.getElementById('start_date').removeAttribute('required');
+        document.getElementById('end_date').removeAttribute('required');
+    } else {
+        monthFilter.style.display = 'none';
+        startDateFilter.style.display = 'block';
+        endDateFilter.style.display = 'block';
+        document.getElementById('start_date').setAttribute('required', 'required');
+        document.getElementById('end_date').setAttribute('required', 'required');
+    }
+}
+
+function exportReport(format) {
+    const filterType = document.getElementById('filter_type')?.value || '{{ request("filter_type", "date_range") }}';
+    let url = `/reports/export/${format}?report_type=income-vs-expenditure`;
+    
+    if (filterType === 'month') {
+        const month = document.getElementById('month')?.value || '{{ request("month", date("Y-m")) }}';
+        if (month) {
+            const [year, monthNum] = month.split('-');
+            const startDate = `${year}-${monthNum}-01`;
+            const endDate = new Date(year, monthNum, 0).toISOString().split('T')[0];
+            url += `&start_date=${startDate}&end_date=${endDate}&filter_type=month&month=${month}`;
+        }
+    } else {
+        const startDate = document.getElementById('start_date')?.value || '{{ $startDate }}';
+        const endDate = document.getElementById('end_date')?.value || '{{ $endDate }}';
+        url += `&start_date=${startDate}&end_date=${endDate}`;
+    }
     
     if (format === 'pdf') {
         window.open(url, '_blank');
@@ -406,4 +474,5 @@ function exportReport(format) {
 }
 </script>
 @endsection
+
 

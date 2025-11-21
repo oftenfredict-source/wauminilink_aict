@@ -54,28 +54,55 @@
                 align-items: center !important;
             }
             .sb-sidenav {
-                background-color: #17082d !important;
+                background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%) !important;
             }
             .sb-sidenav .nav-link {
                 color: white !important;
+                font-weight: 500 !important;
                 transition: all 0.3s ease;
+                padding: 0.75rem 1rem !important;
             }
             .sb-sidenav .nav-link:hover {
-                background-color: #293846 !important;
+                background-color: rgba(255, 255, 255, 0.1) !important;
                 color: white !important;
+            }
+            .sb-sidenav .nav-link.active {
+                background-color: rgba(255, 255, 255, 0.15) !important;
+                font-weight: 600 !important;
             }
             .sb-sidenav .sb-sidenav-menu-heading {
-                color: rgba(255, 255, 255, 0.6) !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.8px !important;
+                font-size: 0.75rem !important;
+                padding: 0.75rem 1rem 0.25rem 1rem !important;
+                background-color: rgba(255, 255, 255, 0.1) !important;
+                border-radius: 4px !important;
+                margin: 0.5rem 0.5rem 0.25rem 0.5rem !important;
             }
             .sb-sidenav .sb-nav-link-icon {
-                color: white !important;
+                color: rgba(255, 255, 255, 0.8) !important;
+                margin-right: 0.5rem !important;
             }
             .sb-sidenav .sb-sidenav-collapse-arrow {
-                color: white !important;
+                color: rgba(255, 255, 255, 0.8) !important;
+            }
+            .sb-sidenav .sb-sidenav-menu-nested .nav-link {
+                padding-left: 2.5rem !important;
+                font-size: 0.9rem !important;
             }
             .sb-sidenav .sb-sidenav-footer {
                 background-color: rgba(255, 255, 255, 0.1) !important;
                 color: white !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+            .sb-sidenav .sb-sidenav-footer .small {
+                font-weight: 600 !important;
+            }
+            /* Ensure all sidebar text is visible */
+            .sb-sidenav * {
+                color: inherit !important;
             }
             .card-header {
                 color: white !important;
@@ -107,27 +134,227 @@
             /* QR styling */
             #inlineQrImg { border: 3px solid #5b2a86; border-radius: 8px; padding: 4px; background: #ffffff; }
             #qrSpinner { width: 2.5rem; height: 2.5rem; }
+            
+            /* Mobile Responsive Styles */
+            @media (max-width: 768px) {
+                .container-fluid {
+                    padding-left: 0.75rem !important;
+                    padding-right: 0.75rem !important;
+                }
+                
+                /* Hide button text on mobile, show only icons */
+                .btn-mobile-icon-only {
+                    padding: 0.375rem 0.5rem !important;
+                }
+                .btn-mobile-icon-only .btn-text {
+                    display: none;
+                }
+                .btn-mobile-icon-only i {
+                    margin: 0 !important;
+                }
+                
+                /* Stack buttons vertically on mobile */
+                .btn-group-mobile {
+                    flex-direction: column;
+                    width: 100%;
+                }
+                .btn-group-mobile .btn {
+                    width: 100%;
+                    margin-bottom: 0.5rem;
+                }
+                
+                /* Make tabs scrollable on mobile */
+                .nav-tabs {
+                    overflow-x: auto;
+                    flex-wrap: nowrap;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .nav-tabs .nav-item {
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+                
+                /* Table responsive improvements */
+                .table-responsive {
+                    border: none;
+                }
+                .table {
+                    font-size: 0.875rem;
+                }
+                .table th,
+                .table td {
+                    padding: 0.5rem 0.25rem;
+                    white-space: nowrap;
+                }
+                
+                /* Card view improvements */
+                .card-view-item {
+                    margin-bottom: 1rem;
+                }
+                
+                /* Modal improvements */
+                .modal-dialog {
+                    margin: 0.5rem;
+                }
+                .modal-content {
+                    border-radius: 0.5rem;
+                }
+                
+                /* Header adjustments */
+                .navbar-text {
+                    font-size: 0.9rem !important;
+                }
+                
+                /* Action buttons in table */
+                .table .btn {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.75rem;
+                }
+                .table .btn i {
+                    margin: 0 !important;
+                }
+                .table .btn .btn-text {
+                    display: none;
+                }
+            }
+            
+            @media (max-width: 576px) {
+                /* Extra small devices */
+                h2 {
+                    font-size: 1.5rem;
+                }
+                
+                .btn {
+                    font-size: 0.875rem;
+                    padding: 0.375rem 0.75rem;
+                }
+                
+                .table {
+                    font-size: 0.75rem;
+                }
+                
+                .tab-badge {
+                    font-size: 0.75rem;
+                    padding: 1px 6px;
+                }
+                
+                /* Hide welcome message on very small screens */
+                .navbar-text {
+                    display: none !important;
+                }
+                
+                /* Make tabs more compact */
+                .nav-tabs .nav-link {
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.875rem;
+                }
+                
+                /* Card view full width on mobile */
+                .card-view-item {
+                    margin-bottom: 1rem;
+                }
+                
+                /* Better spacing for filters */
+                .card-body {
+                    padding: 1rem !important;
+                }
+            }
         </style>
     </head>
     <body class="sb-nav-fixed">
         <!-- Header -->
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
+        @php
+            $navClasses = 'sb-topnav navbar navbar-expand navbar-dark';
+            $navStyle = 'background: #212529 !important;';
+        @endphp
+        <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
+            <!-- Navbar Brand-->
+            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
             </a>
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
-                <strong>Welcome to Waumini Link</strong>
+            <!-- Sidebar Toggle-->
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!" style="font-size: 1.5rem;"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
+            <!-- Welcome Message -->
+            <div class="navbar-text me-auto ms-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <strong>AIC Moshi Kilimanjaro</strong>
             </div>
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-                <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
-                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+            <!-- Date and Time Display -->
+            <div class="d-none d-md-flex align-items-center ms-auto me-0 me-md-3">
+                <div class="text-end" style="color: #ffffff !important;">
+                    <div id="currentDate" style="font-size: 0.9rem; font-weight: 500; color: #ffffff !important;"></div>
+                    <div id="currentTime" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important;"></div>
                 </div>
-            </form>
+            </div>
+
+            <!-- Navbar-->
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+                <!-- Notification Icon -->
+                <li class="nav-item dropdown me-3" id="notificationDropdown">
+                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" style="color: #ffffff !important;">
+                        <!-- Inline SVG bell to avoid external icon dependency -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ffffff" viewBox="0 0 16 16" class="align-text-top" style="color: #ffffff !important;">
+                            <path d="M8 16a2 2 0 0 0 1.985-1.75H6.015A2 2 0 0 0 8 16m.104-14.983a1 1 0 1 0-.208 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 3.06-1.638 4.723-.2.29-.295.63-.295.977 0 .713.54 1.3 1.207 1.3h11.452c.667 0 1.207-.587 1.207-1.3 0-.347-.095-.687-.295-.977C13.5 9.06 13 7.098 13 6a5.002 5.002 0 0 0-4.896-4.983"/>
+                        </svg>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
+                            0
+                        </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 400px; max-height: 70vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: none;">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0; padding: 1rem 1.5rem;">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-bell me-2"></i>Notifications</h6>
+                            <small class="opacity-75" id="lastUpdated">Just now</small>
+                        </div>
+                        
+                        <div class="notification-content" style="padding: 1rem 1.5rem; max-height: calc(70vh - 80px); overflow-y: auto;">
+                            <!-- Upcoming Events -->
+                            <div class="notification-section mb-3">
+                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-primary">
+                                        <i class="fas fa-calendar-alt me-2"></i>Special Events
+                                    </h6>
+                                    <span class="notification-count-badge bg-primary" id="eventsCount">0</span>
+                                </div>
+                                <div id="eventsList" class="notification-list">
+                                    <!-- Events will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Upcoming Celebrations -->
+                            <div class="notification-section mb-3">
+                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-warning">
+                                        <i class="fas fa-birthday-cake me-2"></i>Celebrations
+                                    </h6>
+                                    <span class="notification-count-badge bg-warning" id="celebrationsCount">0</span>
+                                </div>
+                                <div id="celebrationsList" class="notification-list">
+                                    <!-- Celebrations will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Upcoming Services -->
+                            <div class="notification-section mb-3">
+                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-success">
+                                        <i class="fas fa-church me-2"></i>Services
+                                    </h6>
+                                    <span class="notification-count-badge bg-success" id="servicesCount">0</span>
+                                </div>
+                                <div id="servicesList" class="notification-list">
+                                    <!-- Services will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="text-center py-2 pb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Click on any item to view details
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff !important;"><i class="fas fa-user fa-fw" style="color: #ffffff !important;"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="#!">Settings</a></li>
                         <li><a class="dropdown-item" href="#!">Activity Log</a></li>
@@ -152,7 +379,7 @@
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
+                            <a class="nav-link" href="{{ route('dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Dashboard
                             </a>
@@ -164,9 +391,34 @@
                             </a>
                             <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="{{ route('members.add') }}">
+                                        <i class="fas fa-user-plus me-2"></i>Add New Member
+                                    </a>
                                     <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
                                 </nav>
                             </div>
+                            
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLeadership" aria-expanded="false" aria-controls="collapseLeadership">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
+                                Leadership
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLeadership" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="{{ route('leaders.index') }}">
+                                        <i class="fas fa-list me-2"></i>All Leaders
+                                    </a>
+                                    <a class="nav-link" href="{{ route('leaders.reports') }}">
+                                        <i class="fas fa-chart-bar me-2"></i>Reports
+                                    </a>
+                                    @if(auth()->user()->canManageLeadership())
+                                        <a class="nav-link" href="{{ route('leaders.create') }}">
+                                            <i class="fas fa-plus me-2"></i>Assign Position
+                                        </a>
+                                    @endif
+                                </nav>
+                            </div>
+                            
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
                                 <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
                                 Events & Services
@@ -174,34 +426,47 @@
                             </a>
                             <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="#"><i class="fas fa-church me-2"></i>Sunday Services</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
+                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Sunday Services</a>
+                                    <a class="nav-link" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
+                                    <a class="nav-link" href="{{ route('attendance.index') }}"><i class="fas fa-users me-2"></i>Record Attendance</a>
+                                    <a class="nav-link" href="{{ route('attendance.statistics') }}"><i class="fas fa-chart-bar me-2"></i>Attendance Statistics</a>
+                                    <a class="nav-link" href="{{ route('celebrations.index') }}"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
                                 </nav>
                             </div>
+                            
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-donate"></i></div>
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Finance
                                 <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                             </a>
                             <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="#"><i class="fas fa-money-bill-wave me-2"></i>Donations</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Financial Reports</a>
+                                    <a class="nav-link" href="{{ route('finance.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+                                    @if(auth()->user()->canApproveFinances())
+                                    <a class="nav-link" href="{{ route('finance.approval.dashboard') }}"><i class="fas fa-check-circle me-2"></i>Approval Dashboard</a>
+                                    @endif
+                                    <a class="nav-link" href="{{ route('finance.tithes') }}"><i class="fas fa-coins me-2"></i>Tithes</a>
+                                    <a class="nav-link" href="{{ route('finance.offerings') }}"><i class="fas fa-gift me-2"></i>Offerings</a>
+                                    <a class="nav-link" href="{{ route('finance.donations') }}"><i class="fas fa-heart me-2"></i>Donations</a>
+                                    <a class="nav-link" href="{{ route('finance.pledges') }}"><i class="fas fa-handshake me-2"></i>Pledges</a>
+                                    <a class="nav-link" href="{{ route('finance.budgets') }}"><i class="fas fa-wallet me-2"></i>Budgets</a>
+                                    <a class="nav-link" href="{{ route('finance.expenses') }}"><i class="fas fa-receipt me-2"></i>Expenses</a>
+                                    <a class="nav-link" href="{{ route('reports.index') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a>
                                 </nav>
                             </div>
+                            
                             <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{ route('analytics.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Analytics
                             </a>
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{ route('reports.overview') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                Reports
+                                All Reports
                             </a>
+                            
                             <div class="sb-sidenav-menu-heading">Settings</div>
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{ route('settings.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
                                 System Settings
                             </a>
@@ -217,20 +482,43 @@
             <div id="layoutSidenav_content">
                 <main>
                     <div class="container-fluid px-4">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
-                            <h2 class="mb-0">Members</h2>
-                            <div class="d-flex gap-2">
+                        <div class="d-flex flex-column flex-md-row flex-wrap align-items-start align-items-md-center justify-content-between mt-4 mb-3 gap-2">
+                            <h2 class="mb-0 mb-md-0">Members</h2>
+                            <div class="d-flex flex-wrap gap-2 w-100 w-md-auto">
+                                <a href="{{ route('attendance.index') }}" class="btn btn-info btn-mobile-icon-only">
+                                    <i class="fas fa-users"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Record Attendance</span>
+                                </a>
+                                <a href="{{ route('attendance.statistics') }}" class="btn btn-outline-info btn-mobile-icon-only">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Statistics</span>
+                                </a>
                                 <div class="btn-group" role="group" aria-label="View toggle">
                                     <button type="button" class="btn btn-outline-secondary active" id="listViewBtn" onclick="switchView('list')">
-                                        <i class="fas fa-list me-1"></i>List View
+                                        <i class="fas fa-list"></i>
+                                        <span class="d-none d-md-inline ms-1">List</span>
                                     </button>
                                     <button type="button" class="btn btn-outline-secondary" id="cardViewBtn" onclick="switchView('card')">
-                                        <i class="fas fa-th-large me-1"></i>Card View
+                                        <i class="fas fa-th-large"></i>
+                                        <span class="d-none d-md-inline ms-1">Card</span>
                                     </button>
                                 </div>
-                                <a href="{{ route('members.add') }}" class="btn btn-primary"><i class="fas fa-user-plus me-2"></i>Add Member</a>
-                                <a href="{{ route('members.export.csv', request()->query()) }}" class="btn btn-outline-success"><i class="fas fa-file-excel me-2"></i>Export CSV</a>
-                                <button class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-2"></i>Print</button>
+                                <button type="button" class="btn btn-success btn-mobile-icon-only" data-bs-toggle="modal" data-bs-target="#addChildModal">
+                                    <i class="fas fa-child"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Add Child</span>
+                                </button>
+                                <a href="{{ route('members.add') }}" class="btn btn-primary btn-mobile-icon-only">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Add Member</span>
+                                </a>
+                                <a href="{{ route('members.export.csv', request()->query()) }}" class="btn btn-outline-success btn-mobile-icon-only">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Export</span>
+                                </a>
+                                <button class="btn btn-outline-secondary btn-mobile-icon-only" onclick="window.print()">
+                                    <i class="fas fa-print"></i>
+                                    <span class="btn-text ms-2 d-none d-md-inline">Print</span>
+                                </button>
                             </div>
                         </div>
 
@@ -240,6 +528,7 @@
                         @php
                             $permanentCount = $members->where('membership_type','permanent')->count();
                             $temporaryCount = $members->where('membership_type','temporary')->count();
+                            $childrenCount = ($children ?? collect())->count();
                             $archivedCount = ($archivedMembers ?? collect())->count();
                         @endphp
                         <style>
@@ -273,6 +562,11 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="children-tab" data-bs-toggle="tab" data-bs-target="#children" type="button" role="tab">
+                                    Children <span class="tab-badge">{{ $childrenCount }}</span>
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab">
                                     Archived <span class="tab-badge">{{ $archivedCount }}</span>
                                 </button>
@@ -284,6 +578,95 @@
                             </div>
                             <div class="tab-pane fade" id="temporary" role="tabpanel">
                                 @include('members.partials.main-table', ['members' => $members->where('membership_type','temporary'), 'showArchive' => true])
+                            </div>
+                            <div class="tab-pane fade" id="children" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-body p-0">
+                                        @if($childrenCount > 0)
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-hover align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Name</th>
+                                                            <th>Age</th>
+                                                            <th>Gender</th>
+                                                            <th>Date of Birth</th>
+                                                            <th>Parent/Guardian</th>
+                                                            <th>Age Group</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($children as $child)
+                                                            @php
+                                                                $age = (int) $child->getAge();
+                                                                $ageGroup = $child->getAgeGroup();
+                                                            @endphp
+                                                            <tr>
+                                                                <td class="text-muted">{{ $loop->iteration }}</td>
+                                                                <td>
+                                                                    <strong>{{ $child->full_name }}</strong>
+                                                                </td>
+                                                                <td>{{ $age }} years</td>
+                                                                <td>
+                                                                    <span class="badge bg-{{ $child->gender === 'male' ? 'primary' : 'info' }}">
+                                                                        {{ ucfirst($child->gender) }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ $child->date_of_birth ? $child->date_of_birth->format('M d, Y') : '—' }}</td>
+                                                                <td>
+                                                                    @if($child->member)
+                                                                        <a href="javascript:void(0);" 
+                                                                           onclick="viewDetails({{ $child->member->id }})" 
+                                                                           class="text-decoration-none text-primary" 
+                                                                           style="cursor: pointer;">
+                                                                            <i class="fas fa-user me-1"></i>{{ $child->member->full_name }}
+                                                                            <span class="badge bg-success ms-1" style="font-size: 0.7em;">Member</span>
+                                                                        </a>
+                                                                    @elseif($child->parent_name)
+                                                                        <div>
+                                                                            <i class="fas fa-user-friends me-1 text-warning"></i>
+                                                                            <strong>{{ $child->parent_name }}</strong>
+                                                                            <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7em;">Non-Member</span>
+                                                                        </div>
+                                                                        @if($child->parent_phone)
+                                                                            <small class="text-muted">
+                                                                                <i class="fas fa-phone me-1"></i>{{ $child->parent_phone }}
+                                                                            </small>
+                                                                        @endif
+                                                                        @if($child->parent_relationship)
+                                                                            <br><small class="text-muted">
+                                                                                <i class="fas fa-link me-1"></i>{{ $child->parent_relationship }}
+                                                                            </small>
+                                                                        @endif
+                                                                    @else
+                                                                        <span class="text-muted">—</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    @if($ageGroup === 'infant')
+                                                                        <span class="badge bg-secondary">Infant (&lt;3)</span>
+                                                                    @elseif($ageGroup === 'sunday_school')
+                                                                        <span class="badge bg-success">Sunday School (3-12)</span>
+                                                                    @elseif($ageGroup === 'teenager')
+                                                                        <span class="badge bg-warning text-dark">Teenager (13-17)</span>
+                                                                    @else
+                                                                        <span class="badge bg-dark">Adult (18+)</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @else
+                                            <div class="text-center py-5">
+                                                <i class="fas fa-child fa-3x text-muted mb-3"></i>
+                                                <p class="text-muted">No children registered yet.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                             <div class="tab-pane fade" id="archived" role="tabpanel">
                                 @include('members.partials.main-table', ['members' => $archivedMembers ?? collect(), 'showArchive' => false, 'isArchived' => true])
@@ -320,7 +703,15 @@
                                     <span class="me-1">Powered by</span>
                                     <a href="https://emca.tech/#" target="_blank" rel="noopener" class="emca-link fw-semibold">EmCa Technologies</a>
                                 </div>
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-light" id="btnAttendanceHistory" onclick="viewAttendanceHistory()" style="display: none;">
+                                        <i class="fas fa-calendar-check me-1"></i>Attendance History
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light" id="btnIdCard" onclick="viewIdCard()" style="display: none;">
+                                        <i class="fas fa-id-card me-1"></i>ID Card
+                                    </button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -339,10 +730,11 @@
                                     <button class="btn btn-outline-primary" id="btnEditPersonal"><i class="fas fa-user me-2"></i>Personal</button>
                                     <button class="btn btn-outline-primary" id="btnEditLocation"><i class="fas fa-map-marker-alt me-2"></i>Location</button>
                                     <button class="btn btn-outline-primary" id="btnEditFamily"><i class="fas fa-home me-2"></i>Family</button>
-                                        </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
                 <!-- Edit Personal Modal -->
                 <div class="modal fade" id="memberEditPersonalModal" tabindex="-1" aria-hidden="true">
@@ -455,29 +847,123 @@
 
                 <!-- Edit Family Modal -->
                 <div class="modal fade" id="memberEditFamilyModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-md">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
                             <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-home text-primary"></i><span>Edit Family</span></h6>
+                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-home text-primary"></i><span>Edit Family Information</span></h6>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form id="editFamilyForm">
                                     <input type="hidden" id="edit_family_id">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Living with family</label>
-                                            <select id="edit_family_living_with_family" class="form-select">
-                                                <option value="">Select</option>
-                                                <option value="yes">Yes</option>
-                                                <option value="no">No</option>
-                                            </select>
+                                    <input type="hidden" id="edit_family_member_type">
+                                    <input type="hidden" id="edit_family_membership_type">
+                                    
+                                    <!-- Marital Status Section (for permanent father/mother) -->
+                                    <div id="edit_family_marital_section" style="display:none;">
+                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-heart me-2"></i>Marital Status</h6>
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-12">
+                                                <label class="form-label">Marital Status</label>
+                                                <select id="edit_family_marital_status" class="form-select">
+                                                    <option value="">Select</option>
+                                                    <option value="married">Married</option>
+                                                    <option value="divorced">Divorced</option>
+                                                    <option value="widowed">Widowed</option>
+                                                    <option value="separated">Separated</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="col-md-8">
-                                            <label class="form-label">Family relationship</label>
-                                            <input type="text" class="form-control" id="edit_family_family_relationship">
+                                        
+                                        <!-- Spouse Information (shown when married) -->
+                                        <div id="edit_family_spouse_section" style="display:none;">
+                                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user me-2"></i>Spouse Information</h6>
+                                            <div class="row g-3 mb-4">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Full Name</label>
+                                                    <input type="text" class="form-control" id="edit_family_spouse_full_name">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Date of Birth</label>
+                                                    <input type="date" class="form-control" id="edit_family_spouse_date_of_birth">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Education Level</label>
+                                                    <select id="edit_family_spouse_education_level" class="form-select">
+                                                        <option value="">Select</option>
+                                                        <option value="primary">Primary</option>
+                                                        <option value="secondary">Secondary</option>
+                                                        <option value="high_level">High Level</option>
+                                                        <option value="certificate">Certificate</option>
+                                                        <option value="diploma">Diploma</option>
+                                                        <option value="bachelor_degree">Bachelor Degree</option>
+                                                        <option value="masters">Masters</option>
+                                                        <option value="phd">PhD</option>
+                                                        <option value="professor">Professor</option>
+                                                        <option value="not_studied">Not Studied</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Profession</label>
+                                                    <input type="text" class="form-control" id="edit_family_spouse_profession">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse NIDA Number</label>
+                                                    <input type="text" class="form-control" id="edit_family_spouse_nida_number">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Email</label>
+                                                    <input type="email" class="form-control" id="edit_family_spouse_email">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Phone Number</label>
+                                                    <input type="text" class="form-control" id="edit_family_spouse_phone_number" placeholder="+255744000000">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Spouse Tribe</label>
+                                                    <select id="edit_family_spouse_tribe" class="form-select"></select>
+                                                </div>
+                                                <div class="col-md-6" id="edit_family_spouse_other_tribe_group" style="display:none;">
+                                                    <label class="form-label">Spouse Other Tribe</label>
+                                                    <input type="text" class="form-control" id="edit_family_spouse_other_tribe" placeholder="Specify tribe">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Is Spouse a Church Member?</label>
+                                                    <select id="edit_family_spouse_church_member" class="form-select">
+                                                        <option value="">Select</option>
+                                                        <option value="yes">Yes</option>
+                                                        <option value="no">No</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Guardian Section (for temporary members and independent permanent) -->
+                                    <div id="edit_family_guardian_section" style="display:none;">
+                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user-shield me-2"></i>Guardian Information</h6>
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Guardian Name</label>
+                                                <input type="text" class="form-control" id="edit_family_guardian_name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Guardian Phone</label>
+                                                <input type="text" class="form-control" id="edit_family_guardian_phone" placeholder="+255744000000">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Guardian Relationship</label>
+                                                <select id="edit_family_guardian_relationship" class="form-select">
+                                                    <option value="">Select</option>
+                                                    <option value="parent">Parent</option>
+                                                    <option value="guardian">Guardian</option>
+                                                    <option value="relative">Relative</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="d-flex justify-content-end gap-2 mt-3">
                                         <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary">Save</button>
@@ -570,6 +1056,110 @@
     </div>
   </div>
                 </footer>
+                
+                <!-- Add Child Modal -->
+                <div class="modal fade" id="addChildModal" tabindex="-1" aria-labelledby="addChildModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title" id="addChildModalLabel"><i class="fas fa-child me-2"></i>Add Child</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="addChildForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">Child's Full Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="child_full_name" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Gender <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="child_gender" required>
+                                                <option value="">Select</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control" id="child_date_of_birth" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Age</label>
+                                            <input type="text" class="form-control" id="child_age" readonly>
+                                        </div>
+                                        
+                                        <div class="col-12">
+                                            <hr>
+                                            <h6 class="mb-3"><i class="fas fa-user-friends me-2"></i>Parent/Guardian Information</h6>
+                                        </div>
+                                        
+                                        <div class="col-md-12">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="parent_type" id="parent_member" value="member" checked>
+                                                <label class="form-check-label" for="parent_member">
+                                                    Parent is a Church Member
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="parent_type" id="parent_non_member" value="non_member">
+                                                <label class="form-check-label" for="parent_non_member">
+                                                    Parent is NOT a Church Member
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Member Parent Fields -->
+                                        <div id="memberParentFields">
+                                            <div class="col-md-12">
+                                                <label class="form-label">Select Parent Member <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="child_member_id">
+                                                    <option value="">Select Member</option>
+                                                    @foreach($members->flatten() as $member)
+                                                        <option value="{{ $member->id }}">{{ $member->full_name }} ({{ $member->member_id }})</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Non-Member Parent Fields -->
+                                        <div id="nonMemberParentFields" style="display: none;">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Parent/Guardian Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="child_parent_name">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Parent/Guardian Phone</label>
+                                                <input type="text" class="form-control" id="child_parent_phone">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label">Relationship to Child</label>
+                                                <select class="form-select" id="child_parent_relationship">
+                                                    <option value="">Select Relationship</option>
+                                                    <option value="Father">Father</option>
+                                                    <option value="Mother">Mother</option>
+                                                    <option value="Guardian">Guardian</option>
+                                                    <option value="Grandfather">Grandfather</option>
+                                                    <option value="Grandmother">Grandmother</option>
+                                                    <option value="Uncle">Uncle</option>
+                                                    <option value="Aunt">Aunt</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-success" onclick="saveChild()">
+                                    <i class="fas fa-save me-2"></i>Save Child
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Archive Modal (should be included once per page, not per row) -->
                 <div class="modal fade" id="archiveMemberModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog">
@@ -650,7 +1240,7 @@
                 return url.searchParams.get(name);
             }
             const tab = getQueryParam('tab');
-            if(tab && ['permanent','temporary','archived'].includes(tab)) {
+            if(tab && ['permanent','temporary','children','archived'].includes(tab)) {
                 const trigger = document.getElementById(tab+'-tab');
                 if(trigger) {
                     // Bootstrap 5 tab activation
@@ -694,10 +1284,13 @@
 
             // View switching functionality
             function switchView(view) {
+                console.log('Switching to view:', view);
                 const listView = document.getElementById('listView');
                 const cardView = document.getElementById('cardView');
                 const listBtn = document.getElementById('listViewBtn');
                 const cardBtn = document.getElementById('cardViewBtn');
+                
+                console.log('Elements found:', { listView, cardView, listBtn, cardBtn });
                 
                 if (view === 'list') {
                     listView.style.display = 'block';
@@ -705,28 +1298,62 @@
                     listBtn.classList.add('active');
                     cardBtn.classList.remove('active');
                     localStorage.setItem('memberViewPreference', 'list');
+                    console.log('Switched to list view');
                 } else {
                     listView.style.display = 'none';
                     cardView.style.display = 'block';
                     listBtn.classList.remove('active');
                     cardBtn.classList.add('active');
                     localStorage.setItem('memberViewPreference', 'card');
+                    console.log('Switched to card view');
                 }
             }
 
             // Load saved view preference
             document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM Content Loaded');
                 const savedView = localStorage.getItem('memberViewPreference');
+                console.log('Saved view preference:', savedView);
                 if (savedView === 'card') {
                     switchView('card');
+                }
+                
+                // Test if buttons are working
+                const listBtn = document.getElementById('listViewBtn');
+                const cardBtn = document.getElementById('cardViewBtn');
+                console.log('View buttons found:', { listBtn, cardBtn });
+                
+                if (listBtn) {
+                    listBtn.addEventListener('click', function() {
+                        console.log('List view button clicked');
+                        switchView('list');
+                    });
+                }
+                
+                if (cardBtn) {
+                    cardBtn.addEventListener('click', function() {
+                        console.log('Card view button clicked');
+                        switchView('card');
+                    });
                 }
             });
 
             function viewDetails(id) {
+                console.log('viewDetails called with ID:', id);
                 fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
                     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(m => {
+                    .then(async m => {
+                        console.log('Member details loaded:', m);
                         currentDetailsMember = m;
+                        
+                        // Check if we have spouse details from the API response
+                        if (m.spouse_details) {
+                            console.log('Spouse details loaded from API:', m.spouse_details);
+                            m.mainMemberSpouseInfo = m.spouse_details;
+                        } else if (m.main_member_details) {
+                            console.log('Main member details loaded from API:', m.main_member_details);
+                            m.mainMemberSpouseInfo = m.main_member_details;
+                        }
                         // Determine if archived (by checking if member_snapshot exists)
                         let isArchived = false;
                         let snap = null;
@@ -780,7 +1407,7 @@
                             `Family relationship: ${data.family_relationship || '-'}`,
                             `Tribe: ${(data.tribe || '-') + (data.other_tribe ? ` (${data.other_tribe})` : '')}`,
                         ];
-                        if (data.guardian_name || data.guardian_phone || data.guardian_relationship) {
+                        if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
                             lines.push(`Guardian Name: ${data.guardian_name || '-'}`);
                             lines.push(`Guardian Phone: ${data.guardian_phone || '-'}`);
                             lines.push(`Guardian Relationship: ${data.guardian_relationship || '-'}`);
@@ -822,9 +1449,10 @@
                             <div class=\"small text-uppercase text-muted mt-3 mb-1\">Family</div>
                             <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
                                 ${(() => { 
-                                    const spousePresent = !!(data.spouse_full_name || data.spouse_phone_number || data.spouse_email || data.spouse_profession || data.spouse_education_level || data.spouse_nida_number || data.spouse_date_of_birth);
+                                    // Check if spouse information is present
+                                    const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_phone_number || data.spouse_email;
                                     const hasChildren = Array.isArray(data.children) && data.children.length > 0;
-                                    const inferred = (spousePresent || hasChildren) ? 'yes' : 'no';
+                                    const inferred = (hasSpouseDetails || hasChildren) ? 'yes' : 'no';
                                     const v = (data.living_with_family && typeof data.living_with_family === 'string') ? data.living_with_family.toLowerCase() : '';
                                     const value = v === 'yes' || v === 'no' ? v : inferred;
                                     const pretty = value === 'yes' ? 'Yes' : (value === 'no' ? 'No' : '—');
@@ -834,28 +1462,52 @@
                                 ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
                             </tbody></table>
                             ${(() => {
-                                // Spouse details block (if spouse_alive === 'yes' or spouse fields present)
-                                if (data.spouse_full_name || data.spouse_email || data.spouse_phone_number || data.spouse_profession || data.spouse_education_level || data.spouse_nida_number || data.spouse_date_of_birth || data.spouse_tribe) {
-                                    const spouseTitle = (data.member_type === 'father' ? 'Wife' : (data.member_type === 'mother' ? 'Husband' : 'Spouse'));
-                                    const spouseTribe = (data.spouse_tribe || '') + (data.spouse_tribe === 'Other' && data.spouse_other_tribe ? ` (${data.spouse_other_tribe})` : '');
+                                // Check if we have spouse information to display
+                                const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_email || data.spouse_phone_number;
+                                
+                                if (hasSpouseDetails) {
+                                    let spouseData, spouseTitle, spouseTribe, spouseId;
+                                    
+                                    if (data.spouse_details) {
+                                        // This member has a spouse member record
+                                        spouseData = data.spouse_details;
+                                        spouseTitle = (data.gender === 'male' ? 'Wife' : 'Husband');
+                                        spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
+                                        spouseId = spouseData.id;
+                                    } else if (data.main_member_details) {
+                                        // This is a spouse member - show main member info
+                                        spouseData = data.main_member_details;
+                                        spouseTitle = (data.gender === 'male' ? 'Husband' : 'Wife');
+                                        spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
+                                        spouseId = spouseData.id;
+                                    } else {
+                                        // Fallback to old spouse fields
+                                        spouseData = data;
+                                        spouseTitle = (data.member_type === 'father' ? 'Wife' : (data.member_type === 'mother' ? 'Husband' : 'Spouse'));
+                                        spouseTribe = (data.spouse_tribe || '') + (data.spouse_tribe === 'Other' && data.spouse_other_tribe ? ` (${data.spouse_other_tribe})` : '');
+                                        spouseId = data.spouse_member_id;
+                                    }
+                                    
                                     return `
                                     <div class=\"small text-uppercase text-muted mt-3 mb-1\">${spouseTitle}</div>
                                     <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                        ${row('fas fa-check-circle', spouseTitle+' Alive', (data.spouse_alive ? (data.spouse_alive === 'yes' ? 'Yes' : 'No') : '—'))}
-                                        ${row('fas fa-user', spouseTitle+' Name', data.spouse_full_name)}
-                                        ${row('fas fa-birthday-cake', spouseTitle+' DOB', formatDateDisplay(data.spouse_date_of_birth))}
-                                        ${row('fas fa-graduation-cap', spouseTitle+' Education', data.spouse_education_level)}
-                                        ${row('fas fa-briefcase', spouseTitle+' Profession', data.spouse_profession)}
-                                        ${row('fas fa-id-card', spouseTitle+' NIDA', data.spouse_nida_number)}
-                                        ${row('fas fa-envelope', spouseTitle+' Email', data.spouse_email, mailto(data.spouse_email) + copyBtn(data.spouse_email, 'Copy email', 'fas fa-copy'))}
-                                        ${row('fas fa-phone', spouseTitle+' Phone', data.spouse_phone_number, telto(data.spouse_phone_number) + copyBtn(data.spouse_phone_number, 'Copy phone', 'fas fa-copy'))}
+                                        ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
+                                        ${row('fas fa-user', spouseTitle+' Name', spouseData.full_name || data.spouse_full_name)}
+                                        ${row('fas fa-church', spouseTitle+' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
+                                        ${row('fas fa-id-badge', spouseTitle+' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
+                                        ${row('fas fa-birthday-cake', spouseTitle+' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
+                                        ${row('fas fa-graduation-cap', spouseTitle+' Education', spouseData.education_level || data.spouse_education_level)}
+                                        ${row('fas fa-briefcase', spouseTitle+' Profession', spouseData.profession || data.spouse_profession)}
+                                        ${row('fas fa-id-card', spouseTitle+' NIDA', spouseData.nida_number || data.spouse_nida_number)}
+                                        ${row('fas fa-envelope', spouseTitle+' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
+                                        ${row('fas fa-phone', spouseTitle+' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
                                         ${row('fas fa-flag', spouseTitle+' Tribe', spouseTribe)}
                                     </tbody></table>`;
                                 }
                                 return '';
                             })()}`;
-                        // Guardian section (for temporary)
-                        if (data.membership_type === 'temporary' && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
+                        // Guardian section (for temporary and independent members)
+                        if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
                             html += `<div class=\"small text-uppercase text-muted mt-3 mb-1\">Guardian</div>
                             <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
                                 ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
@@ -863,8 +1515,8 @@
                                 ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
                             </tbody></table>`;
                         }
-                        // Children section (for permanent)
-                        if (data.membership_type === 'permanent' && Array.isArray(data.children) && data.children.length > 0) {
+                        // Children section (for permanent father/mother only)
+                        if (data.membership_type === 'permanent' && (data.member_type === 'father' || data.member_type === 'mother') && Array.isArray(data.children) && data.children.length > 0) {
                             html += `<div class=\"small text-uppercase text-muted mt-3 mb-1\">Children</div>
                             <table class=\"table table-bordered table-striped align-middle interactive-table\"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
                             data.children.forEach(child => {
@@ -882,6 +1534,16 @@
                         }
                         html += `</div>`;
                         document.getElementById('memberDetailsBody').innerHTML = html;
+                        
+                        // Show attendance history button and store member ID
+                        const attendanceBtn = document.getElementById('btnAttendanceHistory');
+                        attendanceBtn.style.display = 'inline-block';
+                        attendanceBtn.setAttribute('data-member-id', m.id);
+                        
+                        const idCardBtn = document.getElementById('btnIdCard');
+                        idCardBtn.style.display = 'inline-block';
+                        idCardBtn.setAttribute('data-member-id', m.id);
+                        
                         const detailsModalEl = document.getElementById('memberDetailsModal');
                         const modal = new bootstrap.Modal(detailsModalEl);
                         // Set QR image src to encoded details (no link shown when scanning)
@@ -928,145 +1590,570 @@
 			// Ensure openEdit sets state for chooser and header buttons
  			let currentEditMember = null;
             function openEdit(id) {
- 				confirmThen('Open edit for this member?', () => {
+				console.log('openEdit called with ID:', id);
+				confirmThen('Open edit for this member?', () => {
+					console.log('Edit confirmed for member ID:', id);
 					fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
- 					.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+					.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                     .then(m => {
- 						currentEditMember = m;
- 						const chooser = new bootstrap.Modal(document.getElementById('editSectionChooserModal'));
- 						chooser.show();
- 					})
- 					.catch(err => {
- 						Swal.fire({ icon: 'error', title: 'Failed to load member', text: err && err.message ? err.message : 'Please try again.' });
- 					});
+						console.log('Member data loaded:', m);
+						currentEditMember = m;
+						const chooser = new bootstrap.Modal(document.getElementById('editSectionChooserModal'));
+						chooser.show();
+					})
+					.catch(err => {
+						console.error('Error loading member:', err);
+						Swal.fire({ icon: 'error', title: 'Failed to load member', text: err && err.message ? err.message : 'Please try again.' });
+					});
 				});
- 			}
+			}
 
             // Wire chooser buttons to open respective modals with prefill
-            document.getElementById('btnEditPersonal').addEventListener('click', () => {
-                if (!currentEditMember) return;
-                const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                chooser && chooser.hide();
-                document.getElementById('edit_personal_id').value = currentEditMember.id;
-                document.getElementById('edit_personal_full_name').value = currentEditMember.full_name || '';
-                document.getElementById('edit_personal_email').value = currentEditMember.email || '';
-                document.getElementById('edit_personal_phone_number').value = currentEditMember.phone_number || '';
-                document.getElementById('edit_personal_gender').value = currentEditMember.gender || '';
-                document.getElementById('edit_personal_date_of_birth').value = currentEditMember.date_of_birth || '';
-                document.getElementById('edit_personal_nida_number').value = currentEditMember.nida_number || '';
-                document.getElementById('edit_personal_membership_type').value = currentEditMember.membership_type || 'permanent';
-                // tribe
-                populateSelect(document.getElementById('edit_personal_tribe'), tribeList, 'Select tribe');
-                const tribeEl = document.getElementById('edit_personal_tribe');
-                const otherGroup = document.getElementById('edit_personal_other_tribe_group');
-                const otherInput = document.getElementById('edit_personal_other_tribe');
-                tribeEl.value = tribeList.includes(currentEditMember.tribe) ? currentEditMember.tribe : 'Other';
-                otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none';
-                otherInput.value = currentEditMember.other_tribe || '';
-                tribeEl.onchange = () => { otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none'; if (tribeEl.value !== 'Other') otherInput.value = ''; };
-                new bootstrap.Modal(document.getElementById('memberEditPersonalModal')).show();
-            });
+            // Ensure these are attached after DOM is ready
+            function setupEditButtonListeners() {
+                const btnEditPersonal = document.getElementById('btnEditPersonal');
+                const btnEditLocation = document.getElementById('btnEditLocation');
+                const btnEditFamily = document.getElementById('btnEditFamily');
+                
+                if (btnEditPersonal) {
+                    btnEditPersonal.addEventListener('click', () => {
+                        if (!currentEditMember) return;
+                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
+                        chooser && chooser.hide();
+                        document.getElementById('edit_personal_id').value = currentEditMember.id;
+                        document.getElementById('edit_personal_full_name').value = currentEditMember.full_name || '';
+                        document.getElementById('edit_personal_email').value = currentEditMember.email || '';
+                        document.getElementById('edit_personal_phone_number').value = currentEditMember.phone_number || '';
+                        document.getElementById('edit_personal_gender').value = currentEditMember.gender || '';
+                        document.getElementById('edit_personal_date_of_birth').value = currentEditMember.date_of_birth || '';
+                        document.getElementById('edit_personal_nida_number').value = currentEditMember.nida_number || '';
+                        document.getElementById('edit_personal_membership_type').value = currentEditMember.membership_type || 'permanent';
+                        // tribe
+                        populateSelect(document.getElementById('edit_personal_tribe'), tribeList, 'Select tribe');
+                        const tribeEl = document.getElementById('edit_personal_tribe');
+                        const otherGroup = document.getElementById('edit_personal_other_tribe_group');
+                        const otherInput = document.getElementById('edit_personal_other_tribe');
+                        tribeEl.value = tribeList.includes(currentEditMember.tribe) ? currentEditMember.tribe : 'Other';
+                        otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none';
+                        otherInput.value = currentEditMember.other_tribe || '';
+                        tribeEl.onchange = () => { otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none'; if (tribeEl.value !== 'Other') otherInput.value = ''; };
+                        new bootstrap.Modal(document.getElementById('memberEditPersonalModal')).show();
+                    });
+                }
 
-            document.getElementById('btnEditLocation').addEventListener('click', () => {
-                if (!currentEditMember) return;
-                const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                chooser && chooser.hide();
-                document.getElementById('edit_location_id').value = currentEditMember.id;
-                ensureLocationsLoaded().then(() => {
-                    populateSelect(document.getElementById('edit_location_region'), Object.keys(tzLocations), 'Select region');
-                    const regionEl = document.getElementById('edit_location_region');
-                    const districtEl = document.getElementById('edit_location_district');
-                    const wardEl = document.getElementById('edit_location_ward');
-                    function updateDistricts() {
-                        populateSelect(districtEl, regionEl.value ? Object.keys(tzLocations[regionEl.value] || {}) : [], 'Select district');
-                        updateWards();
-                    }
-                    function updateWards() {
-                        const wards = regionEl.value && districtEl.value ? (tzLocations[regionEl.value]?.[districtEl.value] || []) : [];
-                        populateSelect(wardEl, wards, 'Select ward');
-                    }
-                    regionEl.onchange = updateDistricts;
-                    districtEl.onchange = updateWards;
-                    regionEl.value = currentEditMember.region || '';
-                    updateDistricts();
-                    districtEl.value = currentEditMember.district || '';
-                    updateWards();
-                    wardEl.value = currentEditMember.ward || '';
-                });
-                document.getElementById('edit_location_street').value = currentEditMember.street || '';
-                document.getElementById('edit_location_address').value = currentEditMember.address || '';
-                new bootstrap.Modal(document.getElementById('memberEditLocationModal')).show();
-            });
+                if (btnEditLocation) {
+                    btnEditLocation.addEventListener('click', () => {
+                        if (!currentEditMember) return;
+                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
+                        chooser && chooser.hide();
+                        document.getElementById('edit_location_id').value = currentEditMember.id;
+                        ensureLocationsLoaded().then(() => {
+                            populateSelect(document.getElementById('edit_location_region'), Object.keys(tzLocations), 'Select region');
+                            const regionEl = document.getElementById('edit_location_region');
+                            const districtEl = document.getElementById('edit_location_district');
+                            const wardEl = document.getElementById('edit_location_ward');
+                            function updateDistricts() {
+                                populateSelect(districtEl, regionEl.value ? Object.keys(tzLocations[regionEl.value] || {}) : [], 'Select district');
+                                updateWards();
+                            }
+                            function updateWards() {
+                                const wards = regionEl.value && districtEl.value ? (tzLocations[regionEl.value]?.[districtEl.value] || []) : [];
+                                populateSelect(wardEl, wards, 'Select ward');
+                            }
+                            regionEl.onchange = updateDistricts;
+                            districtEl.onchange = updateWards;
+                            regionEl.value = currentEditMember.region || '';
+                            updateDistricts();
+                            districtEl.value = currentEditMember.district || '';
+                            updateWards();
+                            wardEl.value = currentEditMember.ward || '';
+                        });
+                        document.getElementById('edit_location_street').value = currentEditMember.street || '';
+                        document.getElementById('edit_location_address').value = currentEditMember.address || '';
+                        new bootstrap.Modal(document.getElementById('memberEditLocationModal')).show();
+                    });
+                }
 
-            document.getElementById('btnEditFamily').addEventListener('click', () => {
-                if (!currentEditMember) return;
-                const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                chooser && chooser.hide();
-                document.getElementById('edit_family_id').value = currentEditMember.id;
-                document.getElementById('edit_family_living_with_family').value = (currentEditMember.living_with_family || '').toString().toLowerCase();
-                document.getElementById('edit_family_family_relationship').value = currentEditMember.family_relationship || '';
-                new bootstrap.Modal(document.getElementById('memberEditFamilyModal')).show();
-            });
+                if (btnEditFamily) {
+                    btnEditFamily.addEventListener('click', () => {
+                        if (!currentEditMember) return;
+                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
+                        chooser && chooser.hide();
+                        
+                        const member = currentEditMember;
+                        document.getElementById('edit_family_id').value = member.id;
+                        document.getElementById('edit_family_member_type').value = member.member_type || '';
+                        document.getElementById('edit_family_membership_type').value = member.membership_type || '';
+                        
+                        // Show/hide sections based on member type
+                        const maritalSection = document.getElementById('edit_family_marital_section');
+                        const guardianSection = document.getElementById('edit_family_guardian_section');
+                        const isPermanentFatherOrMother = (member.membership_type === 'permanent' && (member.member_type === 'father' || member.member_type === 'mother'));
+                        const isTemporaryOrIndependent = (member.membership_type === 'temporary' || (member.membership_type === 'permanent' && member.member_type === 'independent'));
+                        
+                        if (isPermanentFatherOrMother) {
+                            maritalSection.style.display = 'block';
+                            // Set marital status
+                            document.getElementById('edit_family_marital_status').value = member.marital_status || '';
+                            
+                            // Show/hide spouse section based on marital status
+                            const spouseSection = document.getElementById('edit_family_spouse_section');
+                            if (member.marital_status === 'married') {
+                                spouseSection.style.display = 'block';
+                                // Populate spouse fields
+                                document.getElementById('edit_family_spouse_full_name').value = member.spouse_full_name || '';
+                                document.getElementById('edit_family_spouse_date_of_birth').value = member.spouse_date_of_birth || '';
+                                document.getElementById('edit_family_spouse_education_level').value = member.spouse_education_level || '';
+                                document.getElementById('edit_family_spouse_profession').value = member.spouse_profession || '';
+                                document.getElementById('edit_family_spouse_nida_number').value = member.spouse_nida_number || '';
+                                document.getElementById('edit_family_spouse_email').value = member.spouse_email || '';
+                                document.getElementById('edit_family_spouse_phone_number').value = member.spouse_phone_number || '';
+                                document.getElementById('edit_family_spouse_church_member').value = member.spouse_church_member || '';
+                                
+                                // Spouse tribe
+                                const spouseTribeEl = document.getElementById('edit_family_spouse_tribe');
+                                populateSelect(spouseTribeEl, tribeList, 'Select tribe');
+                                if (member.spouse_tribe) {
+                                    spouseTribeEl.value = member.spouse_tribe;
+                                    if (member.spouse_tribe === 'Other') {
+                                        document.getElementById('edit_family_spouse_other_tribe_group').style.display = 'block';
+                                        document.getElementById('edit_family_spouse_other_tribe').value = member.spouse_other_tribe || '';
+                                    }
+                                }
+                            } else {
+                                spouseSection.style.display = 'none';
+                            }
+                        } else {
+                            maritalSection.style.display = 'none';
+                        }
+                        
+                        if (isTemporaryOrIndependent) {
+                            guardianSection.style.display = 'block';
+                            document.getElementById('edit_family_guardian_name').value = member.guardian_name || '';
+                            document.getElementById('edit_family_guardian_phone').value = member.guardian_phone || '';
+                            document.getElementById('edit_family_guardian_relationship').value = member.guardian_relationship || '';
+                        } else {
+                            guardianSection.style.display = 'none';
+                        }
+                        
+                        // Add event listener for marital status change
+                        const maritalStatusEl = document.getElementById('edit_family_marital_status');
+                        maritalStatusEl.onchange = function() {
+                            const spouseSection = document.getElementById('edit_family_spouse_section');
+                            spouseSection.style.display = this.value === 'married' ? 'block' : 'none';
+                        };
+                        
+                        // Add event listener for spouse tribe change
+                        const spouseTribeEl = document.getElementById('edit_family_spouse_tribe');
+                        spouseTribeEl.onchange = function() {
+                            const otherTribeGroup = document.getElementById('edit_family_spouse_other_tribe_group');
+                            otherTribeGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+                        };
+                        
+                        new bootstrap.Modal(document.getElementById('memberEditFamilyModal')).show();
+                    });
+                }
+            }
+
+            // Setup edit button listeners when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupEditButtonListeners);
+            } else {
+                setupEditButtonListeners();
+            }
 
             // Submit handlers for section forms
-            document.getElementById('editPersonalForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const id = document.getElementById('edit_personal_id').value;
-                const fd = new FormData();
-                fd.append('full_name', document.getElementById('edit_personal_full_name').value);
-                fd.append('email', document.getElementById('edit_personal_email').value);
-                fd.append('phone_number', document.getElementById('edit_personal_phone_number').value);
-                fd.append('membership_type', document.getElementById('edit_personal_membership_type').value);
-                fd.append('gender', document.getElementById('edit_personal_gender').value);
-                fd.append('date_of_birth', document.getElementById('edit_personal_date_of_birth').value);
-                fd.append('nida_number', document.getElementById('edit_personal_nida_number').value);
-                const tribeVal = document.getElementById('edit_personal_tribe').value;
-                fd.append('tribe', tribeVal === 'Other' ? '' : tribeVal);
-                fd.append('other_tribe', document.getElementById('edit_personal_other_tribe').value);
-                fd.append('_method', 'PUT');
-                fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
-                        else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
-                    })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
-            });
+            function setupFormSubmitHandlers() {
+                const editPersonalForm = document.getElementById('editPersonalForm');
+                const editLocationForm = document.getElementById('editLocationForm');
+                const editFamilyForm = document.getElementById('editFamilyForm');
+                
+                if (editPersonalForm) {
+                    editPersonalForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const id = document.getElementById('edit_personal_id').value;
+                        if (!id) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
+                            return;
+                        }
+                        const fd = new FormData();
+                        // Required fields
+                        fd.append('full_name', document.getElementById('edit_personal_full_name').value);
+                        fd.append('phone_number', document.getElementById('edit_personal_phone_number').value);
+                        fd.append('membership_type', document.getElementById('edit_personal_membership_type').value);
+                        fd.append('gender', document.getElementById('edit_personal_gender').value);
+                        
+                        // Optional fields - only send if they have values
+                        const email = document.getElementById('edit_personal_email').value.trim();
+                        if (email) fd.append('email', email);
+                        
+                        const dateOfBirth = document.getElementById('edit_personal_date_of_birth').value;
+                        if (dateOfBirth) fd.append('date_of_birth', dateOfBirth);
+                        
+                        const nidaNumber = document.getElementById('edit_personal_nida_number').value;
+                        if (nidaNumber) fd.append('nida_number', nidaNumber);
+                        
+                        const tribeVal = document.getElementById('edit_personal_tribe').value;
+                        if (tribeVal && tribeVal !== 'Other') {
+                            fd.append('tribe', tribeVal);
+                        } else if (tribeVal === 'Other') {
+                            const otherTribe = document.getElementById('edit_personal_other_tribe').value;
+                            if (otherTribe) {
+                                fd.append('tribe', 'Other');
+                                fd.append('other_tribe', otherTribe);
+                            }
+                        }
+                        
+                        fd.append('_method', 'PUT');
+                        
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrfToken) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
+                            return;
+                        }
+                        
+                        fetch(`{{ url('/members') }}/${id}`, { 
+                            method: 'POST', 
+                            headers: { 
+                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                                'Accept': 'application/json'
+                            }, 
+                            body: fd 
+                        })
+                        .then(async r => {
+                            // Clone response to avoid "body already read" error
+                            const clonedResponse = r.clone();
+                            const contentType = r.headers.get('content-type') || '';
+                            const isJson = contentType.includes('application/json');
+                            
+                            // Handle non-OK responses
+                            if (!r.ok) {
+                                let errorMessage = `Update failed (Status: ${r.status})`;
+                                
+                                try {
+                                    if (isJson) {
+                                        const res = await clonedResponse.json();
+                                        // Handle validation errors (422)
+                                        if (r.status === 422 && res.errors) {
+                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
+                                            errorMessage = errorMessages || res.message || 'Validation failed';
+                                        }
+                                        // Handle 404 (member not found)
+                                        else if (r.status === 404) {
+                                            errorMessage = 'Member not found. Please refresh the page and try again.';
+                                        }
+                                        // Handle 500 (server error)
+                                        else if (r.status === 500) {
+                                            errorMessage = res.message || 'Server error. Please try again later.';
+                                        }
+                                        // Other errors with message
+                                        else if (res.message) {
+                                            errorMessage = res.message;
+                                        }
+                                    } else {
+                                        // Not JSON, get text
+                                        const text = await clonedResponse.text();
+                                        errorMessage = text || errorMessage;
+                                    }
+                                } catch (parseError) {
+                                    // If parsing fails, use default message
+                                    console.error('Error parsing response:', parseError);
+                                    errorMessage = `Server error (Status: ${r.status})`;
+                                }
+                                
+                                throw new Error(errorMessage);
+                            }
+                            
+                            // Parse successful response
+                            if (isJson) {
+                                return await r.json();
+                            } else {
+                                const text = await r.text();
+                                throw new Error(text || 'Server returned non-JSON response');
+                            }
+                        })
+                        .then(res => {
+                            if (res.success) { 
+                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
+                            } else { 
+                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Update error:', err);
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: 'Update failed', 
+                                html: err.message || 'Network error. Please check your connection and try again.' 
+                            });
+                        });
+                    });
+                }
 
-            document.getElementById('editLocationForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const id = document.getElementById('edit_location_id').value;
-                const fd = new FormData();
-                fd.append('region', document.getElementById('edit_location_region').value);
-                fd.append('district', document.getElementById('edit_location_district').value);
-                fd.append('ward', document.getElementById('edit_location_ward').value);
-                fd.append('street', document.getElementById('edit_location_street').value);
-                fd.append('address', document.getElementById('edit_location_address').value);
-                fd.append('_method', 'PUT');
-                fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
-                        else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
-                    })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
-            });
+                if (editLocationForm) {
+                    editLocationForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const id = document.getElementById('edit_location_id').value;
+                        if (!id) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
+                            return;
+                        }
+                        const fd = new FormData();
+                        fd.append('region', document.getElementById('edit_location_region').value);
+                        fd.append('district', document.getElementById('edit_location_district').value);
+                        fd.append('ward', document.getElementById('edit_location_ward').value);
+                        fd.append('street', document.getElementById('edit_location_street').value);
+                        fd.append('address', document.getElementById('edit_location_address').value);
+                        fd.append('_method', 'PUT');
+                        
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrfToken) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
+                            return;
+                        }
+                        
+                        fetch(`{{ url('/members') }}/${id}`, { 
+                            method: 'POST', 
+                            headers: { 
+                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                                'Accept': 'application/json'
+                            }, 
+                            body: fd 
+                        })
+                        .then(async r => {
+                            // Clone response to avoid "body already read" error
+                            const clonedResponse = r.clone();
+                            const contentType = r.headers.get('content-type') || '';
+                            const isJson = contentType.includes('application/json');
+                            
+                            // Handle non-OK responses
+                            if (!r.ok) {
+                                let errorMessage = `Update failed (Status: ${r.status})`;
+                                
+                                try {
+                                    if (isJson) {
+                                        const res = await clonedResponse.json();
+                                        // Handle validation errors (422)
+                                        if (r.status === 422 && res.errors) {
+                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
+                                            errorMessage = errorMessages || res.message || 'Validation failed';
+                                        }
+                                        // Handle 404 (member not found)
+                                        else if (r.status === 404) {
+                                            errorMessage = 'Member not found. Please refresh the page and try again.';
+                                        }
+                                        // Handle 500 (server error)
+                                        else if (r.status === 500) {
+                                            errorMessage = res.message || 'Server error. Please try again later.';
+                                        }
+                                        // Other errors with message
+                                        else if (res.message) {
+                                            errorMessage = res.message;
+                                        }
+                                    } else {
+                                        // Not JSON, get text
+                                        const text = await clonedResponse.text();
+                                        errorMessage = text || errorMessage;
+                                    }
+                                } catch (parseError) {
+                                    // If parsing fails, use default message
+                                    console.error('Error parsing response:', parseError);
+                                    errorMessage = `Server error (Status: ${r.status})`;
+                                }
+                                
+                                throw new Error(errorMessage);
+                            }
+                            
+                            // Parse successful response
+                            if (isJson) {
+                                return await r.json();
+                            } else {
+                                const text = await r.text();
+                                throw new Error(text || 'Server returned non-JSON response');
+                            }
+                        })
+                        .then(res => {
+                            if (res.success) { 
+                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
+                            } else { 
+                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Update error:', err);
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: 'Update failed', 
+                                html: err.message || 'Network error. Please check your connection and try again.' 
+                            });
+                        });
+                    });
+                }
 
-            document.getElementById('editFamilyForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const id = document.getElementById('edit_family_id').value;
-                const fd = new FormData();
-                fd.append('living_with_family', document.getElementById('edit_family_living_with_family').value);
-                fd.append('family_relationship', document.getElementById('edit_family_family_relationship').value);
-                fd.append('_method', 'PUT');
-                fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
-                        else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
-                    })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
-            });
+                if (editFamilyForm) {
+                    editFamilyForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const id = document.getElementById('edit_family_id').value;
+                        if (!id) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
+                            return;
+                        }
+                        const fd = new FormData();
+                        const memberType = document.getElementById('edit_family_member_type').value;
+                        const membershipType = document.getElementById('edit_family_membership_type').value;
+                        
+                        // Marital status and spouse info (for permanent father/mother)
+                        if (membershipType === 'permanent' && (memberType === 'father' || memberType === 'mother')) {
+                            const maritalStatus = document.getElementById('edit_family_marital_status').value;
+                            if (maritalStatus) {
+                                fd.append('marital_status', maritalStatus);
+                            }
+                            
+                            // Spouse information (if married)
+                            if (maritalStatus === 'married') {
+                                const spouseFullName = document.getElementById('edit_family_spouse_full_name').value;
+                                if (spouseFullName) fd.append('spouse_full_name', spouseFullName);
+                                
+                                const spouseDob = document.getElementById('edit_family_spouse_date_of_birth').value;
+                                if (spouseDob) fd.append('spouse_date_of_birth', spouseDob);
+                                
+                                const spouseEducation = document.getElementById('edit_family_spouse_education_level').value;
+                                if (spouseEducation) fd.append('spouse_education_level', spouseEducation);
+                                
+                                const spouseProfession = document.getElementById('edit_family_spouse_profession').value;
+                                if (spouseProfession) fd.append('spouse_profession', spouseProfession);
+                                
+                                const spouseNida = document.getElementById('edit_family_spouse_nida_number').value;
+                                if (spouseNida) fd.append('spouse_nida_number', spouseNida);
+                                
+                                const spouseEmail = document.getElementById('edit_family_spouse_email').value;
+                                if (spouseEmail) fd.append('spouse_email', spouseEmail);
+                                
+                                const spousePhone = document.getElementById('edit_family_spouse_phone_number').value;
+                                if (spousePhone) fd.append('spouse_phone_number', spousePhone);
+                                
+                                const spouseChurchMember = document.getElementById('edit_family_spouse_church_member').value;
+                                if (spouseChurchMember) fd.append('spouse_church_member', spouseChurchMember);
+                                
+                                // Spouse tribe
+                                const spouseTribeVal = document.getElementById('edit_family_spouse_tribe').value;
+                                if (spouseTribeVal && spouseTribeVal !== 'Other') {
+                                    fd.append('spouse_tribe', spouseTribeVal);
+                                } else if (spouseTribeVal === 'Other') {
+                                    const spouseOtherTribe = document.getElementById('edit_family_spouse_other_tribe').value;
+                                    if (spouseOtherTribe) {
+                                        fd.append('spouse_tribe', 'Other');
+                                        fd.append('spouse_other_tribe', spouseOtherTribe);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Guardian information (for temporary and independent permanent)
+                        if (membershipType === 'temporary' || (membershipType === 'permanent' && memberType === 'independent')) {
+                            const guardianName = document.getElementById('edit_family_guardian_name').value;
+                            if (guardianName) fd.append('guardian_name', guardianName);
+                            
+                            const guardianPhone = document.getElementById('edit_family_guardian_phone').value;
+                            if (guardianPhone) fd.append('guardian_phone', guardianPhone);
+                            
+                            const guardianRelationship = document.getElementById('edit_family_guardian_relationship').value;
+                            if (guardianRelationship) fd.append('guardian_relationship', guardianRelationship);
+                        }
+                        
+                        fd.append('_method', 'PUT');
+                        
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrfToken) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
+                            return;
+                        }
+                        
+                        fetch(`{{ url('/members') }}/${id}`, { 
+                            method: 'POST', 
+                            headers: { 
+                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                                'Accept': 'application/json'
+                            }, 
+                            body: fd 
+                        })
+                        .then(async r => {
+                            // Clone response to avoid "body already read" error
+                            const clonedResponse = r.clone();
+                            const contentType = r.headers.get('content-type') || '';
+                            const isJson = contentType.includes('application/json');
+                            
+                            // Handle non-OK responses
+                            if (!r.ok) {
+                                let errorMessage = `Update failed (Status: ${r.status})`;
+                                
+                                try {
+                                    if (isJson) {
+                                        const res = await clonedResponse.json();
+                                        // Handle validation errors (422)
+                                        if (r.status === 422 && res.errors) {
+                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
+                                            errorMessage = errorMessages || res.message || 'Validation failed';
+                                        }
+                                        // Handle 404 (member not found)
+                                        else if (r.status === 404) {
+                                            errorMessage = 'Member not found. Please refresh the page and try again.';
+                                        }
+                                        // Handle 500 (server error)
+                                        else if (r.status === 500) {
+                                            errorMessage = res.message || 'Server error. Please try again later.';
+                                        }
+                                        // Other errors with message
+                                        else if (res.message) {
+                                            errorMessage = res.message;
+                                        }
+                                    } else {
+                                        // Not JSON, get text
+                                        const text = await clonedResponse.text();
+                                        errorMessage = text || errorMessage;
+                                    }
+                                } catch (parseError) {
+                                    // If parsing fails, use default message
+                                    console.error('Error parsing response:', parseError);
+                                    errorMessage = `Server error (Status: ${r.status})`;
+                                }
+                                
+                                throw new Error(errorMessage);
+                            }
+                            
+                            // Parse successful response
+                            if (isJson) {
+                                return await r.json();
+                            } else {
+                                const text = await r.text();
+                                throw new Error(text || 'Server returned non-JSON response');
+                            }
+                        })
+                        .then(res => {
+                            if (res.success) { 
+                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
+                            } else { 
+                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Update error:', err);
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: 'Update failed', 
+                                html: err.message || 'Network error. Please check your connection and try again.' 
+                            });
+                        });
+                    });
+                }
+            }
+
+            // Setup form submit handlers when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupFormSubmitHandlers);
+            } else {
+                setupFormSubmitHandlers();
+            }
 
             // Quick Add modal cascading + tribe
             function setupCascadingForAdd() {
@@ -1143,7 +2230,371 @@
                     .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
+            function downloadArchiveReport(member, reason) {
+                try {
+                    console.log('Starting download for member:', member);
+                    
+                    // Generate the report HTML
+                    const reportHTML = generateArchiveReportHTML(member, reason);
+                    console.log('Generated HTML length:', reportHTML.length);
+                    
+                    // Method 1: Try blob download first
+                    if (window.Blob && window.URL) {
+                        try {
+                            const blob = new Blob([reportHTML], { 
+                                type: 'text/html;charset=utf-8' 
+                            });
+                            console.log('Created blob:', blob);
+                            
+                            const url = window.URL.createObjectURL(blob);
+                            console.log('Created URL:', url);
+                            
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `Member_Archive_Report_${member.member_id || member.id || 'Unknown'}_${new Date().toISOString().split('T')[0]}.html`;
+                            link.style.display = 'none';
+                            
+                            console.log('Download filename:', link.download);
+                            
+                            document.body.appendChild(link);
+                            
+                            // Trigger download
+                            setTimeout(() => {
+                                link.click();
+                                console.log('Download triggered');
+                                
+                                setTimeout(() => {
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                    console.log('Cleanup completed');
+                                }, 100);
+                            }, 100);
+                            
+                            // Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Report Downloaded',
+                                text: 'Archive report has been downloaded successfully!',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            
+                            return;
+                        } catch (blobError) {
+                            console.log('Blob method failed, trying alternative:', blobError);
+                        }
+                    }
+                    
+                    // Method 2: Fallback - open in new window and let user save
+                    const newWindow = window.open('', '_blank');
+                    if (newWindow) {
+                        newWindow.document.write(reportHTML);
+                        newWindow.document.close();
+                        newWindow.focus();
+                        
+                        // Show instructions
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Report Opened',
+                            html: `
+                                <p>The report has been opened in a new window.</p>
+                                <p><strong>To save the file:</strong></p>
+                                <ol class="text-start">
+                                    <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
+                                    <li>Choose a location to save the file</li>
+                                    <li>The file will be saved as an HTML file</li>
+                                </ol>
+                            `,
+                            showConfirmButton: true,
+                            confirmButtonText: 'Got it!'
+                        });
+                    } else {
+                        throw new Error('Could not open new window');
+                    }
+                    
+                } catch (error) {
+                    console.error('Download error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Download Failed',
+                        html: `
+                            <p>There was an error downloading the report.</p>
+                            <p><strong>Alternative options:</strong></p>
+                            <ul class="text-start">
+                                <li>Use the "Print Report" option and save as PDF</li>
+                                <li>Copy the report content manually</li>
+                                <li>Try using a different browser</li>
+                            </ul>
+                        `,
+                        showConfirmButton: true
+                    });
+                }
+            }
+
+            function generateArchiveReportHTML(member, reason) {
+                return `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Member Archive Report - ${member.full_name}</title>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                background: #f8f9fa;
+                                padding: 20px;
+                                line-height: 1.6;
+                            }
+                            
+                            .report-container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background: white;
+                                border-radius: 15px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                overflow: hidden;
+                            }
+                            
+                            .report-header {
+                                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                color: white;
+                                padding: 25px;
+                                text-align: center;
+                            }
+                            
+                            .report-header h1 {
+                                font-size: 24px;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                            }
+                            
+                            .report-header .subtitle {
+                                font-size: 14px;
+                                opacity: 0.9;
+                            }
+                            
+                            .report-body {
+                                padding: 30px;
+                            }
+                            
+                            .member-info {
+                                background: #f8f9fa;
+                                border-radius: 10px;
+                                padding: 20px;
+                                margin-bottom: 25px;
+                            }
+                            
+                            .member-info h3 {
+                                color: #495057;
+                                margin-bottom: 15px;
+                                font-size: 18px;
+                                border-bottom: 2px solid #dee2e6;
+                                padding-bottom: 10px;
+                            }
+                            
+                            .info-grid {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 15px;
+                            }
+                            
+                            .info-item {
+                                display: flex;
+                                flex-direction: column;
+                            }
+                            
+                            .info-label {
+                                font-weight: 600;
+                                color: #6c757d;
+                                font-size: 12px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 5px;
+                            }
+                            
+                            .info-value {
+                                color: #212529;
+                                font-size: 14px;
+                                font-weight: 500;
+                            }
+                            
+                            .archive-reason {
+                                background: #fff3cd;
+                                border: 1px solid #ffeaa7;
+                                border-radius: 10px;
+                                padding: 20px;
+                                margin-bottom: 25px;
+                            }
+                            
+                            .archive-reason h3 {
+                                color: #856404;
+                                margin-bottom: 15px;
+                                font-size: 18px;
+                                display: flex;
+                                align-items: center;
+                            }
+                            
+                            .archive-reason h3::before {
+                                content: "📋";
+                                margin-right: 10px;
+                            }
+                            
+                            .reason-text {
+                                color: #856404;
+                                font-size: 14px;
+                                line-height: 1.6;
+                                background: white;
+                                padding: 15px;
+                                border-radius: 8px;
+                                border-left: 4px solid #ffc107;
+                            }
+                            
+                            .financial-note {
+                                background: #d1ecf1;
+                                border: 1px solid #bee5eb;
+                                border-radius: 10px;
+                                padding: 20px;
+                                text-align: center;
+                            }
+                            
+                            .financial-note h4 {
+                                color: #0c5460;
+                                margin-bottom: 10px;
+                                font-size: 16px;
+                            }
+                            
+                            .financial-note p {
+                                color: #0c5460;
+                                font-size: 14px;
+                                margin: 0;
+                            }
+                            
+                            .report-footer {
+                                background: #f8f9fa;
+                                padding: 20px;
+                                text-align: center;
+                                border-top: 1px solid #dee2e6;
+                            }
+                            
+                            .report-footer p {
+                                color: #6c757d;
+                                font-size: 12px;
+                                margin: 0;
+                            }
+                            
+                            .date-time {
+                                color: #6c757d;
+                                font-size: 12px;
+                                margin-top: 10px;
+                            }
+                            
+                            @media print {
+                                body {
+                                    background: white;
+                                    padding: 0;
+                                }
+                                
+                                .report-container {
+                                    box-shadow: none;
+                                    border-radius: 0;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-container">
+                            <div class="report-header">
+                                <h1>📦 Member Archive Report</h1>
+                                <p class="subtitle">Member has been moved to archived status</p>
+                            </div>
+                            
+                            <div class="report-body">
+                                <div class="member-info">
+                                    <h3>👤 Member Information</h3>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <span class="info-label">Full Name</span>
+                                            <span class="info-value">${member.full_name || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Member ID</span>
+                                            <span class="info-value">${member.member_id || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Phone Number</span>
+                                            <span class="info-value">${member.phone_number || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Email</span>
+                                            <span class="info-value">${member.email || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Gender</span>
+                                            <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Membership Type</span>
+                                            <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Date of Birth</span>
+                                            <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Registration Date</span>
+                                            <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="archive-reason">
+                                    <h3>Archive Reason</h3>
+                                    <div class="reason-text">${reason}</div>
+                                </div>
+                                
+                                <div class="financial-note">
+                                    <h4>💰 Financial Records Preserved</h4>
+                                    <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="report-footer">
+                                <p><strong>Waumini Link Church Management System</strong></p>
+                                <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            }
+
+            function printArchiveReport(member, reason) {
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank', 'width=800,height=600');
+                
+                // Generate the report HTML using the shared function
+                const reportHTML = generateArchiveReportHTML(member, reason);
+                
+                // Write the HTML to the new window
+                printWindow.document.write(reportHTML);
+                printWindow.document.close();
+                
+                // Focus the window and trigger print dialog
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            }
+
             function confirmDelete(id) {
+                console.log('confirmDelete called with ID:', id);
                 console.log('Attempting to delete member with ID:', id);
                 
                 // Check if we're in the archived tab
@@ -1173,21 +2624,38 @@
                         
                         console.log('Member found:', data.member);
                         
-                        // Now proceed with deletion
+                        // Show reason input form first
                         Swal.fire({
-                            title: 'Delete member?',
-                            text: `Are you sure you want to delete ${data.member.full_name}? This action cannot be undone.`,
+                            title: 'Archive Member',
+                            html: `
+                                <div class="mb-3">
+                                    <label for="archive-reason" class="form-label">Reason for archiving ${data.member.full_name}:</label>
+                                    <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                                </div>
+                            `,
                             icon: 'warning',
                             showCancelButton: true,
-                            confirmButtonText: 'Yes, delete',
+                            confirmButtonText: 'Archive Member',
                             cancelButtonText: 'Cancel',
-                            confirmButtonColor: '#dc3545'
+                            confirmButtonColor: '#dc3545',
+                            preConfirm: () => {
+                                const reason = document.getElementById('archive-reason').value.trim();
+                                if (!reason) {
+                                    Swal.showValidationMessage('Please provide a reason for archiving this member.');
+                                    return false;
+                                }
+                                return reason;
+                            }
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 // Show loading state
                                 Swal.fire({
-                                    title: 'Deleting...',
-                                    text: 'Please wait while we delete the member.',
+                                    title: 'Archiving...',
+                                    text: 'Please wait while we archive the member.',
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
                                     didOpen: () => {
@@ -1198,6 +2666,12 @@
                                 // Use different endpoint for archived vs active members
                                 const deleteUrl = isArchived ? `{{ url('/members/archived') }}/${id}` : `{{ url('/members') }}/${id}`;
                                 console.log('Delete URL:', deleteUrl);
+                                console.log('Archive reason:', result.value);
+                                
+                                // Prepare request body with reason
+                                const requestBody = {
+                                    reason: result.value
+                                };
                                 
                                 // Use a simple fetch request with proper error handling
                                 fetch(deleteUrl, {
@@ -1206,18 +2680,34 @@
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                         'Content-Type': 'application/json',
                                         'Accept': 'application/json'
-                                    }
+                                    },
+                                    body: JSON.stringify(requestBody)
                                 })
                                 .then(response => {
                                     console.log('Delete response status:', response.status);
                                     if (response.ok) {
                                         return response.json();
+                                    } else if (response.status === 403) {
+                                        // Handle 403 Forbidden - permission denied
+                                        return response.json().then(data => {
+                                            throw new Error(data.message || 'You do not have permission to archive members. Please contact your administrator.');
+                                        });
                                     } else if (response.status === 404) {
                                         throw new Error('Member not found');
                                     } else if (response.status === 419) {
                                         throw new Error('CSRF token mismatch. Please refresh the page.');
+                                    } else if (response.status === 422) {
+                                        // Parse the 422 response to get the actual error message
+                                        return response.json().then(data => {
+                                            throw new Error(data.message || 'Validation error occurred');
+                                        });
                                     } else {
-                                        throw new Error(`Server error: ${response.status}`);
+                                        // Try to parse error message from response
+                                        return response.json().then(data => {
+                                            throw new Error(data.message || `Server error: ${response.status}`);
+                                        }).catch(() => {
+                                            throw new Error(`Server error: ${response.status}`);
+                                        });
                                     }
                                 })
                                 .then(data => {
@@ -1237,16 +2727,36 @@
                                         
                                         Swal.fire({ 
                                             icon: 'success', 
-                                            title: 'Member deleted', 
-                                            text: 'The member was deleted successfully.', 
-                                            timer: 2000, 
-                                            showConfirmButton: false 
+                                            title: 'Member Archived', 
+                                            html: `
+                                                <div class="text-start">
+                                                    <p><strong>Reason:</strong> ${result.value}</p>
+                                                    <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
+                                                </div>
+                                            `, 
+                                            showConfirmButton: true,
+                                            showCancelButton: true,
+                                            showDenyButton: true,
+                                            confirmButtonText: '📄 Download Report',
+                                            denyButtonText: '🖨️ Print Report',
+                                            cancelButtonText: 'Close',
+                                            confirmButtonColor: '#28a745',
+                                            denyButtonColor: '#007bff',
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            timer: 0
+                                        }).then((actionResult) => {
+                                            if (actionResult.isConfirmed) {
+                                                downloadArchiveReport(data.member, result.value);
+                                            } else if (actionResult.isDenied) {
+                                                printArchiveReport(data.member, result.value);
+                                            }
+                                            
+                                            // Only reload after user has made a choice
+                                            setTimeout(() => {
+                                                location.reload();
+                                            }, 1000);
                                         });
-                                        
-                                        // Refresh the page after a short delay to update counts
-                                        setTimeout(() => {
-                                            location.reload();
-                                        }, 2000);
                                     } else {
                                         Swal.fire({ 
                                             icon: 'error', 
@@ -1403,6 +2913,24 @@
                         row('Family relationship', m.family_relationship)+
                         row('Tribe', (m.tribe || '') + (m.other_tribe ? (' ('+m.other_tribe+')') : ''))+
                         '</tbody></table>';
+                    
+                    // Add spouse details if present
+                    if (m.spouse_full_name || m.spouse_email || m.spouse_phone_number || m.spouse_profession || m.spouse_education_level || m.spouse_nida_number || m.spouse_date_of_birth || m.spouse_tribe) {
+                        const spouseTitle = (m.member_type === 'father' ? 'Wife' : (m.member_type === 'mother' ? 'Husband' : 'Spouse'));
+                        sectionsHtml += '<div class="section-title">' + spouseTitle + '</div>'+
+                            '<table class="table"><tbody>'+
+                            row('Marital Status', m.marital_status ? (m.marital_status.charAt(0).toUpperCase() + m.marital_status.slice(1)) : '—')+
+                            row(spouseTitle + ' Name', m.spouse_full_name)+
+                            row(spouseTitle + ' Church Member', m.spouse_church_member ? (m.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')+
+                            row(spouseTitle + ' DOB', formatDateDisplay(m.spouse_date_of_birth))+
+                            row(spouseTitle + ' Education', m.spouse_education_level)+
+                            row(spouseTitle + ' Profession', m.spouse_profession)+
+                            row(spouseTitle + ' NIDA', m.spouse_nida_number)+
+                            row(spouseTitle + ' Email', m.spouse_email)+
+                            row(spouseTitle + ' Phone', m.spouse_phone_number)+
+                            row(spouseTitle + ' Tribe', (m.spouse_tribe || '') + (m.spouse_other_tribe ? (' ('+m.spouse_other_tribe+')') : ''))+
+                            '</tbody></table>';
+                    }
                 }
 
                 w.document.write('<html><head><title>Member Details</title>');
@@ -1604,9 +3132,37 @@
                 const first = document.getElementById('btnHeaderEditPersonal') || document.getElementById('btnPrintDetails');
                 first && first.focus();
             });
+            
+            document.getElementById('memberDetailsModal').addEventListener('hidden.bs.modal', function(){
+                // Hide attendance history button when modal is closed
+                const attendanceBtn = document.getElementById('btnAttendanceHistory');
+                attendanceBtn.style.display = 'none';
+                attendanceBtn.removeAttribute('data-member-id');
+                
+                const idCardBtn = document.getElementById('btnIdCard');
+                idCardBtn.style.display = 'none';
+                idCardBtn.removeAttribute('data-member-id');
+            });
 
             // Set footer year
             document.getElementById('year').textContent = new Date().getFullYear();
+            
+            // Attendance history function
+            function viewAttendanceHistory() {
+                const attendanceBtn = document.getElementById('btnAttendanceHistory');
+                const memberId = attendanceBtn.getAttribute('data-member-id');
+                if (memberId) {
+                    window.open(`{{ url('/attendance/member') }}/${memberId}/history`, '_blank');
+                }
+            }
+            
+            function viewIdCard() {
+                const idCardBtn = document.getElementById('btnIdCard');
+                const memberId = idCardBtn.getAttribute('data-member-id');
+                if (memberId) {
+                    window.open(`{{ url('/members') }}/${memberId}/identity-card`, '_blank');
+                }
+            }
 			function ensureQrLib() {
 				return new Promise((resolve) => {
 					if (qrLibLoaded || window.QRCode) { qrLibLoaded = true; return resolve(); }
@@ -1649,13 +3205,777 @@
             }
 
             // Ensure global access for action handlers
+            function resetPassword(memberId) {
+                Swal.fire({
+                    title: 'Reset Password',
+                    text: 'Are you sure you want to reset this member\'s password? A new password will be generated and sent via SMS if available.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Reset Password',
+                    cancelButtonText: 'Cancel',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return fetch(`/members/${memberId}/reset-password`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                throw new Error(data.message || 'Failed to reset password');
+                            }
+                            return data;
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request failed: ${error.message}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed && result.value) {
+                        const data = result.value;
+                        let message = `Password reset successfully!\n\n`;
+                        message += `New Password: <strong>${data.password}</strong>\n\n`;
+                        
+                        if (data.sms_sent) {
+                            message += `✓ SMS sent to ${data.phone_number || 'member'}`;
+                        } else {
+                            message += `⚠ SMS could not be sent. Please share the password manually.`;
+                        }
+                        
+                        Swal.fire({
+                            title: 'Password Reset Successful',
+                            html: message,
+                            icon: 'success',
+                            confirmButtonText: 'Copy Password',
+                            showCancelButton: true,
+                            cancelButtonText: 'Close'
+                        }).then((copyResult) => {
+                            if (copyResult.isConfirmed) {
+                                // Copy password to clipboard
+                                navigator.clipboard.writeText(data.password).then(() => {
+                                    Swal.fire({
+                                        title: 'Copied!',
+                                        text: 'Password copied to clipboard',
+                                        icon: 'success',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+                                }).catch(() => {
+                                    // Fallback: select text
+                                    const tempInput = document.createElement('input');
+                                    tempInput.value = data.password;
+                                    document.body.appendChild(tempInput);
+                                    tempInput.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(tempInput);
+                                    Swal.fire({
+                                        title: 'Copied!',
+                                        text: 'Password copied to clipboard',
+                                        icon: 'success',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            function restoreMember(memberId) {
+                Swal.fire({
+                    title: 'Restore Member',
+                    text: 'Are you sure you want to restore this member? They will be moved back to active members.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Restore',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#28a745',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Restoring...',
+                            text: 'Please wait while we restore the member.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(`{{ url('/members/archived') }}/${memberId}/restore`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else if (response.status === 403) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'You do not have permission to restore members.');
+                                });
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || `Server error: ${response.status}`);
+                                }).catch(() => {
+                                    throw new Error(`Server error: ${response.status}`);
+                                });
+                            }
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Member Restored',
+                                    text: data.message || 'Member has been restored successfully.',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Restore Failed',
+                                    text: data.message || 'Please try again.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Restore error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Restore Failed',
+                                text: error.message || 'An error occurred while restoring the member.',
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
+            }
+
             window.viewDetails = viewDetails;
             window.openEdit = openEdit;
             window.confirmDelete = confirmDelete;
+            window.resetPassword = resetPassword;
+            window.restoreMember = restoreMember;
+            window.switchView = switchView;
             window.printMemberDetails = printMemberDetails;
             window.downloadMemberPDF = downloadMemberPDF;
         </script>
         
+        <script>
+            // Initialize child form handlers when DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                // Calculate age from date of birth
+                const dobInput = document.getElementById('child_date_of_birth');
+                if (dobInput) {
+                    dobInput.addEventListener('change', function() {
+                        const dob = new Date(this.value);
+                        if (!isNaN(dob.getTime())) {
+                            const today = new Date();
+                            let age = today.getFullYear() - dob.getFullYear();
+                            const monthDiff = today.getMonth() - dob.getMonth();
+                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                                age--;
+                            }
+                            const ageInput = document.getElementById('child_age');
+                            if (ageInput) {
+                                ageInput.value = age + ' years';
+                            }
+                        }
+                    });
+                }
+
+                // Toggle between member and non-member parent fields
+                document.querySelectorAll('input[name="parent_type"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const memberFields = document.getElementById('memberParentFields');
+                        const nonMemberFields = document.getElementById('nonMemberParentFields');
+                        const memberSelect = document.getElementById('child_member_id');
+                        const parentNameInput = document.getElementById('child_parent_name');
+                        
+                        if (this.value === 'member') {
+                            if (memberFields) memberFields.style.display = 'block';
+                            if (nonMemberFields) nonMemberFields.style.display = 'none';
+                            if (memberSelect) memberSelect.required = true;
+                            if (parentNameInput) parentNameInput.required = false;
+                        } else {
+                            if (memberFields) memberFields.style.display = 'none';
+                            if (nonMemberFields) nonMemberFields.style.display = 'block';
+                            if (memberSelect) memberSelect.required = false;
+                            if (parentNameInput) parentNameInput.required = true;
+                        }
+                    });
+                });
+            });
+
+            // Save child function
+            function saveChild() {
+                const form = document.getElementById('addChildForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const parentType = document.querySelector('input[name="parent_type"]:checked').value;
+                const childData = {
+                    full_name: document.getElementById('child_full_name').value,
+                    gender: document.getElementById('child_gender').value,
+                    date_of_birth: document.getElementById('child_date_of_birth').value,
+                };
+
+                if (parentType === 'member') {
+                    childData.member_id = document.getElementById('child_member_id').value;
+                    if (!childData.member_id) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Please select a parent member' });
+                        return;
+                    }
+                } else {
+                    childData.parent_name = document.getElementById('child_parent_name').value;
+                    childData.parent_phone = document.getElementById('child_parent_phone').value;
+                    childData.parent_relationship = document.getElementById('child_parent_relationship').value;
+                    if (!childData.parent_name) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Please enter parent/guardian name' });
+                        return;
+                    }
+                }
+
+                fetch('{{ route("children.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(childData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Success', text: data.message, timer: 1500 });
+                        document.getElementById('addChildForm').reset();
+                        document.getElementById('child_age').value = '';
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addChildModal'));
+                        if (modal) modal.hide();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to save child' });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorMessage = error.message || (error.errors ? JSON.stringify(error.errors) : 'An error occurred while saving the child');
+                    Swal.fire({ icon: 'error', title: 'Error', text: errorMessage });
+                });
+            }
+        </script>
+        
+        <script>
+            // Load notifications function
+            function loadNotifications() {
+                fetch('{{ route("notifications.data") }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.success) {
+                            // Store data globally for event details
+                            window.currentNotificationData = data;
+                            
+                            // Update counts
+                            const eventsCountEl = document.getElementById('eventsCount');
+                            const celebrationsCountEl = document.getElementById('celebrationsCount');
+                            const servicesCountEl = document.getElementById('servicesCount');
+                            
+                            if (eventsCountEl) eventsCountEl.textContent = data.counts.events || 0;
+                            if (celebrationsCountEl) celebrationsCountEl.textContent = data.counts.celebrations || 0;
+                            if (servicesCountEl) servicesCountEl.textContent = data.counts.services || 0;
+                            
+                            // Update total notification count
+                            const totalCount = data.counts.total || 0;
+                            const badge = document.getElementById('notificationBadge');
+                            if (badge) {
+                                badge.textContent = totalCount;
+                                badge.style.display = totalCount > 0 ? 'inline' : 'none';
+                            }
+                            
+                            // Update lists
+                            const eventsList = document.getElementById('eventsList');
+                            if (eventsList && data.events) {
+                                eventsList.innerHTML = generateEventList(data.events);
+                            }
+                            
+                            const celebrationsList = document.getElementById('celebrationsList');
+                            if (celebrationsList && data.celebrations) {
+                                celebrationsList.innerHTML = generateCelebrationList(data.celebrations);
+                            }
+                            
+                            const servicesList = document.getElementById('servicesList');
+                            if (servicesList && data.services) {
+                                servicesList.innerHTML = generateServiceList(data.services);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading notifications:', error);
+                        const badge = document.getElementById('notificationBadge');
+                        if (badge) {
+                            badge.textContent = '0';
+                            badge.style.display = 'none';
+                        }
+                    });
+            }
+            
+            // Generate HTML for events list
+            function generateEventList(events) {
+                if (!events || events.length === 0) {
+                    return '<div class="empty-notification-state"><i class="fas fa-calendar-times"></i><span>No upcoming events</span></div>';
+                }
+                return events.map((event, index) => {
+                    const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const timeText = event.hours_remaining !== null ? 
+                        `${event.hours_remaining}h left` : 
+                        `${event.days_remaining}d left`;
+                    const formatTime = (timeStr) => {
+                        if (!timeStr || timeStr === 'TBD') return 'TBD';
+                        try {
+                            if (timeStr.includes('T')) {
+                                const time = new Date(timeStr);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            if (timeStr.includes(':')) {
+                                const [hours, minutes] = timeStr.split(':');
+                                const time = new Date();
+                                time.setHours(parseInt(hours), parseInt(minutes), 0);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            return timeStr;
+                        } catch (e) {
+                            return 'TBD';
+                        }
+                    };
+                    return `
+                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
+                            <div class="notification-item-content">
+                                <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
+                                <div class="notification-details">
+                                    <div class="notification-title">${event.title}</div>
+                                    <div class="notification-meta">
+                                        <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
+                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                    </div>
+                                    <div class="notification-info">
+                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
+                                        ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
+                                    </div>
+                                    <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
+                                </div>
+                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Generate HTML for celebrations list
+            function generateCelebrationList(celebrations) {
+                if (!celebrations || celebrations.length === 0) {
+                    return '<div class="empty-notification-state"><i class="fas fa-birthday-cake"></i><span>No upcoming celebrations</span></div>';
+                }
+                return celebrations.map((celebration, index) => {
+                    const celebrationDate = new Date(celebration.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const timeText = celebration.hours_remaining !== null ? 
+                        `${celebration.hours_remaining}h left` : 
+                        `${celebration.days_remaining}d left`;
+                    const formatTime = (timeStr) => {
+                        if (!timeStr || timeStr === 'TBD') return 'TBD';
+                        try {
+                            if (timeStr.includes('T')) {
+                                const time = new Date(timeStr);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            if (timeStr.includes(':')) {
+                                const [hours, minutes] = timeStr.split(':');
+                                const time = new Date();
+                                time.setHours(parseInt(hours), parseInt(minutes), 0);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            return timeStr;
+                        } catch (e) {
+                            return 'TBD';
+                        }
+                    };
+                    return `
+                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
+                            <div class="notification-item-content">
+                                <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
+                                <div class="notification-details">
+                                    <div class="notification-title">${celebration.title}</div>
+                                    <div class="notification-meta">
+                                        <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
+                                        <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                    </div>
+                                    <div class="notification-info">
+                                        <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
+                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
+                                    </div>
+                                    <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
+                                </div>
+                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Generate HTML for services list
+            function generateServiceList(services) {
+                if (!services || services.length === 0) {
+                    return '<div class="empty-notification-state"><i class="fas fa-church"></i><span>No upcoming services</span></div>';
+                }
+                return services.map((service, index) => {
+                    const serviceDate = new Date(service.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const timeText = service.hours_remaining !== null ? 
+                        `${service.hours_remaining}h left` : 
+                        `${service.days_remaining}d left`;
+                    const formatTime = (timeStr) => {
+                        if (!timeStr || timeStr === 'TBD') return 'TBD';
+                        try {
+                            if (timeStr.includes('T')) {
+                                const time = new Date(timeStr);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            if (timeStr.includes(':')) {
+                                const [hours, minutes] = timeStr.split(':');
+                                const time = new Date();
+                                time.setHours(parseInt(hours), parseInt(minutes), 0);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            return timeStr;
+                        } catch (e) {
+                            return 'TBD';
+                        }
+                    };
+                    return `
+                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
+                            <div class="notification-item-content">
+                                <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
+                                <div class="notification-details">
+                                    <div class="notification-title">${service.title}</div>
+                                    <div class="notification-meta">
+                                        <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
+                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                    </div>
+                                    <div class="notification-info">
+                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
+                                        ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
+                                    </div>
+                                    ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
+                                    <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
+                                </div>
+                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Function to show event details in a modal
+            function showEventDetails(id, type) {
+                let modal = document.getElementById('eventDetailsModal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'eventDetailsModal';
+                    modal.className = 'modal fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4" id="eventDetailsBody">
+                                    <div class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-2"></i>Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                loadEventDetails(id, type);
+            }
+            
+            // Function to load event details
+            function loadEventDetails(id, type) {
+                const modalBody = document.getElementById('eventDetailsBody');
+                const modalTitle = document.getElementById('eventDetailsTitle');
+                const titles = {
+                    'event': 'Event Details',
+                    'celebration': 'Celebration Details', 
+                    'service': 'Service Details'
+                };
+                modalTitle.textContent = titles[type] || 'Details';
+                modalBody.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading details...</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    let eventData = null;
+                    if (window.currentNotificationData) {
+                        if (type === 'event') {
+                            eventData = window.currentNotificationData.events.find(e => e.id === id);
+                        } else if (type === 'celebration') {
+                            eventData = window.currentNotificationData.celebrations.find(c => c.id === id);
+                        } else if (type === 'service') {
+                            eventData = window.currentNotificationData.services.find(s => s.id === id);
+                        }
+                    }
+                    const formatTime = (timeStr) => {
+                        if (!timeStr || timeStr === 'TBD') return 'TBD';
+                        try {
+                            if (timeStr.includes('T') || /\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(timeStr)) {
+                                const time = new Date(timeStr);
+                                return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            if (/^\d{2}:\d{2}/.test(timeStr)) {
+                                const [hours, minutes] = timeStr.split(':');
+                                const d = new Date();
+                                d.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                                return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                            }
+                            return timeStr;
+                        } catch (e) {
+                            return 'TBD';
+                        }
+                    };
+                    if (eventData) {
+                        const eventDate = new Date(eventData.date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        let timeDisplay = 'TBD';
+                        if (type === 'service') {
+                            const start = eventData.start_time || eventData.time;
+                            const end = eventData.end_time;
+                            if (start && end) {
+                                timeDisplay = `${formatTime(start)} - ${formatTime(end)}`;
+                            } else if (start) {
+                                timeDisplay = formatTime(start);
+                            } else if (eventData.time) {
+                                timeDisplay = formatTime(eventData.time);
+                            }
+                        } else {
+                            timeDisplay = eventData.time ? formatTime(eventData.time) : 'TBD';
+                        }
+                        modalBody.innerHTML = `
+                            <div class="text-center mb-4">
+                                <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                                    <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                </div>
+                                <h3 class="text-dark mb-2">${eventData.title}</h3>
+                                <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
+                                            <h6 class="card-title">Date</h6>
+                                            <p class="card-text text-muted">${eventDate}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-clock text-success fa-2x mb-3"></i>
+                                            <h6 class="card-title">Time</h6>
+                                            <p class="card-text text-muted">${timeDisplay}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
+                                            <h6 class="card-title">Venue</h6>
+                                            <p class="card-text text-muted">${eventData.venue}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-user text-info fa-2x mb-3"></i>
+                                            <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
+                                            <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${eventData.theme ? `
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
+                                            <h6 class="card-title">Theme</h6>
+                                            <p class="card-text text-muted">${eventData.theme}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                <div class="col-12">
+                                    <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">Time Remaining</h6>
+                                                <p class="mb-0">
+                                                    ${eventData.hours_remaining !== null ? 
+                                                        `${eventData.hours_remaining} hours left` : 
+                                                        `${eventData.days_remaining} days left`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        modalBody.innerHTML = `
+                            <div class="text-center py-4 text-muted">Details not found.</div>
+                        `;
+                    }
+                }, 50);
+            }
+            
+            // Load notifications on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                loadNotifications();
+                // Refresh notifications every 5 minutes
+                setInterval(loadNotifications, 300000);
+            });
+            
+            // Update date and time display
+            function updateDateTime() {
+                const now = new Date();
+                const dateElement = document.getElementById('currentDate');
+                const timeElement = document.getElementById('currentTime');
+                
+                if (dateElement) {
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    dateElement.textContent = now.toLocaleDateString('en-US', options);
+                }
+                
+                if (timeElement) {
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    const seconds = now.getSeconds().toString().padStart(2, '0');
+                    timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+                }
+            }
+            
+            // Update date and time immediately and then every second
+            document.addEventListener('DOMContentLoaded', function() {
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
+            });
+            
+            // Toggle sidebar functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                const layoutSidenav = document.getElementById('layoutSidenav');
+                
+                if (sidebarToggle) {
+                    sidebarToggle.onclick = null;
+                    sidebarToggle.removeAttribute('onclick');
+                    
+                    if (!sidebarToggle.hasAttribute('data-layout-toggle-handler')) {
+                        sidebarToggle.setAttribute('data-layout-toggle-handler', 'true');
+                        
+                        sidebarToggle.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            if (layoutSidenav) {
+                                layoutSidenav.classList.toggle('sb-sidenav-toggled');
+                            }
+                            document.body.classList.toggle('sb-sidenav-toggled');
+                            
+                            const isToggled = layoutSidenav ? layoutSidenav.classList.contains('sb-sidenav-toggled') : document.body.classList.contains('sb-sidenav-toggled');
+                            localStorage.setItem('sb|sidebar-toggle', isToggled ? 'true' : 'false');
+                            
+                            return false;
+                        }, true);
+                        
+                        const savedState = localStorage.getItem('sb|sidebar-toggle');
+                        if (savedState === 'true') {
+                            if (layoutSidenav) {
+                                layoutSidenav.classList.add('sb-sidenav-toggled');
+                            }
+                            document.body.classList.add('sb-sidenav-toggled');
+                        }
+                    }
+                }
+            });
+            
+            // Make functions globally available
+            window.showEventDetails = showEventDetails;
+            window.loadNotifications = loadNotifications;
+        </script>
     </body>
-</html>
 </html>

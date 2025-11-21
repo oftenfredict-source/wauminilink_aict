@@ -5,11 +5,11 @@
 <form method="GET" action="{{ route('members.index') }}" class="card mb-3" id="filtersForm">
     <div class="card-body">
         <div class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
                 <label class="form-label">Search</label>
                 <input type="text" name="search" id="searchInput" value="{{ request('search') }}" class="form-control" placeholder="Search name, phone, email, member ID">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <label class="form-label">Gender</label>
                 <select name="gender" id="genderFilter" class="form-select">
                     <option value="">All</option>
@@ -17,7 +17,7 @@
                     <option value="female" {{ request('gender')==='female' ? 'selected' : '' }}>Female</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <label class="form-label">Region</label>
                 <select name="region" id="regionFilter" class="form-select">
                     <option value="">All</option>
@@ -26,7 +26,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <label class="form-label">District</label>
                 <select name="district" id="districtFilter" class="form-select">
                     <option value="">All</option>
@@ -35,7 +35,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <label class="form-label">Ward</label>
                 <select name="ward" id="wardFilter" class="form-select">
                     <option value="">All</option>
@@ -44,9 +44,9 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-12 d-flex gap-2 mt-2">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>Apply</button>
-                <a href="{{ route('members.index') }}" class="btn btn-outline-secondary">Reset</a>
+            <div class="col-12 d-flex flex-column flex-sm-row gap-2 mt-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i><span class="d-none d-sm-inline">Apply</span><span class="d-sm-none">Filter</span></button>
+                <a href="{{ route('members.index') }}" class="btn btn-outline-secondary"><i class="fas fa-redo me-2"></i><span class="d-none d-sm-inline">Reset</span><span class="d-sm-none">Clear</span></a>
             </div>
         </div>
     </div>
@@ -110,10 +110,14 @@
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-info" onclick="viewDetails({{ !empty($isArchived) ? $member->member_id : $member->id }})"><i class="fas fa-eye"></i></button>
-                                    <button class="btn btn-outline-primary" onclick="openEdit({{ !empty($isArchived) ? $member->member_id : $member->id }})"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-outline-danger" onclick="confirmDelete({{ !empty($isArchived) ? $member->member_id : $member->id }})"><i class="fas fa-trash"></i></button>
-                                    @if(($showArchive ?? false) && empty($isArchived))
-                                        <button class="btn btn-outline-warning" onclick="openArchiveModal({{ $member->id }})"><i class="fas fa-archive"></i></button>
+                                    @if(!empty($isArchived))
+                                        <button class="btn btn-outline-success" onclick="restoreMember({{ $member->member_id }})" title="Restore Member"><i class="fas fa-undo"></i></button>
+                                    @else
+                                        <button class="btn btn-outline-primary" onclick="openEdit({{ $member->id }})"><i class="fas fa-edit"></i></button>
+                                        @if(auth()->user()->isAdmin())
+                                            <button class="btn btn-outline-success" onclick="resetPassword({{ $member->id }})" title="Reset Password"><i class="fas fa-key"></i></button>
+                                        @endif
+                                        <button class="btn btn-outline-warning" onclick="confirmDelete({{ $member->id }})" title="Archive Member"><i class="fas fa-archive"></i></button>
                                     @endif
                                 </div>
                             </td>
@@ -286,7 +290,21 @@
                 },
                 body: formData
             })
-            .then(r => r.json())
+            .then(r => {
+                if (r.ok) {
+                    return r.json();
+                } else if (r.status === 403) {
+                    return r.json().then(data => {
+                        throw new Error(data.message || 'You do not have permission to archive members. Please contact your administrator.');
+                    });
+                } else {
+                    return r.json().then(data => {
+                        throw new Error(data.message || `Server error: ${r.status}`);
+                    }).catch(() => {
+                        throw new Error(`Server error: ${r.status}`);
+                    });
+                }
+            })
             .then(res => {
                 if (res.success) {
                     Swal.fire({ icon: 'success', title: 'Member archived', timer: 1200, showConfirmButton: false }).then(()=>location.reload());
@@ -294,7 +312,7 @@
                     Swal.fire({ icon: 'error', title: 'Archive failed', text: res.message || 'Please try again.' });
                 }
             })
-            .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
+            .catch(error => Swal.fire({ icon: 'error', title: 'Archive failed', text: error.message || 'Network error' }));
         });
         form._archiveHandlerAttached = true;
     }

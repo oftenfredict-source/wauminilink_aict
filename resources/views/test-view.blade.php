@@ -97,7 +97,7 @@
     <body class="sb-nav-fixed">
         <!-- Header -->
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard.secretary') }}">
+            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
                 <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
             </a>
             <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
@@ -137,7 +137,7 @@
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
+                            <a class="nav-link" href="{{ route('dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Dashboard
                             </a>
@@ -300,7 +300,7 @@
                                                         <div class="btn-group btn-group-sm" role="group">
                                                             <button class="btn btn-outline-info" onclick="viewDetails({{ $member->id }})"><i class="fas fa-eye"></i></button>
                                                             <button class="btn btn-outline-primary" onclick="openEdit({{ $member->id }})"><i class="fas fa-edit"></i></button>
-                                                            <button class="btn btn-outline-danger" onclick="confirmDelete({{ $member->id }})"><i class="fas fa-trash"></i></button>
+                                                            <button class="btn btn-outline-warning" onclick="confirmDelete({{ $member->id }})" title="Archive Member"><i class="fas fa-archive"></i></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -966,33 +966,457 @@
                     .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
+            function downloadArchiveReport(member, reason) {
+                try {
+                    console.log('Starting download for member:', member);
+                    
+                    // Generate the report HTML
+                    const reportHTML = generateArchiveReportHTML(member, reason);
+                    console.log('Generated HTML length:', reportHTML.length);
+                    
+                    // Method 1: Try blob download first
+                    if (window.Blob && window.URL) {
+                        try {
+                            const blob = new Blob([reportHTML], { 
+                                type: 'text/html;charset=utf-8' 
+                            });
+                            console.log('Created blob:', blob);
+                            
+                            const url = window.URL.createObjectURL(blob);
+                            console.log('Created URL:', url);
+                            
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `Member_Archive_Report_${member.member_id || member.id || 'Unknown'}_${new Date().toISOString().split('T')[0]}.html`;
+                            link.style.display = 'none';
+                            
+                            console.log('Download filename:', link.download);
+                            
+                            document.body.appendChild(link);
+                            
+                            // Trigger download
+                            setTimeout(() => {
+                                link.click();
+                                console.log('Download triggered');
+                                
+                                setTimeout(() => {
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                    console.log('Cleanup completed');
+                                }, 100);
+                            }, 100);
+                            
+                            // Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Report Downloaded',
+                                text: 'Archive report has been downloaded successfully!',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            
+                            return;
+                        } catch (blobError) {
+                            console.log('Blob method failed, trying alternative:', blobError);
+                        }
+                    }
+                    
+                    // Method 2: Fallback - open in new window and let user save
+                    const newWindow = window.open('', '_blank');
+                    if (newWindow) {
+                        newWindow.document.write(reportHTML);
+                        newWindow.document.close();
+                        newWindow.focus();
+                        
+                        // Show instructions
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Report Opened',
+                            html: `
+                                <p>The report has been opened in a new window.</p>
+                                <p><strong>To save the file:</strong></p>
+                                <ol class="text-start">
+                                    <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
+                                    <li>Choose a location to save the file</li>
+                                    <li>The file will be saved as an HTML file</li>
+                                </ol>
+                            `,
+                            showConfirmButton: true,
+                            confirmButtonText: 'Got it!'
+                        });
+                    } else {
+                        throw new Error('Could not open new window');
+                    }
+                    
+                } catch (error) {
+                    console.error('Download error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Download Failed',
+                        html: `
+                            <p>There was an error downloading the report.</p>
+                            <p><strong>Alternative options:</strong></p>
+                            <ul class="text-start">
+                                <li>Use the "Print Report" option and save as PDF</li>
+                                <li>Copy the report content manually</li>
+                                <li>Try using a different browser</li>
+                            </ul>
+                        `,
+                        showConfirmButton: true
+                    });
+                }
+            }
+
+            function generateArchiveReportHTML(member, reason) {
+                return `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Member Archive Report - ${member.full_name}</title>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                background: #f8f9fa;
+                                padding: 20px;
+                                line-height: 1.6;
+                            }
+                            
+                            .report-container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background: white;
+                                border-radius: 15px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                overflow: hidden;
+                            }
+                            
+                            .report-header {
+                                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                color: white;
+                                padding: 25px;
+                                text-align: center;
+                            }
+                            
+                            .report-header h1 {
+                                font-size: 24px;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                            }
+                            
+                            .report-header .subtitle {
+                                font-size: 14px;
+                                opacity: 0.9;
+                            }
+                            
+                            .report-body {
+                                padding: 30px;
+                            }
+                            
+                            .member-info {
+                                background: #f8f9fa;
+                                border-radius: 10px;
+                                padding: 20px;
+                                margin-bottom: 25px;
+                            }
+                            
+                            .member-info h3 {
+                                color: #495057;
+                                margin-bottom: 15px;
+                                font-size: 18px;
+                                border-bottom: 2px solid #dee2e6;
+                                padding-bottom: 10px;
+                            }
+                            
+                            .info-grid {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 15px;
+                            }
+                            
+                            .info-item {
+                                display: flex;
+                                flex-direction: column;
+                            }
+                            
+                            .info-label {
+                                font-weight: 600;
+                                color: #6c757d;
+                                font-size: 12px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 5px;
+                            }
+                            
+                            .info-value {
+                                color: #212529;
+                                font-size: 14px;
+                                font-weight: 500;
+                            }
+                            
+                            .archive-reason {
+                                background: #fff3cd;
+                                border: 1px solid #ffeaa7;
+                                border-radius: 10px;
+                                padding: 20px;
+                                margin-bottom: 25px;
+                            }
+                            
+                            .archive-reason h3 {
+                                color: #856404;
+                                margin-bottom: 15px;
+                                font-size: 18px;
+                                display: flex;
+                                align-items: center;
+                            }
+                            
+                            .archive-reason h3::before {
+                                content: "📋";
+                                margin-right: 10px;
+                            }
+                            
+                            .reason-text {
+                                color: #856404;
+                                font-size: 14px;
+                                line-height: 1.6;
+                                background: white;
+                                padding: 15px;
+                                border-radius: 8px;
+                                border-left: 4px solid #ffc107;
+                            }
+                            
+                            .financial-note {
+                                background: #d1ecf1;
+                                border: 1px solid #bee5eb;
+                                border-radius: 10px;
+                                padding: 20px;
+                                text-align: center;
+                            }
+                            
+                            .financial-note h4 {
+                                color: #0c5460;
+                                margin-bottom: 10px;
+                                font-size: 16px;
+                            }
+                            
+                            .financial-note p {
+                                color: #0c5460;
+                                font-size: 14px;
+                                margin: 0;
+                            }
+                            
+                            .report-footer {
+                                background: #f8f9fa;
+                                padding: 20px;
+                                text-align: center;
+                                border-top: 1px solid #dee2e6;
+                            }
+                            
+                            .report-footer p {
+                                color: #6c757d;
+                                font-size: 12px;
+                                margin: 0;
+                            }
+                            
+                            .date-time {
+                                color: #6c757d;
+                                font-size: 12px;
+                                margin-top: 10px;
+                            }
+                            
+                            @media print {
+                                body {
+                                    background: white;
+                                    padding: 0;
+                                }
+                                
+                                .report-container {
+                                    box-shadow: none;
+                                    border-radius: 0;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-container">
+                            <div class="report-header">
+                                <h1>📦 Member Archive Report</h1>
+                                <p class="subtitle">Member has been moved to archived status</p>
+                            </div>
+                            
+                            <div class="report-body">
+                                <div class="member-info">
+                                    <h3>👤 Member Information</h3>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <span class="info-label">Full Name</span>
+                                            <span class="info-value">${member.full_name || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Member ID</span>
+                                            <span class="info-value">${member.member_id || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Phone Number</span>
+                                            <span class="info-value">${member.phone_number || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Email</span>
+                                            <span class="info-value">${member.email || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Gender</span>
+                                            <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Membership Type</span>
+                                            <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Date of Birth</span>
+                                            <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Registration Date</span>
+                                            <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="archive-reason">
+                                    <h3>Archive Reason</h3>
+                                    <div class="reason-text">${reason}</div>
+                                </div>
+                                
+                                <div class="financial-note">
+                                    <h4>💰 Financial Records Preserved</h4>
+                                    <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="report-footer">
+                                <p><strong>Waumini Link Church Management System</strong></p>
+                                <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            }
+
+            function printArchiveReport(member, reason) {
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank', 'width=800,height=600');
+                
+                // Generate the report HTML using the shared function
+                const reportHTML = generateArchiveReportHTML(member, reason);
+                
+                // Write the HTML to the new window
+                printWindow.document.write(reportHTML);
+                printWindow.document.close();
+                
+                // Focus the window and trigger print dialog
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            }
+
             function confirmDelete(id) {
                 Swal.fire({
-                    title: 'Delete member?',
-                    text: 'This action cannot be undone.',
+                    title: 'Archive Member',
+                    html: `
+                        <div class="mb-3">
+                            <label for="archive-reason" class="form-label">Reason for archiving this member:</label>
+                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                        </div>
+                    `,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes, delete',
+                    confirmButtonText: 'Archive Member',
                     cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#dc3545'
+                    confirmButtonColor: '#dc3545',
+                    preConfirm: () => {
+                        const reason = document.getElementById('archive-reason').value.trim();
+                        if (!reason) {
+                            Swal.showValidationMessage('Please provide a reason for archiving this member.');
+                            return false;
+                        }
+                        return reason;
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`{{ url('/members') }}/${id}`, {
                             method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                reason: result.value
+                            })
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else if (response.status === 422) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'Validation error occurred');
+                                });
+                            } else {
+                                throw new Error(`Server error: ${response.status}`);
                             }
                         })
-                        .then(r => r.json())
                         .then(res => {
                             if (res.success) {
                                 document.getElementById(`row-${id}`)?.remove();
-                                Swal.fire({ icon: 'success', title: 'Member deleted', text: 'The member was deleted successfully.', timer: 1200, showConfirmButton: false });
+                                Swal.fire({ 
+                                    icon: 'success', 
+                                    title: 'Member Archived', 
+                                    html: `
+                                        <div class="text-start">
+                                            <p><strong>Reason:</strong> ${result.value}</p>
+                                            <p>The member has been moved to archived status. All financial records have been preserved.</p>
+                                        </div>
+                                    `, 
+                                    showConfirmButton: true,
+                                    showCancelButton: true,
+                                    showDenyButton: true,
+                                    confirmButtonText: '📄 Download Report',
+                                    denyButtonText: '🖨️ Print Report',
+                                    cancelButtonText: 'Close',
+                                    confirmButtonColor: '#28a745',
+                                    denyButtonColor: '#007bff',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    timer: 0
+                                }).then((actionResult) => {
+                                    if (actionResult.isConfirmed) {
+                                        downloadArchiveReport(res.member, result.value);
+                                    } else if (actionResult.isDenied) {
+                                        printArchiveReport(res.member, result.value);
+                                    }
+                                });
                             } else {
                                 Swal.fire({ icon: 'error', title: 'Delete failed', text: res.message || 'Please try again.' });
                             }
                         })
-                        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' }));
+                        .catch(error => {
+                            console.error('Delete error:', error);
+                            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+                        });
                     }
                 });
             }

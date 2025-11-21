@@ -1,7 +1,47 @@
 @extends('layouts.index')
 
 @section('content')
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    </script>
+@endif
+
 <div class="container-fluid px-4">
+    @php
+        $pastorFirst = null;
+        if (isset($pastor) && !empty($pastor->name)) {
+            $cleanName = preg_replace('/^\s*Pastor\s+/i', '', $pastor->name);
+            $parts = preg_split('/\s+/', trim($cleanName));
+            $pastorFirst = $parts[0] ?? trim($cleanName);
+        }
+    @endphp
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mt-4"><i class="fas fa-gift me-2"></i>Offerings Management</h1>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOfferingModal">
@@ -11,8 +51,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Filters
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-filter me-1"></i><strong>Filters</strong>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('finance.offerings') }}">
@@ -21,11 +61,11 @@
                         <label for="offering_type" class="form-label">Offering Type</label>
                         <select class="form-select" id="offering_type" name="offering_type">
                             <option value="">All Types</option>
-                            <option value="general" {{ request('offering_type') == 'general' ? 'selected' : '' }}>General</option>
+                            <option value="general" {{ request('offering_type') == 'general' ? 'selected' : '' }}>General Offering</option>
                             <option value="special" {{ request('offering_type') == 'special' ? 'selected' : '' }}>Special</option>
                             <option value="thanksgiving" {{ request('offering_type') == 'thanksgiving' ? 'selected' : '' }}>Thanksgiving</option>
                             <option value="building_fund" {{ request('offering_type') == 'building_fund' ? 'selected' : '' }}>Building Fund</option>
-                            <option value="missions" {{ request('offering_type') == 'missions' ? 'selected' : '' }}>Missions</option>
+                            <option value="other" {{ request('offering_type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -51,10 +91,10 @@
 
     <!-- Offerings Table -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header bg-primary text-white">
             <i class="fas fa-table me-1"></i>
-            Offerings Records
-            <span class="badge bg-success ms-2">{{ $offerings->total() }} records</span>
+            <strong>Offerings Records</strong>
+            <span class="badge bg-white text-primary ms-2 fw-bold">{{ $offerings->total() }} {{ $offerings->total() == 1 ? 'record' : 'records' }}</span>
         </div>
         <div class="card-body">
             @if($offerings->count() > 0)
@@ -80,7 +120,7 @@
                                                 <i class="fas fa-gift text-white small"></i>
                                             </div>
                                             <div>
-                                                <div class="fw-bold">{{ $offering->member->full_name ?? 'Anonymous' }}</div>
+                                                <div class="fw-bold">{{ $offering->member->full_name ?? 'General Member' }}</div>
                                                 @if($offering->member)
                                                     <small class="text-muted">{{ $offering->member->member_id }}</small>
                                                 @endif
@@ -92,7 +132,13 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-{{ $offering->offering_type == 'general' ? 'primary' : ($offering->offering_type == 'special' ? 'warning' : 'info') }}">
-                                            {{ ucfirst(str_replace('_', ' ', $offering->offering_type)) }}
+                                            @if($offering->offering_type == 'general')
+                                                General Offering
+                                            @elseif(in_array($offering->offering_type, ['special', 'thanksgiving', 'building_fund']))
+                                                {{ ucfirst(str_replace('_', ' ', $offering->offering_type)) }}
+                                            @else
+                                                {{ ucfirst($offering->offering_type) }}
+                                            @endif
                                         </span>
                                     </td>
                                     <td>{{ $offering->offering_date->format('M d, Y') }}</td>
@@ -102,13 +148,17 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if($offering->is_verified)
+                                        @if($offering->approval_status == 'approved')
                                             <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i>Verified
+                                                <i class="fas fa-check me-1"></i>Approved
+                                            </span>
+                                        @elseif($offering->approval_status == 'rejected')
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Rejected
                                             </span>
                                         @else
                                             <span class="badge bg-warning">
-                                                <i class="fas fa-clock me-1"></i>Pending
+                                                <i class="fas fa-clock me-1"></i>Pending Pastor {{ $pastorFirst ?? ' ' }} Approval
                                             </span>
                                         @endif
                                     </td>
@@ -117,10 +167,10 @@
                                             <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#viewOfferingModal{{ $offering->id }}">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            @if(!$offering->is_verified)
-                                                <button type="button" class="btn btn-outline-primary" onclick="verifyOffering({{ $offering->id }})">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
+                                            @if($offering->approval_status == 'pending')
+                                                <span class="badge bg-info ms-1">
+                                                    <i class="fas fa-clock me-1"></i>Awaiting Pastor {{ $pastorFirst ?? ' ' }} Approval
+                                                </span>
                                             @endif
                                         </div>
                                     </td>
@@ -150,20 +200,30 @@
 
 <!-- Add Offering Modal -->
 <div class="modal fade" id="addOfferingModal" tabindex="-1" aria-labelledby="addOfferingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content stylish-modal">
             <form action="{{ route('finance.offerings.store') }}" method="POST">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addOfferingModalLabel">Add New Offering</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header stylish-modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="d-flex align-items-center">
+                        <div class="modal-icon-wrapper me-3">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title text-white mb-0" id="addOfferingModalLabel">
+                                <strong>Add New Offering</strong>
+                            </h5>
+                            <small class="text-white-50">Record an offering or special gift</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="member_id" class="form-label">Member (Optional)</label>
                             <select class="form-select select2-member-modal @error('member_id') is-invalid @enderror" id="member_id" name="member_id">
-                                <option value="">Anonymous Offering</option>
+                                <option value="">General Member Offering</option>
                                 @foreach($members as $member)
                                     <option value="{{ $member->id }}" {{ old('member_id') == $member->id ? 'selected' : '' }}>
                                         {{ $member->full_name }} ({{ $member->member_id }})
@@ -186,13 +246,21 @@
                             <label for="offering_type" class="form-label">Offering Type <span class="text-danger">*</span></label>
                             <select class="form-select @error('offering_type') is-invalid @enderror" id="offering_type" name="offering_type" required>
                                 <option value="">Select Type</option>
-                                <option value="general" {{ old('offering_type') == 'general' ? 'selected' : '' }}>General</option>
+                                <option value="general" {{ old('offering_type') == 'general' ? 'selected' : '' }}>General Offering</option>
                                 <option value="special" {{ old('offering_type') == 'special' ? 'selected' : '' }}>Special</option>
                                 <option value="thanksgiving" {{ old('offering_type') == 'thanksgiving' ? 'selected' : '' }}>Thanksgiving</option>
                                 <option value="building_fund" {{ old('offering_type') == 'building_fund' ? 'selected' : '' }}>Building Fund</option>
-                                <option value="missions" {{ old('offering_type') == 'missions' ? 'selected' : '' }}>Missions</option>
+                                <option value="other" {{ old('offering_type') == 'other' ? 'selected' : '' }}>Other</option>
                             </select>
                             @error('offering_type')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6" id="custom_offering_type_group" style="display: none !important;">
+                            <label for="custom_offering_type" class="form-label">Custom Offering Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('custom_offering_type') is-invalid @enderror" id="custom_offering_type" name="custom_offering_type" 
+                                   value="{{ old('custom_offering_type') }}" placeholder="Enter custom offering type">
+                            @error('custom_offering_type')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -217,7 +285,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="offering_reference_group">
                             <label for="reference_number" class="form-label">Reference Number</label>
                             <input type="text" class="form-control @error('reference_number') is-invalid @enderror" id="reference_number" name="reference_number" 
                                    value="{{ old('reference_number') }}" placeholder="e.g., Check #123, Transaction ID">
@@ -239,11 +307,9 @@
                             @enderror
                         </div>
                         <div class="col-md-6">
-                            <div class="form-check mt-4">
-                                <input class="form-check-input" type="checkbox" id="is_verified" name="is_verified" value="1" {{ old('is_verified') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="is_verified">
-                                    Mark as verified
-                                </label>
+                            <div class="alert alert-info mt-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Note:</strong> All offerings require pastor approval before being added to totals.
                             </div>
                         </div>
                         <div class="col-12">
@@ -256,9 +322,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
+                <div class="modal-footer stylish-modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success stylish-submit-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">
                         <i class="fas fa-save me-1"></i>Save Offering
                     </button>
                 </div>
@@ -280,7 +348,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Member/Donor</label>
-                        <p>{{ $offering->member->full_name ?? 'Anonymous' }}</p>
+                        <p>{{ $offering->member->full_name ?? 'General Member' }}</p>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Amount</label>
@@ -290,7 +358,13 @@
                         <label class="form-label fw-bold">Offering Type</label>
                         <p>
                             <span class="badge bg-{{ $offering->offering_type == 'general' ? 'primary' : ($offering->offering_type == 'special' ? 'warning' : 'info') }}">
-                                {{ ucfirst(str_replace('_', ' ', $offering->offering_type)) }}
+                                @if($offering->offering_type == 'general')
+                                    General Offering
+                                @elseif(in_array($offering->offering_type, ['special', 'thanksgiving', 'building_fund']))
+                                    {{ ucfirst(str_replace('_', ' ', $offering->offering_type)) }}
+                                @else
+                                    {{ ucfirst($offering->offering_type) }}
+                                @endif
                             </span>
                         </p>
                     </div>
@@ -309,13 +383,17 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Status</label>
                         <p>
-                            @if($offering->is_verified)
+                            @if($offering->approval_status == 'approved')
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check me-1"></i>Verified
+                                    <i class="fas fa-check me-1"></i>Approved
+                                </span>
+                            @elseif($offering->approval_status == 'rejected')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Rejected
                                 </span>
                             @else
                                 <span class="badge bg-warning">
-                                    <i class="fas fa-clock me-1"></i>Pending Verification
+                                    <i class="fas fa-clock me-1"></i>Pending Pastor {{ $pastorFirst ?? ' ' }} Approval
                                 </span>
                             @endif
                         </p>
@@ -350,10 +428,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                @if(!$offering->is_verified)
-                    <button type="button" class="btn btn-success" onclick="verifyOffering({{ $offering->id }})">
-                        <i class="fas fa-check me-1"></i>Verify
-                    </button>
+                @if($offering->approval_status == 'pending')
+                    <span class="badge bg-info">
+                        <i class="fas fa-clock me-1"></i>Awaiting Pastor {{ $pastorFirst ?? ' ' }} Approval
+                    </span>
                 @endif
             </div>
         </div>
@@ -371,15 +449,238 @@ document.addEventListener('DOMContentLoaded', function() {
         width: '100%',
         dropdownParent: $('#addOfferingModal')
     });
+
+    // Toggle reference number visibility based on payment method
+    var offeringModal = document.getElementById('addOfferingModal');
+    if (offeringModal) {
+        var methodEl = offeringModal.querySelector('#payment_method');
+        var refGroup = offeringModal.querySelector('#offering_reference_group');
+        var refInput = offeringModal.querySelector('#reference_number');
+
+        function updateOfferingRefVisibility() {
+            var method = methodEl ? methodEl.value : '';
+            var hide = method === 'cash' || method === '';
+            if (refGroup) {
+                refGroup.style.display = hide ? 'none' : '';
+            }
+            if (refInput) {
+                refInput.required = !hide;
+                if (hide) refInput.value = '';
+            }
+        }
+
+        if (methodEl) {
+            methodEl.addEventListener('change', updateOfferingRefVisibility);
+        }
+        offeringModal.addEventListener('shown.bs.modal', updateOfferingRefVisibility);
+        // Initialize state on load
+        updateOfferingRefVisibility();
+    }
+
+    // Handle custom offering type field visibility
+    function updateCustomOfferingTypeVisibility() {
+        var offeringTypeEl = document.querySelector('#addOfferingModal #offering_type');
+        var customOfferingTypeGroup = document.querySelector('#addOfferingModal #custom_offering_type_group');
+        var customOfferingTypeInput = document.querySelector('#addOfferingModal #custom_offering_type');
+        
+        if (!offeringTypeEl || !customOfferingTypeGroup || !customOfferingTypeInput) {
+            console.log('Elements not found:', {
+                offeringTypeEl: !!offeringTypeEl,
+                customOfferingTypeGroup: !!customOfferingTypeGroup,
+                customOfferingTypeInput: !!customOfferingTypeInput
+            });
+            return;
+        }
+        
+        var offeringType = offeringTypeEl.value;
+        var showCustom = offeringType === 'other';
+        
+        console.log('Offering type:', offeringType, 'Show custom:', showCustom);
+        
+        if (showCustom) {
+            customOfferingTypeGroup.style.setProperty('display', 'block', 'important');
+            customOfferingTypeInput.required = true;
+        } else {
+            customOfferingTypeGroup.style.setProperty('display', 'none', 'important');
+            customOfferingTypeInput.required = false;
+            customOfferingTypeInput.value = '';
+        }
+    }
+
+    // Add event listener to the offering type dropdown
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'offering_type' && e.target.closest('#addOfferingModal')) {
+            updateCustomOfferingTypeVisibility();
+        }
+    });
+
+    // Initialize when modal is shown
+    document.addEventListener('shown.bs.modal', function(e) {
+        if (e.target && e.target.id === 'addOfferingModal') {
+            updateCustomOfferingTypeVisibility();
+        }
+    });
 });
 
-function verifyOffering(offeringId) {
-    if (confirm('Are you sure you want to verify this offering?')) {
-        // This would typically be an AJAX call to verify the offering
-        // For now, we'll just show a success message
-        alert('Offering verification functionality will be implemented with AJAX');
-    }
-}
+// Offering verification is now handled by pastor approval system
 </script>
+@endsection
+
+@section('styles')
+<style>
+    /* Stylish Modal Styles for Offerings */
+    .stylish-modal {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+    
+    .stylish-modal-header {
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+    
+    .modal-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stylish-modal .modal-body {
+        padding: 2rem;
+        background: #f8f9fa;
+    }
+    
+    .stylish-modal .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .stylish-modal .form-control,
+    .stylish-modal .form-select {
+        border-radius: 8px;
+        border: 1.5px solid #e0e0e0;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .stylish-modal .form-control:focus,
+    .stylish-modal .form-select:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+        transform: translateY(-1px);
+    }
+    
+    .stylish-modal .form-control:hover,
+    .stylish-modal .form-select:hover {
+        border-color: #28a745;
+    }
+    
+    .stylish-modal-footer {
+        padding: 1.25rem 2rem;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+    
+    .stylish-submit-btn {
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stylish-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+        background: linear-gradient(135deg, #218838 0%, #1aa179 100%) !important;
+    }
+    
+    .stylish-modal .btn-light {
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stylish-modal .btn-light:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .stylish-modal .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 6px;
+        border: 2px solid #28a745;
+        cursor: pointer;
+    }
+    
+    .stylish-modal .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    
+    .stylish-modal textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    /* Animation for modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: translate(0, -50px);
+    }
+    
+    .modal.show .modal-dialog {
+        transform: none;
+    }
+    
+    /* Select2 styling in modal */
+    .stylish-modal .select2-container--default .select2-selection--single {
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        height: auto;
+        padding: 0.5rem;
+    }
+    
+    .stylish-modal .select2-container--default .select2-selection--single:focus {
+        border-color: #28a745;
+    }
+    
+    /* Prevent scrolling */
+    .stylish-modal .modal-body {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .stylish-modal .modal-body {
+            padding: 1.5rem;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .stylish-modal-header {
+            padding: 1.25rem;
+        }
+        
+        .modal-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+    }
+</style>
 @endsection
 

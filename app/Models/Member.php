@@ -33,8 +33,14 @@ class Member extends Model
         'ward',
         'street',
         'address',
+        'residence_region',
+        'residence_district',
+        'residence_ward',
+        'residence_street',
+        'residence_road',
+        'residence_house_number',
         'profile_picture',
-        'spouse_alive',
+        'marital_status',
         'spouse_full_name',
         'spouse_date_of_birth',
         'spouse_education_level',
@@ -44,6 +50,9 @@ class Member extends Model
         'spouse_phone_number',
         'spouse_tribe',
         'spouse_other_tribe',
+        'spouse_gender',
+        'spouse_church_member',
+        'spouse_member_id',
     ];
 
     protected $casts = [
@@ -54,6 +63,18 @@ class Member extends Model
     public function children()
     {
         return $this->hasMany(Child::class);
+    }
+
+    // Relationship to spouse member (if spouse is also a church member)
+    public function spouseMember()
+    {
+        return $this->belongsTo(Member::class, 'spouse_member_id');
+    }
+
+    // Reverse relationship - get the main member from spouse member
+    public function mainMember()
+    {
+        return $this->hasOne(Member::class, 'spouse_member_id');
     }
 
     // Financial relationships
@@ -75,6 +96,39 @@ class Member extends Model
     public function pledges()
     {
         return $this->hasMany(Pledge::class);
+    }
+
+    // Attendance relationships
+    public function attendances()
+    {
+        return $this->hasMany(ServiceAttendance::class);
+    }
+
+    public function sundayServiceAttendances()
+    {
+        return $this->hasMany(ServiceAttendance::class)->sundayServices();
+    }
+
+    public function specialEventAttendances()
+    {
+        return $this->hasMany(ServiceAttendance::class)->specialEvents();
+    }
+
+    // Leadership relationships
+    public function leadershipPositions()
+    {
+        return $this->hasMany(Leader::class);
+    }
+
+    public function activeLeadershipPositions()
+    {
+        return $this->hasMany(Leader::class)->where('is_active', true);
+    }
+
+    // Bereavement relationships
+    public function bereavementContributions()
+    {
+        return $this->hasMany(BereavementContribution::class);
     }
 
     /**

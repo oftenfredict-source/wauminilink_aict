@@ -219,7 +219,7 @@ class SettingsService
     public static function getAppearanceSettings()
     {
         return [
-            'theme_color' => self::get('theme_color', 'primary'),
+            'theme_color' => self::get('theme_color', 'waumini'),
             'sidebar_style' => self::get('sidebar_style', 'dark'),
             'show_member_photos' => self::get('show_member_photos', true),
             'items_per_page' => self::get('items_per_page', 25),

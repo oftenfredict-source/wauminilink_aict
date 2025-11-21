@@ -69,8 +69,11 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <div class="small text-white-50">Expenses (This Month)</div>
+                            <div class="small text-white-50">Expenses (This Year)</div>
                             <div class="h4">TZS {{ number_format($monthlyExpenses, 0) }}</div>
+                            @if(isset($currentMonthExpenses))
+                                <div class="small text-white-50 mt-1">This Month: TZS {{ number_format($currentMonthExpenses, 0) }}</div>
+                            @endif
                         </div>
                         <div class="d-flex align-items-center">
                             <i class="fas fa-arrow-down fa-2x"></i>
@@ -117,13 +120,13 @@
     <div class="row mb-4">
         <div class="col-xl-8">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-chart-pie me-1"></i>
-                    Income Breakdown (This Month)
+                    <strong>Income Breakdown (This Month)</strong>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-center">
                                 <div class="h5 text-primary">TZS {{ number_format($monthlyTithes, 0) }}</div>
                                 <div class="small text-muted">Tithes</div>
@@ -132,7 +135,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-center">
                                 <div class="h5 text-success">TZS {{ number_format($monthlyOfferings, 0) }}</div>
                                 <div class="small text-muted">Offerings</div>
@@ -141,12 +144,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-center">
                                 <div class="h5 text-info">TZS {{ number_format($monthlyDonations, 0) }}</div>
                                 <div class="small text-muted">Donations</div>
                                 <div class="progress mt-2" style="height: 8px;">
                                     <div class="progress-bar bg-info" style="width: {{ $totalIncome > 0 ? ($monthlyDonations / $totalIncome) * 100 : 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h5 text-warning">TZS {{ number_format($monthlyPledgePayments, 0) }}</div>
+                                <div class="small text-muted">Pledge Payments</div>
+                                <div class="progress mt-2" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ $totalIncome > 0 ? ($monthlyPledgePayments / $totalIncome) * 100 : 0 }}%"></div>
                                 </div>
                             </div>
                         </div>
@@ -157,9 +169,9 @@
         
         <div class="col-xl-4">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-chart-line me-1"></i>
-                    Income Trend (Last 6 Months)
+                    <strong>Income Trend (Last 6 Months)</strong>
                 </div>
                 <div class="card-body">
                     <canvas id="incomeTrendChart" width="100%" height="50"></canvas>
@@ -172,9 +184,9 @@
     <div class="row mb-4">
         <div class="col-xl-4">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-coins me-1"></i>
-                    Recent Tithes
+                    <strong>Recent Tithes</strong>
                 </div>
                 <div class="card-body">
                     @if($recentTithes->count() > 0)
@@ -210,9 +222,9 @@
         
         <div class="col-xl-4">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-gift me-1"></i>
-                    Recent Offerings
+                    <strong>Recent Offerings</strong>
                 </div>
                 <div class="card-body">
                     @if($recentOfferings->count() > 0)
@@ -224,7 +236,7 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <div class="fw-bold">{{ $offering->member->full_name ?? 'Anonymous' }}</div>
+                                    <div class="fw-bold">{{ $offering->member->full_name ?? 'General Member' }}</div>
                                     <div class="small text-muted">{{ $offering->offering_date->format('M d, Y') }}</div>
                                 </div>
                                 <div class="text-end">
@@ -248,9 +260,9 @@
         
         <div class="col-xl-4">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-heart me-1"></i>
-                    Recent Donations
+                    <strong>Recent Donations</strong>
                 </div>
                 <div class="card-body">
                     @if($recentDonations->count() > 0)
@@ -289,9 +301,9 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-wallet me-1"></i>
-                    Current Budgets
+                    <strong>Current Budgets</strong>
                 </div>
                 <div class="card-body">
                     @if($currentBudgets->count() > 0)
@@ -326,9 +338,9 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-handshake me-1"></i>
-                    Pledge Status
+                    <strong>Pledge Status</strong>
                 </div>
                 <div class="card-body">
                     @if($activePledges->count() > 0)
@@ -469,5 +481,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
 
 

@@ -98,195 +98,63 @@
 
 <!-- Add Service Modal -->
 <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden; animation: modalSlideIn 0.3s ease-out;">
-            <!-- Enhanced Header with Gradient and Icons -->
-            <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #940000 0%, #667eea 50%, #764ba2 100%); border: none; padding: 2rem;">
-                <div class="d-flex align-items-center">
-                    <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
-                        <i class="fas fa-church fa-2x"></i>
-                    </div>
-                    <div>
-                        <h4 class="modal-title mb-1 fw-bold">Create Sunday Service</h4>
-                        <p class="mb-0 opacity-75">Plan and organize your weekly church services</p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-md">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                <h5 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-church"></i><span>Add Sunday Service</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            <!-- Enhanced Body with Better Layout -->
-            <div class="modal-body" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 2rem;">
+            <div class="modal-body bg-light">
                 <form id="addServiceForm">
-                    
-                    <!-- Service Basic Information Section -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                            <h6 class="mb-0 text-primary fw-bold">
-                                <i class="fas fa-info-circle me-2"></i>Service Information
-                            </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Service Theme</label>
+                            <input type="text" class="form-control" id="svc_theme" placeholder="Enter service theme">
                         </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="svc_theme" placeholder="Service Theme" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_theme" class="text-muted">
-                                            <i class="fas fa-star me-1"></i>Service Theme
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="svc_preacher" placeholder="Preacher Name" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_preacher" class="text-muted">
-                                            <i class="fas fa-user-tie me-1"></i>Preacher
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="svc_venue" placeholder="Venue Location" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_venue" class="text-muted">
-                                            <i class="fas fa-map-marker-alt me-1"></i>Venue
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="svc_choir" placeholder="Choir Name" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_choir" class="text-muted">
-                                            <i class="fas fa-music me-1"></i>Choir
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preacher</label>
+                            <input type="text" class="form-control" id="svc_preacher" placeholder="Enter preacher name">
                         </div>
-                    </div>
-
-                    <!-- Date & Time Section -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                            <h6 class="mb-0 text-primary fw-bold">
-                                <i class="fas fa-clock me-2"></i>Date & Time
-                            </h6>
+                        <div class="col-md-6">
+                            <label class="form-label">Venue</label>
+                            <input type="text" class="form-control" id="svc_venue" placeholder="Enter venue location">
                         </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="date" class="form-control" id="svc_date" required style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_date" class="text-muted">
-                                            <i class="fas fa-calendar-alt me-1"></i>Service Date
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="time" class="form-control" id="svc_start" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_start" class="text-muted">
-                                            <i class="fas fa-play me-1"></i>Start Time
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="time" class="form-control" id="svc_end" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_end" class="text-muted">
-                                            <i class="fas fa-stop me-1"></i>End Time
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Choir</label>
+                            <input type="text" class="form-control" id="svc_choir" placeholder="Enter choir name">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Service Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="svc_date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="form-control" id="svc_start">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">End Time</label>
+                            <input type="time" class="form-control" id="svc_end">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Attendance</label>
+                            <input type="number" min="0" class="form-control" id="svc_attendance" placeholder="Enter attendance count">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Offerings (TZS)</label>
+                            <input type="number" min="0" step="0.01" class="form-control" id="svc_offerings" placeholder="Enter offerings amount">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Scripture Readings</label>
+                            <textarea class="form-control" id="svc_readings" placeholder="Enter scripture readings..." rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="svc_notes" placeholder="Enter additional notes..." rows="2"></textarea>
                         </div>
                     </div>
-
-                    <!-- Attendance & Offerings Section -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                            <h6 class="mb-0 text-primary fw-bold">
-                                <i class="fas fa-chart-line me-2"></i>Attendance & Offerings
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="number" min="0" class="form-control" id="svc_attendance" placeholder="Expected Attendance" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_attendance" class="text-muted">
-                                            <i class="fas fa-users me-1"></i>Attendance
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="number" min="0" step="0.01" class="form-control" id="svc_offerings" placeholder="Offerings Amount" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                        <label for="svc_offerings" class="text-muted">
-                                            <i class="fas fa-money-bill-wave me-1"></i>Offerings (TZS)
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Scripture & Content Section -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                            <h6 class="mb-0 text-primary fw-bold">
-                                <i class="fas fa-bible me-2"></i>Scripture & Content
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <textarea class="form-control" id="svc_readings" placeholder="Scripture Readings" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                        <label for="svc_readings" class="text-muted">
-                                            <i class="fas fa-book-open me-1"></i>Scripture Readings
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Announcements & Notes Section -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                            <h6 class="mb-0 text-primary fw-bold">
-                                <i class="fas fa-bullhorn me-2"></i>Announcements & Notes
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <textarea class="form-control" id="svc_announcements" placeholder="Service Announcements" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                        <label for="svc_announcements" class="text-muted">
-                                            <i class="fas fa-bullhorn me-1"></i>Announcements
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <textarea class="form-control" id="svc_notes" placeholder="Additional Notes" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                        <label for="svc_notes" class="text-muted">
-                                            <i class="fas fa-sticky-note me-1"></i>Notes
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enhanced Action Buttons -->
-                    <div class="d-flex justify-content-end gap-3 mt-4">
-                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 25px; font-weight: 600; background: linear-gradient(135deg, #940000 0%, #667eea 100%); border: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(148, 0, 0, 0.3);">
-                            <i class="fas fa-save me-2"></i>Save Service
-                        </button>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Service</button>
                     </div>
                 </form>
             </div>
@@ -294,55 +162,6 @@
     </div>
 </div>
 
-<style>
-    /* Enhanced Modal Animations */
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-50px) scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    /* Form Control Focus Effects */
-    .form-control:focus {
-        border-color: #940000 !important;
-        box-shadow: 0 0 0 0.2rem rgba(148, 0, 0, 0.25) !important;
-        transform: translateY(-2px);
-    }
-
-    .form-control:hover {
-        border-color: #667eea !important;
-        transform: translateY(-1px);
-    }
-
-    /* Button Hover Effects */
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    }
-
-    /* Card Hover Effects */
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
-    }
-
-    /* Floating Label Animation */
-    .form-floating > .form-control:focus ~ label,
-    .form-floating > .form-control:not(:placeholder-shown) ~ label {
-        color: #940000;
-        font-weight: 600;
-    }
-
-    /* Modal Backdrop */
-    .modal-backdrop {
-        background: linear-gradient(135deg, rgba(148, 0, 0, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
-    }
-</style>
 
 <!-- View Modal -->
 <div class="modal fade" id="serviceDetailsModal" tabindex="-1" aria-hidden="true">
@@ -419,10 +238,6 @@
                             <input type="text" class="form-control" id="edit_choir">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Announcements</label>
-                            <textarea class="form-control" id="edit_announcements" rows="2"></textarea>
-                        </div>
-                        <div class="col-12">
                             <label class="form-label">Notes</label>
                             <textarea class="form-control" id="edit_notes" rows="2"></textarea>
                         </div>
@@ -459,7 +274,6 @@
                     <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
                         ${row('Scripture Readings', s.scripture_readings)}
                         ${row('Choir', s.choir)}
-                        ${row('Announcements', s.announcements)}
                         ${row('Notes', s.notes)}
                     </tbody></table>
                 `;
@@ -506,7 +320,6 @@
         fd.append('offerings_amount', document.getElementById('svc_offerings').value);
         fd.append('scripture_readings', document.getElementById('svc_readings').value);
         fd.append('choir', document.getElementById('svc_choir').value);
-        fd.append('announcements', document.getElementById('svc_announcements').value);
         fd.append('notes', document.getElementById('svc_notes').value);
         fetch(`{{ route('services.sunday.store') }}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
             .then(r => r.json())
@@ -528,7 +341,6 @@
         fd.append('offerings_amount', document.getElementById('edit_offerings').value);
         fd.append('scripture_readings', document.getElementById('edit_readings').value);
         fd.append('choir', document.getElementById('edit_choir').value);
-        fd.append('announcements', document.getElementById('edit_announcements').value);
         fd.append('notes', document.getElementById('edit_notes').value);
         fd.append('_method', 'PUT');
         fetch(`{{ url('/services/sunday') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })

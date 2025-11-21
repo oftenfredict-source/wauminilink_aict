@@ -325,189 +325,127 @@
 
     <!-- Add Celebration Modal -->
     <div class="modal fade" id="addCelebrationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden; animation: modalSlideIn 0.3s ease-out;">
-                <!-- Enhanced Header with Gradient and Icons -->
-                <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #940000 0%, #667eea 50%, #764ba2 100%); border: none; padding: 2rem;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg service-modal-content" style="border-radius: 20px; overflow: hidden;">
+                <!-- Stylish Header -->
+                <div class="modal-header border-0 service-modal-header" style="background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%); padding: 1.25rem 1.5rem;">
                     <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
-                            <i class="fas fa-birthday-cake fa-2x"></i>
+                        <div class="service-icon-wrapper me-3">
+                            <i class="fas fa-birthday-cake"></i>
                         </div>
-                        <div>
-                            <h4 class="modal-title mb-1 fw-bold">Create Celebration</h4>
-                            <p class="mb-0 opacity-75">Plan and organize special celebrations and events</p>
-                        </div>
+                        <h5 class="modal-title mb-0 fw-bold text-white" id="celebrationModalTitle">
+                            Create Celebration
+                        </h5>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <!-- Enhanced Body with Better Layout -->
-                <div class="modal-body" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 2rem;">
+                <!-- Stylish Body -->
+                <div class="modal-body service-modal-body" style="padding: 1.75rem; background: #f8f9fa;">
                     <form id="addCelebrationForm">
                         <input type="hidden" id="editing_celebration_id" value="">
+                        <div class="row g-3">
+                            <!-- Row 1: Title & Celebrant -->
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-star me-1 text-warning"></i>Celebration Title <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control service-input" id="cel_title" placeholder="Enter celebration title" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-user me-1 text-primary"></i>Celebrant Name
+                                </label>
+                                <input type="text" class="form-control service-input" id="cel_celebrant" placeholder="Enter celebrant name">
+                            </div>
+                            
+                            <!-- Row 2: Type & Venue -->
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-tags me-1 text-primary"></i>Celebration Type
+                                </label>
+                                <select class="form-select service-input" id="cel_type">
+                                    <option value="">Select Type</option>
+                                    <option value="Birthday">Birthday</option>
+                                    <option value="Anniversary">Anniversary</option>
+                                    <option value="Wedding">Wedding</option>
+                                    <option value="Graduation">Graduation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-map-marker-alt me-1 text-danger"></i>Venue
+                                </label>
+                                <input type="text" class="form-control service-input" id="cel_venue" placeholder="Enter venue location">
+                            </div>
+                            
+                            <!-- Row 3: Date & Time -->
+                            <div class="col-md-4">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-calendar-alt me-1 text-info"></i>Date <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control service-input" id="cel_date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-clock me-1 text-success"></i>Start Time
+                                </label>
+                                <input type="time" class="form-control service-input" id="cel_start">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-clock me-1 text-danger"></i>End Time
+                                </label>
+                                <input type="time" class="form-control service-input" id="cel_end">
+                            </div>
+                            
+                            <!-- Row 4: Guests & Budget -->
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-users me-1 text-info"></i>Expected Guests
+                                </label>
+                                <input type="number" min="0" class="form-control service-input" id="cel_guests" placeholder="Number of guests">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-money-bill-wave me-1 text-success"></i>Budget (TZS)
+                                </label>
+                                <input type="number" min="0" step="0.01" class="form-control service-input" id="cel_budget" placeholder="Budget amount">
+                            </div>
+                            
+                            <!-- Row 5: Description -->
+                            <div class="col-12">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-file-alt me-1 text-primary"></i>Description
+                                </label>
+                                <textarea class="form-control service-input" id="cel_description" rows="2" placeholder="Enter celebration description"></textarea>
+                            </div>
+                            
+                            <!-- Row 6: Special Requests -->
+                            <div class="col-12">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-gift me-1 text-warning"></i>Special Requests
+                                </label>
+                                <textarea class="form-control service-input" id="cel_requests" rows="2" placeholder="Enter special requests"></textarea>
+                            </div>
+                            
+                            <!-- Row 7: Notes -->
+                            <div class="col-12">
+                                <label class="form-label service-label mb-2">
+                                    <i class="fas fa-sticky-note me-1 text-secondary"></i>Notes
+                                </label>
+                                <textarea class="form-control service-input" id="cel_notes" rows="2" placeholder="Additional notes"></textarea>
+                            </div>
+                        </div>
                         
-                        <!-- Celebration Basic Information Section -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                <h6 class="mb-0 text-primary fw-bold">
-                                    <i class="fas fa-info-circle me-2"></i>Celebration Information
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="cel_title" placeholder="Celebration Title" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_title" class="text-muted">
-                                                <i class="fas fa-star me-1"></i>Celebration Title
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="cel_celebrant" placeholder="Celebrant Name" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_celebrant" class="text-muted">
-                                                <i class="fas fa-user me-1"></i>Celebrant Name
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select class="form-select" id="cel_type" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                                <option value="">Select Type</option>
-                                                <option value="Birthday">Birthday</option>
-                                                <option value="Anniversary">Anniversary</option>
-                                                <option value="Wedding">Wedding</option>
-                                                <option value="Graduation">Graduation</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            <label for="cel_type" class="text-muted">
-                                                <i class="fas fa-tags me-1"></i>Celebration Type
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="cel_venue" placeholder="Venue Location" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_venue" class="text-muted">
-                                                <i class="fas fa-map-marker-alt me-1"></i>Venue
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Date & Time Section -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                <h6 class="mb-0 text-primary fw-bold">
-                                    <i class="fas fa-clock me-2"></i>Date & Time
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-4">
-                                    <div class="col-md-4">
-                                        <div class="form-floating">
-                                            <input type="date" class="form-control" id="cel_date" required style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_date" class="text-muted">
-                                                <i class="fas fa-calendar-alt me-1"></i>Celebration Date
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-floating">
-                                            <input type="time" class="form-control" id="cel_start" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_start" class="text-muted">
-                                                <i class="fas fa-play me-1"></i>Start Time
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-floating">
-                                            <input type="time" class="form-control" id="cel_end" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_end" class="text-muted">
-                                                <i class="fas fa-stop me-1"></i>End Time
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Guests & Budget Section -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                <h6 class="mb-0 text-primary fw-bold">
-                                    <i class="fas fa-chart-line me-2"></i>Guests & Budget
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="number" min="0" class="form-control" id="cel_guests" placeholder="Expected Guests" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_guests" class="text-muted">
-                                                <i class="fas fa-users me-1"></i>Expected Guests
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="number" min="0" step="0.01" class="form-control" id="cel_budget" placeholder="Budget Amount" style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;">
-                                            <label for="cel_budget" class="text-muted">
-                                                <i class="fas fa-money-bill-wave me-1"></i>Budget (TZS)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Description & Details Section -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header bg-white border-0" style="border-radius: 15px 15px 0 0;">
-                                <h6 class="mb-0 text-primary fw-bold">
-                                    <i class="fas fa-align-left me-2"></i>Description & Details
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-4">
-                                    <div class="col-12">
-                                        <div class="form-floating">
-                                            <textarea class="form-control" id="cel_description" placeholder="Celebration Description" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                            <label for="cel_description" class="text-muted">
-                                                <i class="fas fa-file-alt me-1"></i>Description
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="form-floating">
-                                            <textarea class="form-control" id="cel_requests" placeholder="Special Requests" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                            <label for="cel_requests" class="text-muted">
-                                                <i class="fas fa-gift me-1"></i>Special Requests
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="form-floating">
-                                            <textarea class="form-control" id="cel_notes" placeholder="Additional Notes" style="height: 100px; border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease; resize: none;"></textarea>
-                                            <label for="cel_notes" class="text-muted">
-                                                <i class="fas fa-sticky-note me-1"></i>Notes
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Enhanced Action Buttons -->
-                        <div class="d-flex justify-content-end gap-3 mt-4">
-                            <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                <i class="fas fa-times me-2"></i>Cancel
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary service-btn-cancel" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Cancel
                             </button>
-                            <button type="submit" class="btn btn-primary px-4 py-2" id="submitButton" style="border-radius: 25px; font-weight: 600; background: linear-gradient(135deg, #940000 0%, #667eea 100%); border: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(148, 0, 0, 0.3);">
-                                <i class="fas fa-save me-2"></i>Save Celebration
+                            <button type="submit" class="btn service-btn-save" id="submitButton">
+                                <i class="fas fa-save me-1"></i>Save Celebration
                             </button>
                         </div>
                     </form>
@@ -578,10 +516,10 @@
         // Modal Functions
         function openAddCelebration() {
             document.getElementById('editing_celebration_id').value = '';
-            const titleEl = document.querySelector('#addCelebrationModal .modal-title');
+            const titleEl = document.getElementById('celebrationModalTitle');
             if (titleEl) titleEl.textContent = 'Create Celebration';
             const submitBtn = document.getElementById('submitButton');
-            if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Celebration';
+            if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Celebration';
             document.getElementById('addCelebrationForm').reset();
         }
 
@@ -590,10 +528,10 @@
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('editing_celebration_id').value = id;
-                    const titleEl = document.querySelector('#addCelebrationModal .modal-title');
+                    const titleEl = document.getElementById('celebrationModalTitle');
                     if (titleEl) titleEl.textContent = 'Edit Celebration';
                     const submitBtn = document.getElementById('submitButton');
-                    if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Celebration';
+                    if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Update Celebration';
                     
                     document.getElementById('cel_title').value = data.title || '';
                     document.getElementById('cel_celebrant').value = data.celebrant_name || '';
@@ -889,7 +827,155 @@
 
         /* Modal Backdrop */
         .modal-backdrop {
-            background: linear-gradient(135deg, rgba(148, 0, 0, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+            background: rgba(23, 8, 45, 0.4) !important;
+        }
+        
+        .modal-backdrop.show {
+            opacity: 1 !important;
+        }
+        
+        /* Service Modal Styling (for Celebration Modal) */
+        .service-modal-content {
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .service-modal-header {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+        
+        .service-icon-wrapper {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .service-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+            letter-spacing: 0.3px;
+        }
+        
+        .service-input {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.5rem 0.75rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            background: white;
+        }
+        
+        .service-input:focus {
+            border-color: #17082d;
+            box-shadow: 0 0 0 0.2rem rgba(23, 8, 45, 0.15);
+            transform: translateY(-1px);
+            background: white;
+        }
+        
+        .service-input:hover {
+            border-color: #ced4da;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .service-btn-save {
+            background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(23, 8, 45, 0.3);
+        }
+        
+        .service-btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(23, 8, 45, 0.4);
+            background: linear-gradient(180deg, #1f0d3d 0%, #1f0d3ddd 100%);
+            color: white;
+        }
+        
+        .service-btn-cancel {
+            border-radius: 10px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid #dee2e6;
+        }
+        
+        .service-btn-cancel:hover {
+            transform: translateY(-2px);
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+        
+        .service-modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .service-modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .service-modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .service-modal-body::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%);
+            border-radius: 10px;
+        }
+        
+        .service-modal-body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #1f0d3d 0%, #1f0d3ddd 100%);
+        }
+        
+        /* Form Select Styling */
+        .service-input.form-select {
+            cursor: pointer;
+        }
+        
+        .service-input.form-select:focus {
+            border-color: #17082d;
+        }
+        
+        /* Textarea Styling */
+        .service-input[rows] {
+            resize: vertical;
+            min-height: 60px;
         }
     </style>
 

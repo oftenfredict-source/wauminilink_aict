@@ -15,6 +15,11 @@ class SettingsController extends Controller
      */
     public function index()
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.view') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to view settings.');
+        }
+        
         // Initialize default settings if they don't exist
         $this->initializeDefaultSettings();
         
@@ -31,6 +36,10 @@ class SettingsController extends Controller
      */
     public function update(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit settings.');
+        }
         $settings = $request->except(['_token', '_method']);
         
         try {
@@ -43,10 +52,13 @@ class SettingsController extends Controller
                     // Validate the value
                     $this->validateSetting($setting, $value);
                     
-                    // Update the setting
-                    $setting->update(['value' => $value]);
+                    // Update the setting using setValue to clear cache
+                    SystemSetting::setValue($key, $value, $setting->type);
                 }
             }
+            
+            // Clear all settings cache
+            Cache::flush();
             
             DB::commit();
             
@@ -66,6 +78,11 @@ class SettingsController extends Controller
      */
     public function updateCategory(Request $request, $category)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit settings.');
+        }
+        
         $settings = $request->except(['_token', '_method']);
         
         try {
@@ -78,9 +95,13 @@ class SettingsController extends Controller
                 
                 if ($setting && $setting->is_editable) {
                     $this->validateSetting($setting, $value);
-                    $setting->update(['value' => $value]);
+                    // Update the setting using setValue to clear cache
+                    SystemSetting::setValue($key, $value, $setting->type);
                 }
             }
+            
+            // Clear all settings cache
+            Cache::flush();
             
             DB::commit();
             
@@ -100,6 +121,11 @@ class SettingsController extends Controller
      */
     public function reset(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit settings.');
+        }
+        
         $category = $request->input('category');
         $defaults = config('settings.defaults');
         
@@ -168,6 +194,11 @@ class SettingsController extends Controller
      */
     public function import(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit settings.');
+        }
+        
         $request->validate([
             'settings_file' => 'required|file|mimes:json|max:2048'
         ]);
@@ -219,6 +250,11 @@ class SettingsController extends Controller
      */
     public function setValue(Request $request, $key)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            return response()->json(['error' => 'You do not have permission to edit settings.'], 403);
+        }
+        
         $setting = SystemSetting::where('key', $key)->first();
         
         if (!$setting || !$setting->is_editable) {
@@ -318,6 +354,11 @@ class SettingsController extends Controller
      */
     public function restore(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('settings.edit') && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit settings.');
+        }
+        
         $request->validate([
             'backup_file' => 'required|file|mimes:json|max:5120' // 5MB max
         ]);
@@ -376,7 +417,10 @@ class SettingsController extends Controller
         $defaults = config('settings.defaults');
         
         foreach ($defaults as $key => $config) {
-            if (!SystemSetting::where('key', $key)->exists()) {
+            $existing = SystemSetting::where('key', $key)->first();
+            
+            if (!$existing) {
+                // Create new setting
                 SystemSetting::create([
                     'key' => $key,
                     'value' => $config['value'],
@@ -390,6 +434,38 @@ class SettingsController extends Controller
                     'options' => $config['options'] ?? null,
                     'sort_order' => 0
                 ]);
+            } else {
+                // Update existing setting with new options and validation rules if they changed
+                $needsUpdate = false;
+                $updateData = [];
+                
+                // Update validation rules if they exist in config
+                if (isset($config['validation_rules']) && 
+                    json_encode($existing->validation_rules) !== json_encode($config['validation_rules'])) {
+                    $updateData['validation_rules'] = $config['validation_rules'];
+                    $needsUpdate = true;
+                }
+                
+                // Update options if they exist in config
+                if (isset($config['options']) && 
+                    json_encode($existing->options) !== json_encode($config['options'])) {
+                    $updateData['options'] = $config['options'];
+                    $needsUpdate = true;
+                }
+                
+                // Update description if it changed
+                if (isset($config['description']) && $existing->description !== $config['description']) {
+                    $updateData['description'] = $config['description'];
+                    $needsUpdate = true;
+                }
+                
+                if ($needsUpdate) {
+                    $existing->update($updateData);
+                    // Clear cache for this setting
+                    Cache::forget("setting.{$key}");
+                    Cache::forget('settings.grouped');
+                    Cache::forget("settings.category.{$existing->category}");
+                }
             }
         }
     }

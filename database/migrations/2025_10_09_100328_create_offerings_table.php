@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('member_id')->nullable()->constrained()->onDelete('set null'); // Can be anonymous
             $table->decimal('amount', 10, 2);
             $table->date('offering_date');
-            $table->string('offering_type')->default('general'); // general, special, thanksgiving, building_fund, missions
+            $table->string('offering_type')->default('general'); // general, special, thanksgiving, building_fund, other (custom)
             $table->string('service_type')->nullable(); // sunday_service, special_event, etc.
             $table->foreignId('service_id')->nullable(); // Link to specific service/event
             $table->string('payment_method')->default('cash');

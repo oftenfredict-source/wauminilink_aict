@@ -83,23 +83,33 @@ class SystemSetting extends Model
      */
     public static function getGroupedSettings()
     {
-        return Cache::remember('settings.grouped', 3600, function () {
-            return static::where('is_editable', true)
-                ->orderBy('category')
-                ->orderBy('group')
-                ->orderBy('sort_order')
-                ->orderBy('key')
-                ->get()
-                ->groupBy(['category', 'group'])
-                ->map(function ($categories) {
-                    return $categories->map(function ($groups) {
-                        return $groups->map(function ($setting) {
-                            $setting->value = static::castValue($setting->value, $setting->type);
-                            return $setting;
+        try {
+            return Cache::remember('settings.grouped', 3600, function () {
+                return static::where('is_editable', true)
+                    ->orderBy('category')
+                    ->orderBy('group')
+                    ->orderBy('sort_order')
+                    ->orderBy('key')
+                    ->get()
+                    ->groupBy(['category', 'group'])
+                    ->map(function ($categories) {
+                        return $categories->map(function ($groups) {
+                            return $groups->map(function ($setting) {
+                                try {
+                                    $setting->value = static::castValue($setting->value, $setting->type);
+                                } catch (\Exception $e) {
+                                    // If casting fails, use raw value
+                                    \Log::warning("Failed to cast setting value for {$setting->key}: " . $e->getMessage());
+                                }
+                                return $setting;
+                            });
                         });
                     });
-                });
-        });
+            });
+        } catch (\Exception $e) {
+            \Log::error("Error loading grouped settings: " . $e->getMessage());
+            return collect([]);
+        }
     }
 
     /**

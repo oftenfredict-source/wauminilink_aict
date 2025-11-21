@@ -16,8 +16,8 @@
 
     <!-- Filters -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i>Report Filters
+        <div class="card-header report-header-neutral py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-filter me-1"></i>Report Filters</h6>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('reports.department-giving') }}">
@@ -44,7 +44,7 @@
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-xl-4 col-md-6">
-            <div class="card bg-primary text-white mb-4">
+            <div class="card bg-info text-white mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -92,10 +92,87 @@
         </div>
     </div>
 
+    <!-- Combined by Purpose (Pledges + Offerings + Donations) -->
+    @if(isset($combinedByPurpose) && !empty($combinedByPurpose))
+    <div class="card mb-4">
+        <div class="card-header report-header-warning py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-layer-group me-1"></i>Combined Giving by Purpose</h6>
+            <small class="text-white-50">This section combines Pledges, Offerings, and Donations that share the same purpose</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="combinedTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Purpose</th>
+                            <th>Pledges (Paid)</th>
+                            <th>Offerings</th>
+                            <th>Donations</th>
+                            <th>Combined Total</th>
+                            <th>Total Pledged</th>
+                            <th>Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $grandTotal = 0;
+                            $grandPledged = 0;
+                        @endphp
+                        @foreach($combinedByPurpose as $purpose => $data)
+                        @php
+                            $grandTotal += $data['combined_total'];
+                            $grandPledged += $data['combined_pledged'];
+                        @endphp
+                        <tr>
+                            <td>
+                                <strong>{{ $data['display_name'] }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ $data['pledges']['count'] }} pledges, 
+                                    {{ $data['offerings']['count'] }} offerings, 
+                                    {{ $data['donations']['count'] }} donations
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                TZS {{ number_format($data['pledges']['total_paid'], 0) }}
+                                <br>
+                                <small class="text-muted">of {{ number_format($data['pledges']['total_pledged'], 0) }} pledged</small>
+                            </td>
+                            <td class="text-end">TZS {{ number_format($data['offerings']['total'], 0) }}</td>
+                            <td class="text-end">TZS {{ number_format($data['donations']['total'], 0) }}</td>
+                            <td class="text-end">
+                                <strong>TZS {{ number_format($data['combined_total'], 0) }}</strong>
+                            </td>
+                            <td class="text-end">TZS {{ number_format($data['combined_pledged'], 0) }}</td>
+                            <td class="text-end">
+                                <span class="badge bg-{{ $data['pledges']['outstanding'] > 0 ? 'warning' : 'success' }}">
+                                    TZS {{ number_format($data['pledges']['outstanding'], 0) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-primary">
+                            <th>Grand Total</th>
+                            <th class="text-end">TZS {{ number_format(collect($combinedByPurpose)->sum('pledges.total_paid'), 0) }}</th>
+                            <th class="text-end">TZS {{ number_format(collect($combinedByPurpose)->sum('offerings.total'), 0) }}</th>
+                            <th class="text-end">TZS {{ number_format(collect($combinedByPurpose)->sum('donations.total'), 0) }}</th>
+                            <th class="text-end">TZS {{ number_format($grandTotal, 0) }}</th>
+                            <th class="text-end">TZS {{ number_format($grandPledged, 0) }}</th>
+                            <th class="text-end">TZS {{ number_format(collect($combinedByPurpose)->sum('pledges.outstanding'), 0) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Offering Types -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-gift me-1"></i>Offering Types Breakdown
+        <div class="card-header report-header-primary py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-gift me-1"></i>Offering Types Breakdown</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -116,7 +193,15 @@
                         @forelse($offeringTypes as $offering)
                         <tr>
                             <td>
-                                <span class="badge bg-primary">{{ ucfirst($offering->offering_type) }}</span>
+                                <span class="badge bg-info">
+                                    @if($offering->offering_type == 'general')
+                                        General Offering
+                                    @elseif(in_array($offering->offering_type, ['special', 'thanksgiving', 'building_fund']))
+                                        {{ ucfirst(str_replace('_', ' ', $offering->offering_type)) }}
+                                    @else
+                                        {{ ucfirst($offering->offering_type) }}
+                                    @endif
+                                </span>
                             </td>
                             <td class="text-end">TZS {{ number_format($offering->total_amount, 0) }}</td>
                             <td class="text-center">{{ $offering->transaction_count }}</td>
@@ -136,8 +221,8 @@
 
     <!-- Donation Types -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-heart me-1"></i>Donation Types Breakdown
+        <div class="card-header report-header-success py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-heart me-1"></i>Donation Types Breakdown</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -178,8 +263,8 @@
 
     <!-- Pledge Types -->
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-handshake me-1"></i>Pledge Types Breakdown
+        <div class="card-header report-header-info py-2">
+            <h6 class="mb-0 text-white"><i class="fas fa-handshake me-1"></i>Pledge Types Breakdown</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -228,8 +313,8 @@
     <div class="row mb-4">
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>Offering Types Distribution
+                <div class="card-header report-header-primary py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-chart-pie me-1"></i>Offering Types Distribution</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="offeringChart" width="100%" height="50"></canvas>
@@ -239,8 +324,8 @@
         
         <div class="col-xl-6">
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>Donation Types Distribution
+                <div class="card-header report-header-success py-2">
+                    <h6 class="mb-0 text-white"><i class="fas fa-chart-pie me-1"></i>Donation Types Distribution</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="donationChart" width="100%" height="50"></canvas>
@@ -260,7 +345,15 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(offeringCtx, {
         type: 'doughnut',
         data: {
-            labels: offeringData.map(item => item.offering_type),
+            labels: offeringData.map(item => {
+                if (item.offering_type === 'general') {
+                    return 'General Offering';
+                } else if (['special', 'thanksgiving', 'building_fund'].includes(item.offering_type)) {
+                    return item.offering_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                } else {
+                    return item.offering_type.charAt(0).toUpperCase() + item.offering_type.slice(1);
+                }
+            }),
             datasets: [{
                 data: offeringData.map(item => item.total_amount),
                 backgroundColor: [
@@ -348,4 +441,21 @@ function exportReport(format) {
 }
 </script>
 @endsection
+<style>
+.report-header-primary{ background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%) !important; color:#fff !important; }
+.report-header-success{ background: linear-gradient(135deg, #1cc88a 0%, #16a36f 100%) !important; color:#fff !important; }
+.report-header-info{ background: linear-gradient(135deg, #36b9cc 0%, #2aa2b3 100%) !important; color:#fff !important; }
+.report-header-neutral{ background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important; color:#fff !important; }
+.report-header-primary h6, .report-header-success h6, .report-header-info h6, .report-header-neutral h6{ color:#fff !important; }
+</style>
+
+
+
+
+
+
+
+
+
+
 
