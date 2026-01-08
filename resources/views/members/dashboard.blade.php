@@ -11,7 +11,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="dashboard-profile-img">
                                 @if($member->profile_picture)
-                                    <img src="{{ asset('storage/' . $member->profile_picture) }}" alt="Profile Picture" class="rounded-circle border border-primary border-2" style="width:48px; height:48px; object-fit:cover;">
+                                    <img src="{{ asset($member->profile_picture) }}" alt="Profile Picture" class="rounded-circle border border-primary border-2" style="width:48px; height:48px; object-fit:cover;">
                                 @else
                                     <div class="rounded-circle d-flex align-items-center justify-content-center border border-primary border-2" style="width:48px; height:48px; background:rgba(0,123,255,.1);">
                                         <i class="fas fa-user text-primary"></i>

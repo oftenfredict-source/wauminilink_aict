@@ -478,7 +478,7 @@
             <div class="photo-section">
                 <div class="photo">
                     @if($member->profile_picture)
-                        <img src="{{ asset('storage/' . $member->profile_picture) }}" 
+                        <img src="{{ asset($member->profile_picture) }}" 
                              alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                     @else
                         <i class="fas fa-user"></i>

@@ -19,6 +19,9 @@ use App\Services\SettingsService;
 
 class AuthController extends Controller
 {
+    // OTP Feature Flag - Set to false to disable OTP temporarily
+    private const ENABLE_OTP = false;
+    
     // Show login form
     public function showLogin()
     {
@@ -138,33 +141,92 @@ class AuthController extends Controller
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
                 
-                // Generate and send OTP instead of logging in directly
-                $otp = $this->generateAndSendOtp($user, $emailOrMemberId, $request);
-                
-                if ($otp) {
-                    // Store user ID in session temporarily for OTP verification
-                    $request->session()->put('otp_user_id', $user->id);
-                    $request->session()->put('otp_email', $emailOrMemberId);
-                    // Reset resend attempts counter for new OTP session
-                    $request->session()->put('otp_resend_attempts', 0);
+                // Check if OTP is enabled
+                if (self::ENABLE_OTP) {
+                    // Generate and send OTP instead of logging in directly
+                    $otp = $this->generateAndSendOtp($user, $emailOrMemberId, $request);
                     
-                    // Logout the user (they'll be logged in after OTP verification)
-                    Auth::logout();
-                    
-                    // Redirect to OTP verification page
-                    return redirect()->route('login.otp.verify')
-                        ->with('info', 'An OTP has been sent to your phone number. Please enter it to complete login.');
+                    if ($otp) {
+                        // Store user ID in session temporarily for OTP verification
+                        $request->session()->put('otp_user_id', $user->id);
+                        $request->session()->put('otp_email', $emailOrMemberId);
+                        // Reset resend attempts counter for new OTP session
+                        $request->session()->put('otp_resend_attempts', 0);
+                        
+                        // Logout the user (they'll be logged in after OTP verification)
+                        Auth::logout();
+                        
+                        // Redirect to OTP verification page
+                        return redirect()->route('login.otp.verify')
+                            ->with('info', 'An OTP has been sent to your phone number. Please enter it to complete login.');
+                    } else {
+                        // If OTP sending failed, allow login but log the issue
+                        Auth::logout();
+                        \Log::warning('OTP generation failed, login blocked', [
+                            'user_id' => $user->id,
+                            'email' => $emailOrMemberId
+                        ]);
+                        
+                        return back()->withErrors([
+                            'email' => 'Unable to send OTP. Please contact administrator or try again later.',
+                        ])->withInput($request->only('email'));
+                    }
                 } else {
-                    // If OTP sending failed, allow login but log the issue
-                    Auth::logout();
-                    \Log::warning('OTP generation failed, login blocked', [
-                        'user_id' => $user->id,
-                        'email' => $emailOrMemberId
-                    ]);
+                    // OTP is disabled - proceed with direct login
+                    $request->session()->regenerate();
                     
-                    return back()->withErrors([
-                        'email' => 'Unable to send OTP. Please contact administrator or try again later.',
-                    ])->withInput($request->only('email'));
+                    // Update the session record with user_id
+                    try {
+                        $sessionId = $request->session()->getId();
+                        DB::table('sessions')
+                            ->updateOrInsert(
+                                ['id' => $sessionId],
+                                [
+                                    'user_id' => Auth::id(),
+                                    'ip_address' => $request->ip(),
+                                    'user_agent' => $request->userAgent(),
+                                    'last_activity' => time(),
+                                ]
+                            );
+                    } catch (\Exception $e) {
+                        // Silently continue if session table doesn't exist
+                    }
+                    
+                    // Log login activity
+                    try {
+                        \App\Models\ActivityLog::create([
+                            'user_id' => Auth::id(),
+                            'action' => 'login',
+                            'description' => 'User logged in (OTP disabled)',
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->userAgent(),
+                            'route' => 'login',
+                            'method' => 'POST',
+                        ]);
+                    } catch (\Exception $e) {
+                        // Silently continue if table doesn't exist
+                    }
+                    
+                    // Redirect based on role
+                    if ($user->role === 'secretary') {
+                        return redirect()->route('dashboard.secretary')
+                            ->with('success', 'Login successful! Welcome back.');
+                    } elseif ($user->role === 'pastor') {
+                        return redirect()->route('dashboard.pastor')
+                            ->with('success', 'Login successful! Welcome Pastor.');
+                    } elseif ($user->role === 'admin') {
+                        return redirect()->route('admin.dashboard')
+                            ->with('success', 'Login successful! Welcome Admin.');
+                    } elseif ($user->role === 'treasurer') {
+                        return redirect()->route('finance.dashboard')
+                            ->with('success', 'Login successful! Welcome Treasurer.');
+                    } elseif ($user->role === 'member') {
+                        return redirect()->route('member.dashboard')
+                            ->with('success', 'Login successful! Welcome.');
+                    } else {
+                        Auth::logout();
+                        return back()->withErrors(['role' => 'Unauthorized role.']);
+                    }
                 }
             }
         } catch (\Illuminate\Database\QueryException $e) {

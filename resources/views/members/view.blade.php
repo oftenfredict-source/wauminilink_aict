@@ -2273,9 +2273,26 @@
                         }
                         const qrPayload = lines.join('\n');
                         // Build HTML
+                        // Get profile picture URL - handle both old storage path and new assets path
+                        const baseUrl = '{{ url("/") }}';
+                        let profilePictureUrl = '';
+                        if (data.profile_picture) {
+                            if (data.profile_picture.startsWith('assets/images/')) {
+                                profilePictureUrl = `${baseUrl}/${data.profile_picture}`;
+                            } else {
+                                profilePictureUrl = `${baseUrl}/storage/${data.profile_picture}`;
+                            }
+                        }
+                        
                         let html = `<div id=\"memberDetailsPrint\" class=\"p-2\">
-                            <div class=\"d-flex justify-content-center\">
-                                <div class=\"text-center mb-3\">
+                            <div class=\"d-flex justify-content-center gap-4 mb-3\">
+                                ${profilePictureUrl ? `
+                                <div class=\"text-center\">
+                                    <img src=\"${profilePictureUrl}\" alt=\"Passport Photo\" class=\"img-thumbnail\" style=\"width: 150px; height: 180px; object-fit: cover; border: 2px solid #5b2a86; border-radius: 8px;\"/>
+                                    <div class=\"text-muted small mt-1\">Passport Photo</div>
+                                </div>
+                                ` : ''}
+                                <div class=\"text-center\">
                                     <img id=\"inlineQrImg\" alt=\"Member details QR\" width=\"120\" height=\"120\"/>
                                     <div class=\"text-muted small mt-1\">Scan for details</div>
                                 </div>
@@ -4092,14 +4109,47 @@
                     cancelButtonText: 'Cancel',
                     showLoaderOnConfirm: true,
                     preConfirm: () => {
-                        return fetch(`/members/${memberId}/reset-password`, {
+                        // Construct URL using base path - route is /members/{id}/reset-password
+                        const baseUrl = '{{ url("/") }}';
+                        const url = `${baseUrl}/members/${memberId}/reset-password`;
+                        console.log('Resetting password for member ID:', memberId);
+                        console.log('Request URL:', url);
+                        
+                        return fetch(url, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
                             }
                         })
-                        .then(response => response.json())
+                        .then(async response => {
+                            // Check if response is OK
+                            if (!response.ok) {
+                                // Try to parse error message from JSON response
+                                const contentType = response.headers.get('content-type');
+                                if (contentType && contentType.includes('application/json')) {
+                                    const errorData = await response.json();
+                                    throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
+                                } else {
+                                    // If not JSON, it's likely an HTML error page
+                                    const text = await response.text();
+                                    if (response.status === 404) {
+                                        throw new Error('Route not found. Please check if the route is properly configured.');
+                                    } else if (response.status === 419) {
+                                        throw new Error('CSRF token mismatch. Please refresh the page and try again.');
+                                    } else if (response.status === 403) {
+                                        throw new Error('You do not have permission to perform this action.');
+                                    } else {
+                                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                                    }
+                                }
+                            }
+                            
+                            // Parse JSON response
+                            return response.json();
+                        })
                         .then(data => {
                             if (!data.success) {
                                 throw new Error(data.message || 'Failed to reset password');

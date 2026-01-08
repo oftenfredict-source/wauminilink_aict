@@ -12,8 +12,8 @@
 					<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 gap-md-3">
 						<div class="d-flex align-items-center gap-2 gap-md-3">
 							<div class="dashboard-profile-img">
-								@if($pastor && $pastor->member->profile_picture)
-									<img src="{{ asset('storage/' . $pastor->member->profile_picture) }}" alt="Pastor Profile" class="rounded-circle border border-primary border-2" style="width:48px; height:48px; object-fit:cover;">
+								@if($pastor && $pastor->member && $pastor->member->profile_picture)
+									<img src="{{ asset($pastor->member->profile_picture) }}" alt="Pastor Profile" class="rounded-circle border border-primary border-2" style="width:48px; height:48px; object-fit:cover;">
 								@else
 									<div class="rounded-circle d-flex align-items-center justify-content-center border border-primary border-2" style="width:48px; height:48px; background:rgba(0,123,255,.1);">
 										<i class="fas fa-user-tie text-primary"></i>

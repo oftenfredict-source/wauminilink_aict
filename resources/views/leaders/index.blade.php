@@ -507,6 +507,7 @@
             <div class="card-body">
                 <div class="row">
                     @foreach($positionLeaders as $leader)
+                        @if($leader->member)
                         <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-3">
                             <div class="card h-100 border-start border-4 border-primary">
                                 <div class="card-body">
@@ -593,6 +594,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                     @endforeach
                 </div>
             </div>

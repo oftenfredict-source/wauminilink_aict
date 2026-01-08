@@ -12,12 +12,12 @@
                         <div class="d-flex align-items-center gap-2 flex-grow-1">
                             <div class="dashboard-profile-img position-relative">
                                 @if(isset($secretary) && $secretary->member && $secretary->member->profile_picture)
-                                    <img src="{{ asset('storage/' . $secretary->member->profile_picture) }}" 
+                                    <img src="{{ asset($secretary->member->profile_picture) }}" 
                                          alt="Secretary Profile" 
                                          class="rounded-circle border border-primary border-2 shadow-sm" 
                                          style="width:50px; height:50px; object-fit:cover; background:white;">
                                 @elseif(isset($user) && $user->profile_picture)
-                                    <img src="{{ asset('storage/' . $user->profile_picture) }}" 
+                                    <img src="{{ asset($user->profile_picture) }}" 
                                          alt="User Profile" 
                                          class="rounded-circle border border-primary border-2 shadow-sm" 
                                          style="width:50px; height:50px; object-fit:cover; background:white;">

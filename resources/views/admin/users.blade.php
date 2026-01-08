@@ -826,14 +826,47 @@ function resetPassword(userId) {
         cancelButtonText: 'Cancel',
         showLoaderOnConfirm: true,
         preConfirm: () => {
-            return fetch(`/admin/users/${userId}/reset-password`, {
+            // Construct URL using base path - route is /admin/users/{userId}/reset-password
+            const baseUrl = '{{ url("/") }}';
+            const url = `${baseUrl}/admin/users/${userId}/reset-password`;
+            console.log('Resetting password for user ID:', userId);
+            console.log('Request URL:', url);
+            
+            return fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                // Check if response is OK
+                if (!response.ok) {
+                    // Try to parse error message from JSON response
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
+                    } else {
+                        // If not JSON, it's likely an HTML error page
+                        const text = await response.text();
+                        if (response.status === 404) {
+                            throw new Error('Route not found. Please check if the route is properly configured.');
+                        } else if (response.status === 419) {
+                            throw new Error('CSRF token mismatch. Please refresh the page and try again.');
+                        } else if (response.status === 403) {
+                            throw new Error('You do not have permission to perform this action.');
+                        } else {
+                            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                        }
+                    }
+                }
+                
+                // Parse JSON response
+                return response.json();
+            })
             .then(data => {
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to reset password');
@@ -961,14 +994,47 @@ function deleteUser(userId, userName) {
         cancelButtonText: 'Cancel',
         showLoaderOnConfirm: true,
         preConfirm: () => {
-            return fetch(`/admin/users/${userId}`, {
+            // Construct URL using base path - route is /admin/users/{userId}
+            const baseUrl = '{{ url("/") }}';
+            const url = `${baseUrl}/admin/users/${userId}`;
+            console.log('Deleting user ID:', userId);
+            console.log('Request URL:', url);
+            
+            return fetch(url, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                // Check if response is OK
+                if (!response.ok) {
+                    // Try to parse error message from JSON response
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
+                    } else {
+                        // If not JSON, it's likely an HTML error page
+                        const text = await response.text();
+                        if (response.status === 404) {
+                            throw new Error('Route not found. Please check if the route is properly configured.');
+                        } else if (response.status === 419) {
+                            throw new Error('CSRF token mismatch. Please refresh the page and try again.');
+                        } else if (response.status === 403) {
+                            throw new Error('You do not have permission to perform this action.');
+                        } else {
+                            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                        }
+                    }
+                }
+                
+                // Parse JSON response
+                return response.json();
+            })
             .then(data => {
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to delete user');

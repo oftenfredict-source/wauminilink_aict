@@ -52,7 +52,7 @@
                             <div class="col-md-4 text-center mb-3 mb-md-0">
                                 <div class="position-relative d-inline-block">
                                     @if($member->profile_picture)
-                                        <img src="{{ asset('storage/' . $member->profile_picture) }}" 
+                                        <img src="{{ asset($member->profile_picture) }}" 
                                              alt="Profile Picture" 
                                              class="img-thumbnail rounded-circle" 
                                              style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">

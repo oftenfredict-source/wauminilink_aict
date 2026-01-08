@@ -229,9 +229,14 @@ class PastorDashboardController extends Controller
         $totalMembers = Member::count();
         
         // Get pastor information from leaders table
+        // Filter out leaders without valid member relationships
         $pastor = Leader::with('member')
             ->where('position', 'pastor')
             ->where('is_active', true)
+            ->get()
+            ->filter(function($leader) {
+                return $leader->member !== null;
+            })
             ->first();
         
         // Get pending amount (including pledge payments)

@@ -522,13 +522,29 @@ class MemberDashboardController extends Controller
             $file = $request->file('profile_picture');
             
             // Delete old profile picture if exists
-            if ($member->profile_picture && Storage::disk('public')->exists($member->profile_picture)) {
-                Storage::disk('public')->delete($member->profile_picture);
+            if ($member->profile_picture) {
+                // Handle old public path (assets/images/...) - delete if exists
+                if (strpos($member->profile_picture, 'assets/images/') === 0) {
+                    $oldPath = public_path($member->profile_picture);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+                // Delete from storage if it exists (for migration from old storage path)
+                if (Storage::disk('public')->exists($member->profile_picture)) {
+                    Storage::disk('public')->delete($member->profile_picture);
+                }
             }
             
-            // Store new profile picture
-            $profilePicturePath = $file->store('members/profile-pictures', 'public');
-            $member->profile_picture = $profilePicturePath;
+            // Save to public/assets/images/members/profile-pictures/ for direct access
+            $uploadPath = public_path('assets/images/members/profile-pictures');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadPath, $filename);
+            // Store path starting with 'assets/images/' (this will be used with asset() helper)
+            $member->profile_picture = 'assets/images/members/profile-pictures/' . $filename;
             $updated = true;
         }
 

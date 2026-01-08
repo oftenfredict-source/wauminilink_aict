@@ -37,6 +37,11 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ZKTecoController;
+use App\Http\Controllers\DiagnosticController;
+
+// Diagnostic route (no auth required for troubleshooting)
+Route::get('/diagnose-image-display', [DiagnosticController::class, 'imageDisplay'])->name('diagnose.image');
 
 // Leader password change routes - accessible to all leaders (pastor, secretary, treasurer, admin)
 Route::middleware(['auth', PreventBackHistory::class])->group(function () {
@@ -254,9 +259,10 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
         ->middleware('permission:members.edit')
         ->name('members.restore');
     
-    // Password reset - Admin only
-    Route::post('/members/{member}/reset-password', [MemberController::class, 'resetPassword'])
+    // Password reset - Admin only (must come before GET /members/{id} route)
+    Route::post('/members/{id}/reset-password', [MemberController::class, 'resetPassword'])
         ->middleware('permission:members.edit')
+        ->where('id', '[0-9]+')
         ->name('members.reset-password');
     
     // GET route with parameter should come last
@@ -443,14 +449,38 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::get('/special-events-members/notification', [SpecialEventController::class, 'getMembersForNotification'])->name('special.events.members.notification');
 
     // Attendance routes
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    // IMPORTANT: More specific routes must come BEFORE less specific routes
+    // Biometric sync route - must be first to avoid conflicts
+    Route::post('/attendance/biometric-sync', [AttendanceController::class, 'syncBiometricAttendance'])
+        ->name('attendance.biometric.sync')
+        ->middleware('auth'); // Explicitly add auth middleware
+    
+    Route::post('/attendance/trigger-notifications', [AttendanceController::class, 'triggerNotifications'])->name('attendance.trigger.notifications');
     Route::get('/attendance/member/{memberId}/history', [AttendanceController::class, 'memberHistory'])->name('attendance.member.history');
     Route::get('/attendance/service/{serviceType}/{serviceId}/report', [AttendanceController::class, 'serviceReport'])->name('attendance.service.report');
-    Route::get('/attendance/statistics', [AttendanceController::class, 'statistics'])->name('attendance.statistics');
-    Route::post('/attendance/trigger-notifications', [AttendanceController::class, 'triggerNotifications'])->name('attendance.trigger.notifications');
-    Route::get('/attendance/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members');
-    Route::post('/attendance/biometric-sync', [AttendanceController::class, 'syncBiometricAttendance'])->name('attendance.biometric.sync');
+    // Primary route that works with php artisan serve (avoids conflict with public/attendance directory)
+    Route::get('/stats/attendance', [AttendanceController::class, 'statistics'])->name('attendance.statistics');
+    // Alternative routes for compatibility
+    Route::get('/attendance-stats', [AttendanceController::class, 'statistics'])->name('attendance.statistics.alt');
+    Route::get('/attendance/statistics', [AttendanceController::class, 'statistics'])->name('attendance.statistics.legacy');
+    // Primary route that works with php artisan serve (avoids conflict with public/attendance directory)
+    Route::get('/stats/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members');
+    // Alternative route for compatibility
+    Route::get('/attendance/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members.legacy');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
+    // Biometric Device Testing Routes
+    Route::get('/biometric/test', [ZKTecoController::class, 'index'])->name('biometric.test');
+    Route::post('/biometric/test-connection', [ZKTecoController::class, 'testConnection'])->name('biometric.test-connection');
+    Route::post('/biometric/device-info', [ZKTecoController::class, 'getDeviceInfo'])->name('biometric.device-info');
+    Route::post('/biometric/attendance', [ZKTecoController::class, 'getAttendance'])->name('biometric.attendance');
+    Route::post('/biometric/users', [ZKTecoController::class, 'getUsers'])->name('biometric.users');
+    
+    // Biometric Member Registration Routes
+    Route::post('/biometric/register-member', [ZKTecoController::class, 'registerMember'])->name('biometric.register-member');
+    Route::post('/biometric/register-members-bulk', [ZKTecoController::class, 'registerMembersBulk'])->name('biometric.register-members-bulk');
+    Route::get('/biometric/search-members', [ZKTecoController::class, 'searchMembers'])->name('biometric.search-members');
 
     // Promise Guests routes
     Route::resource('promise-guests', App\Http\Controllers\PromiseGuestController::class);
@@ -528,6 +558,11 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
 });
 
 
+
+// Test route for biometric sync (temporary - for debugging)
+Route::post('/test-biometric-sync', [AttendanceController::class, 'syncBiometricAttendance'])
+    ->middleware('auth')
+    ->name('test.biometric.sync');
 
 Route::get('/', function () {
     return view('welcome');
@@ -1190,5 +1225,85 @@ Route::middleware(['auth', PreventBackHistory::class])->prefix('member')->name('
     Route::post('/change-password', [MemberDashboardController::class, 'updatePassword'])->name('password.update');
     Route::post('/notifications/{notification}/read', [MemberDashboardController::class, 'markNotificationAsRead'])->name('notifications.read');
 });
+
+// Serve storage files directly (bypasses symlink issues)
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    
+    // Security: Only allow files in public storage
+    $realPath = realpath($filePath);
+    $storagePath = realpath(storage_path('app/public'));
+    
+    // Check if file exists and is within storage/app/public directory
+    if (!$realPath || strpos($realPath, $storagePath) !== 0) {
+        abort(404);
+    }
+    
+    // Check if file exists
+    if (!file_exists($realPath) || !is_file($realPath)) {
+        abort(404);
+    }
+    
+    // Get MIME type
+    $mimeType = mime_content_type($realPath);
+    if (!$mimeType) {
+        // Fallback MIME types for common image formats
+        $extension = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
+    }
+    
+    // Set headers and return file
+    return response()->file($realPath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
+    ]);
+})->where('path', '.*')->name('storage.serve');
+
+// Serve assets/images files directly (bypasses document root issues)
+Route::get('/assets/images/{path}', function ($path) {
+    $filePath = public_path('assets/images/' . $path);
+    
+    // Security: Only allow files in public/assets/images directory
+    $realPath = realpath($filePath);
+    $assetsPath = realpath(public_path('assets/images'));
+    
+    // Check if file exists and is within public/assets/images directory
+    if (!$realPath || !$assetsPath || strpos($realPath, $assetsPath) !== 0) {
+        abort(404);
+    }
+    
+    // Check if file exists
+    if (!file_exists($realPath) || !is_file($realPath)) {
+        abort(404);
+    }
+    
+    // Get MIME type
+    $mimeType = mime_content_type($realPath);
+    if (!$mimeType) {
+        // Fallback MIME types for common image formats
+        $extension = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
+    }
+    
+    // Set headers and return file
+    return response()->file($realPath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
+    ]);
+})->where('path', '.*')->name('assets.images.serve');
 
 

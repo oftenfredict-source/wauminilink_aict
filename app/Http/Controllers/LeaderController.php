@@ -33,6 +33,11 @@ class LeaderController extends Controller
             ->orderBy('appointment_date', 'desc')
             ->get();
 
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function($leader) {
+            return $leader->member !== null;
+        });
+
         // Group leaders by position
         $leadersByPosition = $leaders->groupBy('position');
 

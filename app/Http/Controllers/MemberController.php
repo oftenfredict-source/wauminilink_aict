@@ -15,8 +15,10 @@ use App\Models\DeletedMember;
 use App\Models\User;
 use App\Services\SmsService;
 use App\Services\SettingsService;
+use App\Services\ZKTecoService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
@@ -201,7 +203,15 @@ class MemberController extends Controller
                     ], 422);
                 }
                 
-                $profilePicturePath = $file->store('members/profile-pictures', 'public');
+                // Save to public/assets/images/members/profile-pictures/ for direct access
+                $uploadPath = public_path('assets/images/members/profile-pictures');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move($uploadPath, $filename);
+                // Store path starting with 'assets/images/' (this will be used with asset() helper)
+                $profilePicturePath = 'assets/images/members/profile-pictures/' . $filename;
             }
 
             // Handle spouse profile picture upload
@@ -227,7 +237,15 @@ class MemberController extends Controller
                     ], 422);
                 }
                 
-                $spouseProfilePicturePath = $file->store('members/profile-pictures', 'public');
+                // Save to public/assets/images/members/profile-pictures/ for direct access
+                $uploadPath = public_path('assets/images/members/profile-pictures');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move($uploadPath, $filename);
+                // Store path starting with 'assets/images/' (this will be used with asset() helper)
+                $spouseProfilePicturePath = 'assets/images/members/profile-pictures/' . $filename;
             }
 
             // Generate unique member ID
@@ -289,43 +307,8 @@ class MemberController extends Controller
             \Log::info('Created member ID: ' . $member->id);
             \Log::info('Created member data:', $member->toArray());
 
-            // Register member on biometric attendance device
-            try {
-                $biometricResponse = Http::timeout(5)->post(
-                    'http://192.168.100.100:8000/api/v1/users/register',
-                    [
-                        // Use internal numeric ID as enroll_id basis; device will return actual enroll_id
-                        'id' => (string) $member->id,
-                        'name' => $member->full_name,
-                    ]
-                );
-
-                if ($biometricResponse->successful()) {
-                    $biometricJson = $biometricResponse->json();
-
-                    \Log::info('Biometric registration response', [
-                        'member_id' => $member->id,
-                        'response' => $biometricJson,
-                    ]);
-
-                    if (!empty($biometricJson['data']['enroll_id'])) {
-                        $member->biometric_enroll_id = (string) $biometricJson['data']['enroll_id'];
-                        $member->save();
-                    }
-                } else {
-                    \Log::warning('Biometric registration HTTP error', [
-                        'member_id' => $member->id,
-                        'status' => $biometricResponse->status(),
-                        'body' => $biometricResponse->body(),
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                \Log::error('Biometric registration failed', [
-                    'member_id' => $member->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // Continue flow even if biometric registration fails
-            }
+            // NOTE: Biometric registration will happen AFTER spouse and children are created
+            // This ensures all family members are registered at once
 
             // Create User account for member
             try {
@@ -380,9 +363,22 @@ class MemberController extends Controller
             }
 
             // Send welcome SMS (non-blocking best-effort) with diagnostic logging
+            $smsSent = false;
+            $smsError = null;
             try {
                 $smsEnabled = SettingsService::get('enable_sms_notifications', false);
-                if ($smsEnabled && !empty($member->phone_number)) {
+                if (!$smsEnabled) {
+                    $smsError = 'SMS notifications are disabled in system settings';
+                    Log::info('Welcome SMS skipped: SMS notifications disabled', [
+                        'member_id' => $member->id,
+                        'phone' => $member->phone_number ?? 'N/A'
+                    ]);
+                } elseif (empty($member->phone_number)) {
+                    $smsError = 'Member has no phone number';
+                    Log::info('Welcome SMS skipped: No phone number', [
+                        'member_id' => $member->id
+                    ]);
+                } else {
                     $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
                     
                     // Get username and password for SMS
@@ -396,18 +392,33 @@ class MemberController extends Controller
                     $message .= "Password: {$password}\n\n";
                     $message .= "Unaweza kupokea taarifa za ibada, matukio, na huduma kwa njia ya SMS. Karibu sana!";
                     
-                    $resp = app(SmsService::class)->sendDebug($member->phone_number, $message);
-                    \Log::info('Welcome SMS provider response', [
-                        'ok' => $resp['ok'] ?? null,
-                        'status' => $resp['status'] ?? null,
-                        'body' => $resp['body'] ?? null,
-                        'reason' => $resp['reason'] ?? null,
-                        'error' => $resp['error'] ?? null,
-                        'request' => $resp['request'] ?? null,
-                    ]);
+                    $smsService = app(SmsService::class);
+                    $resp = $smsService->sendDebug($member->phone_number, $message);
+                    $smsSent = $resp['ok'] ?? false;
+                    $smsError = $resp['reason'] ?? ($resp['error'] ?? null);
+                    
+                    if ($smsSent) {
+                        Log::info('Welcome SMS sent successfully', [
+                            'member_id' => $member->id,
+                            'phone' => $member->phone_number,
+                            'response' => $resp
+                        ]);
+                    } else {
+                        Log::warning('Welcome SMS failed', [
+                            'member_id' => $member->id,
+                            'phone' => $member->phone_number,
+                            'error' => $smsError,
+                            'response' => $resp
+                        ]);
+                    }
                 }
             } catch (\Throwable $e) {
-                \Log::warning('Welcome SMS failed', ['error' => $e->getMessage()]);
+                $smsError = $e->getMessage();
+                Log::error('Welcome SMS exception', [
+                    'member_id' => $member->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
 
             // Create spouse as separate member if they are a church member
@@ -537,6 +548,171 @@ class MemberController extends Controller
                 }
             } catch (\Throwable $e) {
                 \Log::warning('Spouse Welcome SMS failed', ['error' => $e->getMessage()]);
+            }
+
+            // Automatically register member AND family (spouse + teenagers) to biometric device
+            // This happens AFTER spouse and children are created to ensure all are registered at once
+            try {
+                // Check if device connection is configured
+                $ip = config('zkteco.ip');
+                $port = config('zkteco.port');
+                $password = config('zkteco.password', 0);
+                
+                if ($ip && $port) {
+                    // Generate enroll ID if not already set (should be auto-generated by model boot, but double-check)
+                    if (empty($member->biometric_enroll_id)) {
+                        $enrollId = Member::generateBiometricEnrollId();
+                        $member->biometric_enroll_id = $enrollId;
+                        $member->save();
+                    }
+                    
+                    // Try to register to device (don't fail member creation if device is offline)
+                    try {
+                        $zktecoService = new ZKTecoService($ip, $port, $password);
+                        
+                        if ($zktecoService->connect()) {
+                            $enrollId = $member->biometric_enroll_id;
+                            
+                            // Validate enroll ID is in valid range
+                            $enrollIdInt = (int)$enrollId;
+                            if ($enrollIdInt >= 10 && $enrollIdInt <= 999) {
+                                \Log::info("=== REGISTERING FAMILY TO BIOMETRIC DEVICE ===");
+                                \Log::info("Main Member: {$member->full_name} (ID: {$enrollId})");
+                                
+                                // Register main member
+                                try {
+                                    $registered = $zktecoService->registerUser(
+                                        $enrollIdInt,
+                                        (string)$enrollId,
+                                        $member->full_name,
+                                        '',
+                                        0,
+                                        0
+                                    );
+                                    
+                                    if ($registered) {
+                                        \Log::info("✅ Main member '{$member->full_name}' registered to device (ID: {$enrollId})");
+                                    } else {
+                                        \Log::warning("Main member registration returned false, but continuing with family registration");
+                                    }
+                                } catch (\Exception $mainError) {
+                                    if (strpos($mainError->getMessage(), 'already exists') !== false) {
+                                        \Log::info("✅ Main member '{$member->full_name}' already on device");
+                                    } else {
+                                        \Log::warning("Main member registration error: " . $mainError->getMessage() . " - Continuing with family");
+                                    }
+                                }
+                                
+                                // Register spouse if they are a church member
+                                // Reload member to get spouse relationship (spouse was created after main member)
+                                $member->refresh();
+                                $member->load('spouseMember');
+                                
+                                if ($member->spouse_member_id) {
+                                    $spouse = $member->spouseMember;
+                                    if ($spouse) {
+                                        \Log::info("Registering spouse: {$spouse->full_name}");
+                                        
+                                        // Generate enroll ID for spouse if needed
+                                        if (!$spouse->biometric_enroll_id) {
+                                            $spouseEnrollId = Member::generateBiometricEnrollId();
+                                            $spouse->biometric_enroll_id = $spouseEnrollId;
+                                            $spouse->save();
+                                        } else {
+                                            $spouseEnrollId = $spouse->biometric_enroll_id;
+                                        }
+                                        
+                                        // Small delay
+                                        usleep(500000);
+                                        
+                                        try {
+                                            $spouseResult = $zktecoService->registerUser(
+                                                (int)$spouseEnrollId,
+                                                (string)$spouseEnrollId,
+                                                $spouse->full_name,
+                                                '',
+                                                0,
+                                                0
+                                            );
+                                            
+                                            if ($spouseResult) {
+                                                \Log::info("✅ Spouse '{$spouse->full_name}' registered to device (ID: {$spouseEnrollId})");
+                                            }
+                                        } catch (\Exception $spouseError) {
+                                            if (strpos($spouseError->getMessage(), 'already exists') !== false) {
+                                                \Log::info("✅ Spouse '{$spouse->full_name}' already on device");
+                                            } else {
+                                                \Log::warning("Spouse registration error: " . $spouseError->getMessage());
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Register teenager children (13-17)
+                                $member->load('children');
+                                $allChildren = $member->children()->whereNotNull('date_of_birth')->get();
+                                $teenagers = $allChildren->filter(function($child) {
+                                    return $child->shouldAttendMainService(); // Only teenagers (13-17)
+                                });
+                                
+                                \Log::info("Found {$teenagers->count()} teenagers to register");
+                                
+                                foreach ($teenagers as $teenager) {
+                                    \Log::info("Registering teenager: {$teenager->full_name} (age: {$teenager->getAge()})");
+                                    
+                                    // Generate enroll ID if needed
+                                    if (!$teenager->biometric_enroll_id) {
+                                        $teenEnrollId = \App\Models\Child::generateBiometricEnrollId();
+                                        $teenager->biometric_enroll_id = $teenEnrollId;
+                                        $teenager->save();
+                                    } else {
+                                        $teenEnrollId = $teenager->biometric_enroll_id;
+                                    }
+                                    
+                                    // Small delay
+                                    usleep(500000);
+                                    
+                                    try {
+                                        $teenResult = $zktecoService->registerUser(
+                                            (int)$teenEnrollId,
+                                            (string)$teenEnrollId,
+                                            $teenager->full_name,
+                                            '',
+                                            0,
+                                            0
+                                        );
+                                        
+                                        if ($teenResult) {
+                                            \Log::info("✅ Teenager '{$teenager->full_name}' registered to device (ID: {$teenEnrollId})");
+                                        }
+                                    } catch (\Exception $teenError) {
+                                        if (strpos($teenError->getMessage(), 'already exists') !== false) {
+                                            \Log::info("✅ Teenager '{$teenager->full_name}' already on device");
+                                        } else {
+                                            \Log::warning("Teenager registration error: " . $teenError->getMessage());
+                                        }
+                                    }
+                                }
+                                
+                                \Log::info("✅ Family registration complete for member '{$member->full_name}'");
+                            } else {
+                                \Log::warning("Member '{$member->full_name}' has invalid enroll ID: {$enrollId} (must be 10-999)");
+                            }
+                            
+                            $zktecoService->disconnect();
+                        } else {
+                            \Log::warning("Could not connect to biometric device to register member '{$member->full_name}'. Device may be offline.");
+                        }
+                    } catch (\Exception $deviceError) {
+                        // Don't fail member creation if device registration fails
+                        \Log::warning("Failed to register member '{$member->full_name}' to biometric device: " . $deviceError->getMessage());
+                    }
+                } else {
+                    \Log::info("Biometric device not configured. Member '{$member->full_name}' created without device registration.");
+                }
+            } catch (\Exception $e) {
+                // Don't fail member creation if biometric registration fails
+                \Log::warning("Biometric registration error for member '{$member->full_name}': " . $e->getMessage());
             }
 
             // Get updated total members count
@@ -1145,8 +1321,16 @@ public function storeChild(Request $request)
      * Reset member password - Admin only
      * Generates a new password and optionally sends it via SMS
      */
-    public function resetPassword(Request $request, Member $member)
+    public function resetPassword(Request $request, $id)
     {
+        // Log the request for debugging
+        Log::info('Password reset request received', [
+            'member_id' => $id,
+            'user_id' => auth()->id(),
+            'url' => $request->fullUrl(),
+            'method' => $request->method()
+        ]);
+
         // Check if user is admin
         if (!auth()->user()->isAdmin()) {
             return response()->json([
@@ -1156,6 +1340,20 @@ public function storeChild(Request $request)
         }
 
         try {
+            // Find the member - try by ID first, then by member_id
+            $member = Member::find($id);
+            if (!$member) {
+                // Try finding by member_id if ID doesn't work
+                $member = Member::where('member_id', $id)->first();
+            }
+            
+            if (!$member) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Member not found with ID: ' . $id
+                ], 404);
+            }
+            
             // Find user account for this member
             $user = User::where('member_id', $member->id)->first();
             
@@ -1170,8 +1368,53 @@ public function storeChild(Request $request)
             $newPassword = $this->generateSecurePassword();
             
             // Update password
-            $user->password = Hash::make($newPassword);
-            $user->save();
+            // IMPORTANT: User model has 'password' => 'hashed' cast which can cause issues
+            // Use DB::table() to directly update the password field, bypassing model casts
+            $hashedPassword = Hash::make($newPassword);
+            
+            // Direct database update to bypass the 'hashed' cast
+            DB::table('users')
+                ->where('id', $user->id)
+                ->update(['password' => $hashedPassword]);
+            
+            // Refresh the model to get the latest data
+            $user->refresh();
+            
+            // Verify the password was saved correctly by checking against database
+            $dbPassword = DB::table('users')->where('id', $user->id)->value('password');
+            $passwordVerified = Hash::check($newPassword, $dbPassword);
+            
+            if (!$passwordVerified) {
+                Log::error('Password verification failed after reset', [
+                    'user_id' => $user->id,
+                    'member_id' => $member->id,
+                    'email' => $user->email,
+                    'db_password_length' => strlen($dbPassword ?? ''),
+                    'new_password' => $newPassword
+                ]);
+                
+                // Try one more time with a fresh hash
+                $hashedPassword2 = Hash::make($newPassword);
+                DB::table('users')
+                    ->where('id', $user->id)
+                    ->update(['password' => $hashedPassword2]);
+                
+                $user->refresh();
+                $dbPassword2 = DB::table('users')->where('id', $user->id)->value('password');
+                $passwordVerified2 = Hash::check($newPassword, $dbPassword2);
+                
+                Log::info('Password reset retry', [
+                    'user_id' => $user->id,
+                    'password_verified' => $passwordVerified2
+                ]);
+            } else {
+                Log::info('Password reset and verified successfully', [
+                    'user_id' => $user->id,
+                    'member_id' => $member->id,
+                    'email' => $user->email,
+                    'password_verified' => true
+                ]);
+            }
 
             // Log the password reset
             Log::info('Member password reset by admin', [
@@ -1184,30 +1427,74 @@ public function storeChild(Request $request)
 
             // Send SMS with new password if phone number exists
             $smsSent = false;
+            $smsError = null;
             if (!empty($member->phone_number)) {
+                try {
+                    // Check if SMS notifications are enabled
+                    $smsEnabled = \App\Services\SettingsService::get('enable_sms_notifications', false);
+                    if (!$smsEnabled) {
+                        $smsError = 'SMS notifications are disabled in system settings';
+                        Log::info('Password reset SMS skipped: SMS notifications disabled', [
+                            'member_id' => $member->id,
+                            'phone' => $member->phone_number
+                        ]);
+                    } else {
                 $smsService = app(SmsService::class);
                 $message = "Shalom {$member->full_name}, nenosiri lako jipya la akaunti yako ni: {$newPassword}. Tafadhali badilisha nenosiri baada ya kuingia. Mungu akubariki.";
                 
-                $smsSent = $smsService->send($member->phone_number, $message);
+                        // Use sendDebug to get detailed response
+                        $smsResult = $smsService->sendDebug($member->phone_number, $message);
+                        $smsSent = $smsResult['ok'] ?? false;
+                        $smsError = $smsResult['reason'] ?? ($smsResult['error'] ?? null);
                 
                 if ($smsSent) {
-                    Log::info('Password reset SMS sent', [
+                            Log::info('Password reset SMS sent successfully', [
                         'member_id' => $member->id,
-                        'phone' => $member->phone_number
+                                'phone' => $member->phone_number,
+                                'response' => $smsResult
                     ]);
                 } else {
                     Log::warning('Password reset SMS failed', [
                         'member_id' => $member->id,
-                        'phone' => $member->phone_number
+                                'phone' => $member->phone_number,
+                                'error' => $smsError,
+                                'response' => $smsResult
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $smsError = $e->getMessage();
+                    Log::error('Failed to send password reset SMS: ' . $e->getMessage(), [
+                        'member_id' => $member->id,
+                        'phone' => $member->phone_number,
+                        'exception' => $e
                     ]);
                 }
+            } else {
+                $smsError = 'No phone number found for this member';
+                Log::info('Password reset SMS skipped: No phone number', [
+                    'member_id' => $member->id
+                ]);
+            }
+
+            // Build success message
+            $message = 'Password reset successfully.';
+            if ($smsSent) {
+                $message .= ' New password has been sent via SMS.';
+            } else {
+                $message .= ' New password: ' . $newPassword . ' (SMS not sent';
+                if ($smsError) {
+                    $message .= ': ' . $smsError;
+                }
+                $message .= ').';
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password reset successfully.',
+                'message' => $message,
                 'password' => $newPassword, // Return password so admin can see/copy it
                 'sms_sent' => $smsSent,
+                'sms_error' => $smsError,
                 'member_name' => $member->full_name,
                 'phone_number' => $member->phone_number
             ]);

@@ -161,4 +161,50 @@ class Member extends Model
         
         return $memberId;
     }
+
+    /**
+     * Generate a unique biometric enroll ID (2-3 digits: 10-999)
+     * This ID is used to register members on the biometric device
+     * 
+     * @return string Unique enroll ID between 10 and 999
+     */
+    public static function generateBiometricEnrollId()
+    {
+        $maxAttempts = 1000; // Prevent infinite loop
+        $attempts = 0;
+        
+        do {
+            // Generate random number between 10 and 999 (2-3 digits)
+            $enrollId = rand(10, 999);
+            $attempts++;
+            
+            if ($attempts >= $maxAttempts) {
+                // If we can't find a unique ID, try sequential search
+                for ($id = 10; $id <= 999; $id++) {
+                    if (!self::where('biometric_enroll_id', (string)$id)->exists()) {
+                        return (string)$id;
+                    }
+                }
+                throw new \Exception('Cannot generate unique biometric enroll ID. All IDs (10-999) are taken.');
+            }
+            
+        } while (self::where('biometric_enroll_id', (string)$enrollId)->exists());
+        
+        return (string)$enrollId;
+    }
+
+    /**
+     * Boot method to auto-generate biometric enroll ID when member is created
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($member) {
+            // Auto-generate biometric enroll ID if not provided
+            if (empty($member->biometric_enroll_id)) {
+                $member->biometric_enroll_id = self::generateBiometricEnrollId();
+            }
+        });
+    }
 }

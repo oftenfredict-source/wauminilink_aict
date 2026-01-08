@@ -21,7 +21,7 @@
                         <div class="text-center">
                             <div class="member-avatar mb-1">
                                 @if($member->profile_picture)
-                                    <img src="{{ asset('storage/' . $member->profile_picture) }}" alt="Profile" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
+                                    <img src="{{ asset($member->profile_picture) }}" alt="Profile" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
                                 @else
                                     <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 45px; height: 45px; background: rgba(255,255,255,0.2); font-size: 1.2rem;">
                                         {{ substr($member->full_name ?? 'M', 0, 1) }}
@@ -153,7 +153,7 @@
                         <div class="text-center">
                             <div class="member-avatar mb-1">
                                 @if($member->profile_picture)
-                                    <img src="{{ asset('storage/' . $member->profile_picture) }}" alt="Profile" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
+                                    <img src="{{ asset($member->profile_picture) }}" alt="Profile" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
                                 @else
                                     <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 45px; height: 45px; background: rgba(255,255,255,0.2); font-size: 1.2rem;">
                                         {{ substr($member->full_name ?? 'M', 0, 1) }}
