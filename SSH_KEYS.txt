@@ -1,0 +1,75 @@
+================================================================================
+SSH KEYS FOR GITHUB ACTIONS DEPLOYMENT
+================================================================================
+
+IMPORTANT: Keep these keys secure! Never share your private key publicly.
+
+================================================================================
+PRIVATE KEY (Add to GitHub Secret: SERVER_SSH_KEY)
+================================================================================
+
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+
+================================================================================
+PUBLIC KEY (Add to your server's ~/.ssh/authorized_keys)
+================================================================================
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCy10FI0kwiYE3gaPo+zJ17q1tcSlh8v8XcVYod5kDsKbtIIQ8pXkY9wi5MxwHIY2fJs/2I16KBR1sVGKkQAap/QoUgTwd9ryDRApaFGzrXhGKXzvGZoQV8x8+6DI+7Xw0g4UYqMoRKv6XrSWwwR4u5LT0Pll/nkPrYiiJQNYlm16kjXaRs5mKqsT+9p2j0kN3q8IoD5hdB+bIfRtT/nEh03zW4Ywd4r9JXT2zhVXQQVKLzfD+PJsFUKyFWcX4xhLr4uDt8RpGZRQ25fxPAru3+7k2+GLbTXhaobqA4RPN1PBT3ybRMgTsfCoesfSgivpl1W6gHC/rdPwalYbfRXFREoTlA/GKSUXzZ2RYbOrcpgwYrW35yqBB5HzZcyIsDp7DhB0cTXECu8dDcwknuqKDlvRowTuS6WecfEjE+x/QhfdHLaeSL7aT5vXMkKFmTRbfwjiqV1E+H09BSDPAfpskKTOS/uqNwYIhsME9BdKY1QZfBY+S3ygALYlvhlIdHN/wUayfolv5mr4lRH/2/Hrwct0agSEYD2BlW5YtOfCBhYemeFepCy8C5fOOJgXba67sG9tv0/nk5DtDaTZVTwQH2+08aAfZDNxfLNcp0OoV10Ol/iI3h8AOQN51N9L8rV+HI+0s1fKAIlDd2+HFrrNTr7QH6MeRoS67YrNz+jDmbAQ== github-actions-wauminilink
+
+================================================================================
+KEY LOCATIONS
+================================================================================
+
+Private Key: C:\Users\often\.ssh\github_actions_wauminilink
+Public Key:  C:\Users\often\.ssh\github_actions_wauminilink.pub
+
+================================================================================
+
