@@ -273,18 +273,40 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     
     // Test route to check if member exists
     Route::get('/test-member/{id}', function($id) {
-        $member = \App\Models\Member::find($id);
-        if ($member) {
+        try {
+            // Validate ID is numeric
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid member ID'
+                ], 400);
+            }
+            
+            $member = \App\Models\Member::find($id);
+            if ($member) {
+                return response()->json([
+                    'success' => true,
+                    'member' => [
+                        'id' => $member->id,
+                        'member_id' => $member->member_id,
+                        'full_name' => $member->full_name
+                    ]
+                ]);
+            }
             return response()->json([
-                'success' => true,
-                'member' => [
-                    'id' => $member->id,
-                    'member_id' => $member->member_id,
-                    'full_name' => $member->full_name
-                ]
+                'success' => false,
+                'message' => 'Member not found'
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error in test-member route: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
             ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error verifying member: ' . $e->getMessage()
+            ], 500);
         }
-        return response()->json(['success' => false, 'message' => 'Member not found']);
     });
     
     // List all members for debugging
@@ -1305,5 +1327,67 @@ Route::get('/assets/images/{path}', function ($path) {
         'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
     ]);
 })->where('path', '.*')->name('assets.images.serve');
+
+// GitHub Webhook for automated deployment (optional)
+// Configure this in GitHub: Settings → Webhooks → Add webhook
+// Payload URL: https://wauminilink.co.tz/deploy-webhook
+// Content type: application/json
+// Secret: Add GITHUB_WEBHOOK_SECRET to your .env file
+Route::post('/deploy-webhook', function (Request $request) {
+    // Verify webhook secret (optional but recommended)
+    $secret = env('GITHUB_WEBHOOK_SECRET');
+    $signature = $request->header('X-Hub-Signature-256');
+    
+    if ($secret && $signature) {
+        $payload = $request->getContent();
+        $hash = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+        
+        if (!hash_equals($hash, $signature)) {
+            \Log::warning('Deployment webhook: Invalid signature');
+            abort(403, 'Invalid signature');
+        }
+    }
+    
+    // Only deploy on push to main branch
+    $payload = json_decode($request->getContent(), true);
+    if (isset($payload['ref']) && $payload['ref'] !== 'refs/heads/main') {
+        return response()->json(['message' => 'Ignored: Not main branch'], 200);
+    }
+    
+    // Execute deployment script
+    $deployScript = base_path('deploy.sh');
+    
+    if (!file_exists($deployScript)) {
+        \Log::error('Deployment script not found: ' . $deployScript);
+        return response()->json(['error' => 'Deployment script not found'], 500);
+    }
+    
+    // Make script executable
+    chmod($deployScript, 0755);
+    
+    // Run deployment script
+    $output = [];
+    $returnCode = 0;
+    exec("cd " . base_path() . " && bash deploy.sh 2>&1", $output, $returnCode);
+    
+    \Log::info('Deployment webhook triggered', [
+        'output' => implode("\n", $output),
+        'return_code' => $returnCode
+    ]);
+    
+    if ($returnCode !== 0) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Deployment failed',
+            'output' => implode("\n", $output)
+        ], 500);
+    }
+    
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Deployment completed',
+        'output' => implode("\n", $output)
+    ]);
+})->middleware('throttle:10,1'); // Limit to 10 requests per minute
 
 

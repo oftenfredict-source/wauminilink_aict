@@ -3475,8 +3475,27 @@
                 console.log('Is archived tab:', isArchived);
                 
                 // First, test if the member exists
-                fetch(`/test-member/${id}`)
-                    .then(response => response.json())
+                fetch(`/test-member/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                    .then(response => {
+                        // Check if response is ok
+                        if (!response.ok) {
+                            // Try to parse error message
+                            return response.json().then(data => {
+                                throw new Error(data.message || `Server error: ${response.status}`);
+                            }).catch(() => {
+                                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                            });
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (!data.success) {
                             // If not found in active members, check if it's archived
@@ -3484,201 +3503,230 @@
                                 console.log('Member not found in active members, checking archived...');
                                 // For archived members, we'll proceed with deletion attempt
                                 // The controller will handle the archived member deletion
+                                proceedWithDeletion(id, isArchived);
                             } else {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Member Not Found',
-                                    text: 'The member you are trying to delete does not exist in active members.',
+                                    text: data.message || 'The member you are trying to delete does not exist in active members.',
                                     confirmButtonText: 'OK'
                                 });
                                 return;
                             }
+                        } else {
+                            console.log('Member found:', data.member);
+                            // Proceed with deletion using the extracted function
+                            proceedWithDeletion(id, isArchived, data.member ? data.member.full_name : null);
                         }
-                        
-                        console.log('Member found:', data.member);
-                        
-                        // Show reason input form first
-                        Swal.fire({
-                            title: 'Archive Member',
-                            html: `
-                                <div class="mb-3">
-                                    <label for="archive-reason" class="form-label">Reason for archiving ${data.member.full_name}:</label>
-                                    <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
-                                </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
-                                </div>
-                            `,
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Archive Member',
-                            cancelButtonText: 'Cancel',
-                            confirmButtonColor: '#dc3545',
-                            preConfirm: () => {
-                                const reason = document.getElementById('archive-reason').value.trim();
-                                if (!reason) {
-                                    Swal.showValidationMessage('Please provide a reason for archiving this member.');
-                                    return false;
-                                }
-                                return reason;
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Show loading state
-                                Swal.fire({
-                                    title: 'Archiving...',
-                                    text: 'Please wait while we archive the member.',
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    didOpen: () => {
-                                        Swal.showLoading();
-                                    }
-                                });
-
-                                // Use different endpoint for archived vs active members
-                                const deleteUrl = isArchived ? `{{ url('/members/archived') }}/${id}` : `{{ url('/members') }}/${id}`;
-                                console.log('Delete URL:', deleteUrl);
-                                console.log('Archive reason:', result.value);
-                                
-                                // Prepare request body with reason
-                                const requestBody = {
-                                    reason: result.value
-                                };
-                                
-                                // Use a simple fetch request with proper error handling
-                                fetch(deleteUrl, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json'
-                                    },
-                                    body: JSON.stringify(requestBody)
-                                })
-                                .then(response => {
-                                    console.log('Delete response status:', response.status);
-                                    if (response.ok) {
-                                        return response.json();
-                                    } else if (response.status === 403) {
-                                        // Handle 403 Forbidden - permission denied
-                                        return response.json().then(data => {
-                                            throw new Error(data.message || 'You do not have permission to archive members. Please contact your administrator.');
-                                        });
-                                    } else if (response.status === 404) {
-                                        throw new Error('Member not found');
-                                    } else if (response.status === 419) {
-                                        // CSRF token expired - reload page to get new token
-                                        if (typeof Swal !== 'undefined') {
-                                            Swal.fire({
-                                                icon: 'info',
-                                                title: 'Refreshing...',
-                                                text: 'Please wait while we refresh your session.',
-                                                allowOutsideClick: false,
-                                                allowEscapeKey: false,
-                                                showConfirmButton: false,
-                                                didOpen: () => {
-                                                    Swal.showLoading();
-                                                }
-                                            });
-                                            setTimeout(() => {
-                                                window.location.reload();
-                                            }, 500);
-                                        } else {
-                                            window.location.reload();
-                                        }
-                                        return;
-                                    } else if (response.status === 422) {
-                                        // Parse the 422 response to get the actual error message
-                                        return response.json().then(data => {
-                                            throw new Error(data.message || 'Validation error occurred');
-                                        });
-                                    } else {
-                                        // Try to parse error message from response
-                                        return response.json().then(data => {
-                                            throw new Error(data.message || `Server error: ${response.status}`);
-                                        }).catch(() => {
-                                            throw new Error(`Server error: ${response.status}`);
-                                        });
-                                    }
-                                })
-                                .then(data => {
-                                    console.log('Delete response data:', data);
-                                    if (data.success) {
-                                        // Remove the row from the table
-                                        const row = document.getElementById(`row-${id}`);
-                                        if (row) {
-                                            row.remove();
-                                        }
-                                        
-                                        // Also remove from card view if it exists
-                                        const card = document.querySelector(`[data-member-id="${id}"]`);
-                                        if (card) {
-                                            card.remove();
-                                        }
-                                        
-                                        Swal.fire({ 
-                                            icon: 'success', 
-                                            title: 'Member Archived', 
-                                            html: `
-                                                <div class="text-start">
-                                                    <p><strong>Reason:</strong> ${result.value}</p>
-                                                    <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
-                                                </div>
-                                            `, 
-                                            showConfirmButton: true,
-                                            showCancelButton: true,
-                                            showDenyButton: true,
-                                            confirmButtonText: '📄 Download Report',
-                                            denyButtonText: '🖨️ Print Report',
-                                            cancelButtonText: 'Close',
-                                            confirmButtonColor: '#28a745',
-                                            denyButtonColor: '#007bff',
-                                            allowOutsideClick: false,
-                                            allowEscapeKey: false,
-                                            timer: 0
-                                        }).then((actionResult) => {
-                                            if (actionResult.isConfirmed) {
-                                                downloadArchiveReport(data.member, result.value);
-                                            } else if (actionResult.isDenied) {
-                                                printArchiveReport(data.member, result.value);
-                                            }
-                                            
-                                            // Only reload after user has made a choice
-                                            setTimeout(() => {
-                                                location.reload();
-                                            }, 1000);
-                                        });
-                                    } else {
-                                        Swal.fire({ 
-                                            icon: 'error', 
-                                            title: 'Delete failed', 
-                                            text: data.message || 'Please try again.',
-                                            confirmButtonText: 'OK'
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Delete error:', error);
-                                    Swal.fire({ 
-                                        icon: 'error', 
-                                        title: 'Error', 
-                                        text: error.message,
-                                        confirmButtonText: 'OK'
-                                    });
-                                });
-                            }
-                        });
                     })
                     .catch(error => {
                         console.error('Member check error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Unable to verify member. Please try again.',
-                            confirmButtonText: 'OK'
+                        console.error('Error details:', {
+                            message: error.message,
+                            stack: error.stack
                         });
+                        
+                        // If member check fails, we can still proceed with deletion
+                        // The delete endpoint will also validate the member exists
+                        // Only show error if it's not a network/connection issue
+                        if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+                            // Network error - proceed anyway, delete endpoint will handle it
+                            console.warn('Network error during member check, proceeding with deletion...');
+                            proceedWithDeletion(id, isArchived);
+                        } else {
+                            // Other errors - show message but allow user to proceed
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Verification Warning',
+                                text: 'Unable to verify member: ' + (error.message || 'Unknown error') + '. You can still proceed with deletion.',
+                                showCancelButton: true,
+                                confirmButtonText: 'Proceed Anyway',
+                                cancelButtonText: 'Cancel',
+                                confirmButtonColor: '#dc3545'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    proceedWithDeletion(id, isArchived);
+                                }
+                            });
+                        }
                     });
+            }
+
+            // Helper function to proceed with deletion (extracted for reuse)
+            function proceedWithDeletion(id, isArchived, memberName = null) {
+                const displayName = memberName ? ` ${memberName}` : '';
+                // Show reason input form
+                Swal.fire({
+                    title: 'Archive Member',
+                    html: `
+                        <div class="mb-3">
+                            <label for="archive-reason" class="form-label">Reason for archiving${displayName}:</label>
+                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Archive Member',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#dc3545',
+                    preConfirm: () => {
+                        const reason = document.getElementById('archive-reason').value.trim();
+                        if (!reason) {
+                            Swal.showValidationMessage('Please provide a reason for archiving this member.');
+                            return false;
+                        }
+                        return reason;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Archiving...',
+                            text: 'Please wait while we archive the member.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Use different endpoint for archived vs active members
+                        const deleteUrl = isArchived ? `{{ url('/members/archived') }}/${id}` : `{{ url('/members') }}/${id}`;
+                        console.log('Delete URL:', deleteUrl);
+                        console.log('Archive reason:', result.value);
+                        
+                        // Prepare request body with reason
+                        const requestBody = {
+                            reason: result.value
+                        };
+                        
+                        // Use a simple fetch request with proper error handling
+                        fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(requestBody)
+                        })
+                        .then(response => {
+                            console.log('Delete response status:', response.status);
+                            if (response.ok) {
+                                return response.json();
+                            } else if (response.status === 403) {
+                                // Handle 403 Forbidden - permission denied
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'You do not have permission to archive members. Please contact your administrator.');
+                                });
+                            } else if (response.status === 404) {
+                                throw new Error('Member not found');
+                            } else if (response.status === 419) {
+                                // CSRF token expired - reload page to get new token
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'Refreshing...',
+                                        text: 'Please wait while we refresh your session.',
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        showConfirmButton: false,
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                        }
+                                    });
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 500);
+                                } else {
+                                    window.location.reload();
+                                }
+                                return;
+                            } else if (response.status === 422) {
+                                // Parse the 422 response to get the actual error message
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'Validation error occurred');
+                                });
+                            } else {
+                                // Try to parse error message from response
+                                return response.json().then(data => {
+                                    throw new Error(data.message || `Server error: ${response.status}`);
+                                }).catch(() => {
+                                    throw new Error(`Server error: ${response.status}`);
+                                });
+                            }
+                        })
+                        .then(data => {
+                            console.log('Delete response data:', data);
+                            if (data.success) {
+                                // Remove the row from the table
+                                const row = document.getElementById(`row-${id}`);
+                                if (row) {
+                                    row.remove();
+                                }
+                                
+                                // Also remove from card view if it exists
+                                const card = document.querySelector(`[data-member-id="${id}"]`);
+                                if (card) {
+                                    card.remove();
+                                }
+                                
+                                Swal.fire({ 
+                                    icon: 'success', 
+                                    title: 'Member Archived', 
+                                    html: `
+                                        <div class="text-start">
+                                            <p><strong>Reason:</strong> ${result.value}</p>
+                                            <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
+                                        </div>
+                                    `, 
+                                    showConfirmButton: true,
+                                    showCancelButton: true,
+                                    showDenyButton: true,
+                                    confirmButtonText: '📄 Download Report',
+                                    denyButtonText: '🖨️ Print Report',
+                                    cancelButtonText: 'Close',
+                                    confirmButtonColor: '#28a745',
+                                    denyButtonColor: '#007bff',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    timer: 0
+                                }).then((actionResult) => {
+                                    if (actionResult.isConfirmed) {
+                                        downloadArchiveReport(data.member, result.value);
+                                    } else if (actionResult.isDenied) {
+                                        printArchiveReport(data.member, result.value);
+                                    }
+                                    
+                                    // Only reload after user has made a choice
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 1000);
+                                });
+                            } else {
+                                Swal.fire({ 
+                                    icon: 'error', 
+                                    title: 'Delete failed', 
+                                    text: data.message || 'Please try again.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Delete error:', error);
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: 'Error', 
+                                text: error.message,
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
             }
 
             // Simple client-side, real-time filtering
