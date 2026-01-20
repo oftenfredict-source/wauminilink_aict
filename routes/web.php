@@ -38,10 +38,6 @@ use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ZKTecoController;
-use App\Http\Controllers\DiagnosticController;
-
-// Diagnostic route (no auth required for troubleshooting)
-Route::get('/diagnose-image-display', [DiagnosticController::class, 'imageDisplay'])->name('diagnose.image');
 
 // Leader password change routes - accessible to all leaders (pastor, secretary, treasurer, admin)
 Route::middleware(['auth', PreventBackHistory::class])->group(function () {
@@ -239,39 +235,34 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::get('/members', [MemberController::class, 'index'])
         ->middleware('permission:members.view')
         ->name('members.index');
+    // Redirect /members/leaders to /member/leaders (correct route)
+    Route::get('/members/leaders', function() {
+        return redirect()->route('member.leaders');
+    })->name('members.leaders.redirect');
     Route::get('/members/next-id', [MemberController::class, 'nextId'])->name('members.next_id');
     Route::get('/members/export/csv', [MemberController::class, 'exportCsv'])->name('members.export.csv');
     
     // PUT and DELETE routes must come before GET routes with parameters
     Route::put('/members/{member}', [MemberController::class, 'update'])
         ->middleware('permission:members.edit')
+        ->where('member', '[0-9]+')
         ->name('members.update');
     Route::delete('/members/{member}', [MemberController::class, 'destroy'])
         ->middleware('permission:members.delete')
+        ->where('member', '[0-9]+')
         ->name('members.destroy');
     Route::delete('/members/archived/{memberId}', [MemberController::class, 'destroyArchived'])
         ->middleware('permission:members.delete')
         ->name('members.destroy.archived');
     Route::delete('/members/{member}/archive', [MemberController::class, 'archive'])
         ->middleware('permission:members.delete')
+        ->where('member', '[0-9]+')
         ->name('members.archive');
     Route::post('/members/archived/{memberId}/restore', [MemberController::class, 'restore'])
         ->middleware('permission:members.edit')
         ->name('members.restore');
     
-    // Password reset - Admin only (must come before GET /members/{id} route)
-    Route::post('/members/{id}/reset-password', [MemberController::class, 'resetPassword'])
-        ->middleware('permission:members.edit')
-        ->where('id', '[0-9]+')
-        ->name('members.reset-password');
-    
-    // GET route with parameter should come last
-    Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show')->where('id', '[0-9]+');
-    
-    // Children routes
-    Route::post('/children', [MemberController::class, 'storeChild'])->name('children.store');
-    
-    // Test route to check if member exists
+    // Test route to check if member exists - MUST be before /members/{id} to avoid conflicts
     Route::get('/test-member/{id}', function($id) {
         try {
             // Validate ID is numeric
@@ -307,7 +298,19 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
                 'message' => 'Error verifying member: ' . $e->getMessage()
             ], 500);
         }
-    });
+    })->where('id', '[0-9]+');
+    
+    // Password reset - Admin only (must come before GET /members/{id} route)
+    Route::post('/members/{id}/reset-password', [MemberController::class, 'resetPassword'])
+        ->middleware('permission:members.edit')
+        ->where('id', '[0-9]+')
+        ->name('members.reset-password');
+    
+    // GET route with parameter should come last
+    Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show')->where('id', '[0-9]+');
+    
+    // Children routes
+    Route::post('/children', [MemberController::class, 'storeChild'])->name('children.store');
     
     // List all members for debugging
     Route::get('/list-members', function() {
@@ -469,7 +472,16 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::put('/special-events/{specialEvent}', [SpecialEventController::class, 'update'])->name('special.events.update');
     Route::delete('/special-events/{specialEvent}', [SpecialEventController::class, 'destroy'])->name('special.events.destroy');
     Route::get('/special-events-members/notification', [SpecialEventController::class, 'getMembersForNotification'])->name('special.events.members.notification');
+});
 
+// Attendance clear-all route - OUTSIDE treasurer group for admin/pastor/secretary access
+// MUST be registered BEFORE the treasurer group's /attendance routes to avoid conflicts
+Route::middleware(['auth', PreventBackHistory::class])->group(function () {
+    Route::post('/attendance/clear-all', [AttendanceController::class, 'clearAll'])->name('attendance.clear-all');
+});
+
+// Treasurer middleware is applied to restrict treasurer access to finance-only routes
+Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(function () {
     // Attendance routes
     // IMPORTANT: More specific routes must come BEFORE less specific routes
     // Biometric sync route - must be first to avoid conflicts
@@ -489,6 +501,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::get('/stats/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members');
     // Alternative route for compatibility
     Route::get('/attendance/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members.legacy');
+    // Generic routes come LAST
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
@@ -1223,9 +1236,77 @@ Route::middleware(['auth', PreventBackHistory::class])->prefix('admin')->name('a
     Route::post('/users/{userId}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
     Route::get('/roles-permissions', [AdminController::class, 'rolesPermissions'])->name('roles-permissions');
     Route::post('/roles-permissions/update', [AdminController::class, 'updateRolePermissions'])->name('roles-permissions.update');
+    Route::get('/otps', [AdminController::class, 'otps'])->name('otps');
     Route::get('/system-monitor', [AdminController::class, 'systemMonitor'])->name('system-monitor');
     Route::get('/system-info', [AdminController::class, 'getSystemInfo'])->name('system-info');
     Route::post('/clear-cache', [AdminController::class, 'clearCache'])->name('clear-cache');
+});
+
+// Debug route to test attendance clear-all (temporary - remove after testing)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/test-attendance-clear-route', function() {
+        $route = \Illuminate\Support\Facades\Route::getRoutes()->getByName('attendance.clear-all');
+        $allRoutes = \Illuminate\Support\Facades\Route::getRoutes();
+        $matchingRoutes = [];
+        
+        foreach ($allRoutes as $r) {
+            if (str_contains($r->uri(), 'attendance/clear-all') || str_contains($r->uri(), 'attendance')) {
+                $matchingRoutes[] = [
+                    'uri' => $r->uri(),
+                    'methods' => $r->methods(),
+                    'name' => $r->getName(),
+                    'middleware' => $r->gatherMiddleware(),
+                ];
+            }
+        }
+        
+        // Try to match the route manually
+        $request = request();
+        $request->setMethod('POST');
+        $request->server->set('REQUEST_URI', '/attendance/clear-all');
+        $matchedRoute = \Illuminate\Support\Facades\Route::getRoutes()->match($request);
+        
+        if ($route) {
+            return response()->json([
+                'success' => true,
+                'route_exists' => true,
+                'uri' => $route->uri(),
+                'methods' => $route->methods(),
+                'middleware' => $route->gatherMiddleware(),
+                'action' => $route->getActionName(),
+                'matched_route' => $matchedRoute ? [
+                    'uri' => $matchedRoute->uri(),
+                    'name' => $matchedRoute->getName(),
+                ] : null,
+                'all_attendance_routes' => $matchingRoutes,
+                'user' => [
+                    'id' => auth()->user()?->id,
+                    'role' => auth()->user()?->role,
+                    'is_admin' => auth()->user()?->isAdmin(),
+                    'is_treasurer' => auth()->user()?->isTreasurer(),
+                ]
+            ]);
+        }
+        return response()->json([
+            'success' => false, 
+            'route_exists' => false,
+            'all_attendance_routes' => $matchingRoutes
+        ]);
+    });
+    
+    // Test POST route - direct proxy to clear-all
+    Route::post('/test-attendance-clear-post', function(\Illuminate\Http\Request $request) {
+        try {
+            $controller = new \App\Http\Controllers\AttendanceController();
+            return $controller->clearAll($request);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    });
 });
 
 // Announcements routes (for secretary/admin)
@@ -1287,107 +1368,5 @@ Route::get('/storage/{path}', function ($path) {
         'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
     ]);
 })->where('path', '.*')->name('storage.serve');
-
-// Serve assets/images files directly (bypasses document root issues)
-Route::get('/assets/images/{path}', function ($path) {
-    $filePath = public_path('assets/images/' . $path);
-    
-    // Security: Only allow files in public/assets/images directory
-    $realPath = realpath($filePath);
-    $assetsPath = realpath(public_path('assets/images'));
-    
-    // Check if file exists and is within public/assets/images directory
-    if (!$realPath || !$assetsPath || strpos($realPath, $assetsPath) !== 0) {
-        abort(404);
-    }
-    
-    // Check if file exists
-    if (!file_exists($realPath) || !is_file($realPath)) {
-        abort(404);
-    }
-    
-    // Get MIME type
-    $mimeType = mime_content_type($realPath);
-    if (!$mimeType) {
-        // Fallback MIME types for common image formats
-        $extension = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
-        $mimeTypes = [
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'webp' => 'image/webp',
-        ];
-        $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
-    }
-    
-    // Set headers and return file
-    return response()->file($realPath, [
-        'Content-Type' => $mimeType,
-        'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
-    ]);
-})->where('path', '.*')->name('assets.images.serve');
-
-// GitHub Webhook for automated deployment (optional)
-// Configure this in GitHub: Settings → Webhooks → Add webhook
-// Payload URL: https://wauminilink.co.tz/deploy-webhook
-// Content type: application/json
-// Secret: Add GITHUB_WEBHOOK_SECRET to your .env file
-Route::post('/deploy-webhook', function (Request $request) {
-    // Verify webhook secret (optional but recommended)
-    $secret = env('GITHUB_WEBHOOK_SECRET');
-    $signature = $request->header('X-Hub-Signature-256');
-    
-    if ($secret && $signature) {
-        $payload = $request->getContent();
-        $hash = 'sha256=' . hash_hmac('sha256', $payload, $secret);
-        
-        if (!hash_equals($hash, $signature)) {
-            \Log::warning('Deployment webhook: Invalid signature');
-            abort(403, 'Invalid signature');
-        }
-    }
-    
-    // Only deploy on push to main branch
-    $payload = json_decode($request->getContent(), true);
-    if (isset($payload['ref']) && $payload['ref'] !== 'refs/heads/main') {
-        return response()->json(['message' => 'Ignored: Not main branch'], 200);
-    }
-    
-    // Execute deployment script
-    $deployScript = base_path('deploy.sh');
-    
-    if (!file_exists($deployScript)) {
-        \Log::error('Deployment script not found: ' . $deployScript);
-        return response()->json(['error' => 'Deployment script not found'], 500);
-    }
-    
-    // Make script executable
-    chmod($deployScript, 0755);
-    
-    // Run deployment script
-    $output = [];
-    $returnCode = 0;
-    exec("cd " . base_path() . " && bash deploy.sh 2>&1", $output, $returnCode);
-    
-    \Log::info('Deployment webhook triggered', [
-        'output' => implode("\n", $output),
-        'return_code' => $returnCode
-    ]);
-    
-    if ($returnCode !== 0) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Deployment failed',
-            'output' => implode("\n", $output)
-        ], 500);
-    }
-    
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Deployment completed',
-        'output' => implode("\n", $output)
-    ]);
-})->middleware('throttle:10,1'); // Limit to 10 requests per minute
 
 

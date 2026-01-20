@@ -15,6 +15,7 @@ use App\Models\Permission;
 use App\Models\FailedLoginAttempt;
 use App\Models\SystemLog;
 use App\Models\BlockedIp;
+use App\Models\LoginOtp;
 use App\Services\SmsService;
 use App\Services\SettingsService;
 use App\Services\DeviceInfoService;
@@ -1797,6 +1798,78 @@ class AdminController extends Controller
             return redirect()->route('admin.system-monitor')
                 ->with('error', $errorMessage);
         }
+    }
+
+    /**
+     * Display all OTPs generated in the system
+     */
+    public function otps(Request $request)
+    {
+        $query = LoginOtp::with('user:id,name,email,role');
+
+        // Filter by status
+        if ($request->has('status')) {
+            $status = $request->get('status');
+            if ($status === 'used') {
+                $query->where('is_used', true);
+            } elseif ($status === 'unused') {
+                $query->where('is_used', false);
+            } elseif ($status === 'expired') {
+                $query->where('expires_at', '<', now());
+            } elseif ($status === 'active') {
+                $query->where('is_used', false)
+                      ->where('expires_at', '>', now());
+            }
+        }
+
+        // Filter by user
+        if ($request->has('user_id') && $request->get('user_id')) {
+            $query->where('user_id', $request->get('user_id'));
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->get('date_from')) {
+            $query->whereDate('created_at', '>=', $request->get('date_from'));
+        }
+        if ($request->has('date_to') && $request->get('date_to')) {
+            $query->whereDate('created_at', '<=', $request->get('date_to'));
+        }
+
+        // Search by email or OTP code
+        if ($request->has('search') && $request->get('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                  ->orWhere('otp_code', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Order by latest first
+        $otps = $query->orderBy('created_at', 'desc')
+                      ->paginate(50);
+
+        // Get statistics
+        $stats = [
+            'total' => LoginOtp::count(),
+            'used' => LoginOtp::where('is_used', true)->count(),
+            'unused' => LoginOtp::where('is_used', false)->count(),
+            'expired' => LoginOtp::where('expires_at', '<', now())->count(),
+            'active' => LoginOtp::where('is_used', false)
+                               ->where('expires_at', '>', now())
+                               ->count(),
+            'today' => LoginOtp::whereDate('created_at', today())->count(),
+        ];
+
+        // Get users for filter dropdown
+        $users = User::select('id', 'name', 'email')
+                    ->orderBy('name')
+                    ->get();
+
+        return view('admin.otps', compact('otps', 'stats', 'users'));
     }
 }
 

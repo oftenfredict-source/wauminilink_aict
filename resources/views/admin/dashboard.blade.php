@@ -557,6 +557,11 @@
                                 <i class="fas fa-shield-alt"></i> Roles & Permissions
                             </a>
                         </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('admin.otps') }}" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-key"></i> OTP Management
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

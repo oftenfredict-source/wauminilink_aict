@@ -1894,6 +1894,9 @@
                                     <a class="nav-link" href="{{ route('admin.system-monitor') }}">
                                         <i class="fas fa-server me-2"></i>System Monitor
                                     </a>
+                                    <a class="nav-link" href="{{ route('admin.otps') }}">
+                                        <i class="fas fa-key me-2"></i>OTP Management
+                                    </a>
                                 </nav>
                             </div>
                             @endif

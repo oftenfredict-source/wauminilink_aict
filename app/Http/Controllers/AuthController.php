@@ -19,8 +19,6 @@ use App\Services\SettingsService;
 
 class AuthController extends Controller
 {
-    // OTP Feature Flag - Set to false to disable OTP temporarily
-    private const ENABLE_OTP = false;
     
     // Show login form
     public function showLogin()
@@ -141,8 +139,9 @@ class AuthController extends Controller
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
                 
-                // Check if OTP is enabled
-                if (self::ENABLE_OTP) {
+                // Check if OTP is enabled from settings
+                $otpEnabled = SettingsService::get('enable_otp', false);
+                if ($otpEnabled) {
                     // Generate and send OTP instead of logging in directly
                     $otp = $this->generateAndSendOtp($user, $emailOrMemberId, $request);
                     

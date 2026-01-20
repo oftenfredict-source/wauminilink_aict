@@ -344,6 +344,14 @@ return [
         ],
 
         // Security Settings
+        'enable_otp' => [
+            'value' => true,
+            'type' => 'boolean',
+            'category' => 'security',
+            'group' => 'basic',
+            'description' => 'Enable OTP (One-Time Password) verification for login',
+            'validation_rules' => ['boolean']
+        ],
         'session_timeout' => [
             'value' => 120,
             'type' => 'integer',
