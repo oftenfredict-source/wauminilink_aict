@@ -2191,6 +2191,19 @@
                 }
             }
         })();
+        
+        // Auto-show member details modal if redirected from /members/{id}
+        @if(session('show_member_id'))
+            document.addEventListener('DOMContentLoaded', function() {
+                const memberId = {{ session('show_member_id') }};
+                if (memberId && typeof window.viewDetails === 'function') {
+                    // Small delay to ensure all scripts are loaded
+                    setTimeout(function() {
+                        window.viewDetails(memberId);
+                    }, 500);
+                }
+            });
+        @endif
         </script>
         <script>
             // Globals to share state between details/print

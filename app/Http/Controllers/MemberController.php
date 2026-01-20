@@ -816,9 +816,12 @@ public function view()
     return $this->index(request());
 }
 
-public function show($id)
+public function show(Request $request, $id)
 {
     \Log::info('SHOW_MEMBER_ATTEMPT', ['id' => $id, 'type' => gettype($id)]);
+    
+    // Check if this is an AJAX/JSON request
+    $wantsJson = $request->wantsJson() || $request->expectsJson() || $request->ajax();
     
     // First try to find in regular members
     $member = Member::find($id);
@@ -868,7 +871,13 @@ public function show($id)
             ];
         }
         
-        return response()->json($member);
+        // Return JSON for AJAX requests, otherwise redirect to members list
+        if ($wantsJson) {
+            return response()->json($member);
+        } else {
+            // Redirect to members list page (the view page handles showing member details in a modal)
+            return redirect()->route('members.index')->with('show_member_id', $id);
+        }
     }
     
     // If not found, try to find in archived members
@@ -886,12 +895,23 @@ public function show($id)
         $memberData['archive_reason'] = $archivedMember->reason;
         $memberData['archived_at'] = $archivedMember->deleted_at_actual;
         \Log::info('SHOW_ARCHIVED_SUCCESS', ['id' => $id]);
-        return response()->json($memberData);
+        
+        // Return JSON for AJAX requests, otherwise redirect
+        if ($wantsJson) {
+            return response()->json($memberData);
+        } else {
+            return redirect()->route('members.index')->with('show_member_id', $id);
+        }
     }
     
-    // If not found in either table, return 404
+    // If not found in either table
     \Log::info('SHOW_MEMBER_NOT_FOUND', ['id' => $id]);
-    return response()->json(['error' => 'Member not found'], 404);
+    
+    if ($wantsJson) {
+        return response()->json(['error' => 'Member not found'], 404);
+    } else {
+        return redirect()->route('members.index')->with('error', 'Member not found');
+    }
 }
 
 public function update(Request $request, Member $member)
