@@ -28,6 +28,15 @@
         <!-- SweetAlert Helpers -->
         <script src="{{ asset('js/sweetalert-helpers.js') }}"></script>
         <style>
+            /* Global Font: Century Gothic */
+            * {
+                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif !important;
+            }
+            
+            body, html {
+                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif !important;
+            }
+            
             /* Prevent horizontal scrolling - minimal approach */
             @media (max-width: 768px) {
                 html {

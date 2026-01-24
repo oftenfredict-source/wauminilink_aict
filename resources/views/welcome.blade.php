@@ -15,7 +15,7 @@
         html, body {
             height: 100%;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
         }
 
         /* Navbar */
