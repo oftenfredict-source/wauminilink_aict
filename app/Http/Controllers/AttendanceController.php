@@ -513,21 +513,36 @@ class AttendanceController extends Controller
             $query->whereDate('attended_at', '<=', $request->date('to'));
         }
         
-        // Filter by service type
-        if ($request->filled('service_type')) {
-            $query->where('service_type', $request->service_type);
+        // Filter by service type (from service_type_only or service_type)
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        if ($serviceType) {
+            $query->where('service_type', $serviceType);
         }
         
         // Filter by specific service/event
-        if ($request->filled('service_id') && $request->filled('service_type')) {
+        if ($request->filled('service_id') && $serviceType) {
             $query->where('service_id', $request->service_id)
-                  ->where('service_type', $request->service_type);
+                  ->where('service_type', $serviceType);
         }
         
         // Get basic statistics
         $totalAttendances = $query->count();
         $sundayAttendances = (clone $query)->sundayServices()->count();
         $specialEventAttendances = (clone $query)->specialEvents()->count();
+        
+        // Get distinct Sunday services that have attendance records (for displaying dates)
+        // Apply the same filters as the main query
+        $sundayServicesQuery = (clone $query)->sundayServices();
+        $sundayServicesWithAttendance = $sundayServicesQuery
+            ->select('service_id')
+            ->distinct()
+            ->pluck('service_id')
+            ->map(function($serviceId) {
+                return SundayService::find($serviceId);
+            })
+            ->filter()
+            ->sortByDesc('service_date')
+            ->values();
         
         // Get attendance by category (adult members vs children)
         $adultMemberAttendances = (clone $query)->membersOnly()->count();
@@ -542,7 +557,8 @@ class AttendanceController extends Controller
             $guestsQuery->whereDate('service_date', '<=', $request->date('to'));
         }
         // Filter by specific service if selected
-        if ($request->filled('service_id') && $request->filled('service_type') && $request->service_type === 'sunday_service') {
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        if ($request->filled('service_id') && $serviceType && $serviceType === 'sunday_service') {
             $guestsQuery->where('id', $request->service_id);
         }
         $totalGuests = $guestsQuery->sum('guests_count');
@@ -583,12 +599,13 @@ class AttendanceController extends Controller
         if ($request->filled('to')) {
             $mostRegularMemberQuery->whereDate('attended_at', '<=', $request->date('to'));
         }
-        if ($request->filled('service_type')) {
-            $mostRegularMemberQuery->where('service_type', $request->service_type);
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        if ($serviceType) {
+            $mostRegularMemberQuery->where('service_type', $serviceType);
         }
-        if ($request->filled('service_id') && $request->filled('service_type')) {
+        if ($request->filled('service_id') && $serviceType) {
             $mostRegularMemberQuery->where('service_id', $request->service_id)
-                                   ->where('service_type', $request->service_type);
+                                   ->where('service_type', $serviceType);
         }
         
         $mostRegularMemberAttendees = $mostRegularMemberQuery
@@ -616,12 +633,13 @@ class AttendanceController extends Controller
         if ($request->filled('to')) {
             $mostRegularChildQuery->whereDate('attended_at', '<=', $request->date('to'));
         }
-        if ($request->filled('service_type')) {
-            $mostRegularChildQuery->where('service_type', $request->service_type);
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        if ($serviceType) {
+            $mostRegularChildQuery->where('service_type', $serviceType);
         }
-        if ($request->filled('service_id') && $request->filled('service_type')) {
+        if ($request->filled('service_id') && $serviceType) {
             $mostRegularChildQuery->where('service_id', $request->service_id)
-                                  ->where('service_type', $request->service_type);
+                                  ->where('service_type', $serviceType);
         }
         
         $mostRegularChildAttendees = $mostRegularChildQuery
@@ -659,12 +677,13 @@ class AttendanceController extends Controller
         if ($request->filled('to')) {
             $monthlyTrendsQuery->whereDate('attended_at', '<=', $request->date('to'));
         }
-        if ($request->filled('service_type')) {
-            $monthlyTrendsQuery->where('service_type', $request->service_type);
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        if ($serviceType) {
+            $monthlyTrendsQuery->where('service_type', $serviceType);
         }
-        if ($request->filled('service_id') && $request->filled('service_type')) {
+        if ($request->filled('service_id') && $serviceType) {
             $monthlyTrendsQuery->where('service_id', $request->service_id)
-                               ->where('service_type', $request->service_type);
+                               ->where('service_type', $serviceType);
         }
         
         $monthlyTrends = $monthlyTrendsQuery
@@ -677,6 +696,19 @@ class AttendanceController extends Controller
         // Get services and events for filter dropdowns
         $sundayServices = SundayService::orderBy('service_date', 'desc')->get();
         $specialEvents = SpecialEvent::orderBy('event_date', 'desc')->get();
+        
+        // Get selected service/event for display
+        $selectedService = null;
+        $selectedEvent = null;
+        $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
+        
+        if ($request->filled('service_id') && $serviceType) {
+            if ($serviceType === 'sunday_service') {
+                $selectedService = SundayService::find($request->service_id);
+            } elseif ($serviceType === 'special_event') {
+                $selectedEvent = SpecialEvent::find($request->service_id);
+            }
+        }
             
         return view('attendance.statistics', compact(
             'totalAttendances',
@@ -692,10 +724,82 @@ class AttendanceController extends Controller
             'mostRegularAttendees',
             'monthlyTrends',
             'sundayServices',
-            'specialEvents'
+            'specialEvents',
+            'selectedService',
+            'selectedEvent',
+            'serviceType',
+            'sundayServicesWithAttendance'
         ));
     }
     
+    /**
+     * Clear all attendance records
+     */
+    public function clearAll(Request $request)
+    {
+        $user = auth()->user();
+        
+        // Only allow Administrator, Pastor, and Secretary to clear attendance
+        // Treasurers are NOT allowed to clear attendance
+        if (!$user || (!$user->isAdmin() && !$user->isPastor() && !$user->isSecretary())) {
+            Log::warning('Unauthorized attempt to clear attendance', [
+                'user_id' => $user?->id,
+                'role' => $user?->role,
+                'ip' => $request->ip()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Administrators, Pastors, and Secretaries can clear attendance records.'
+            ], 403);
+        }
+        
+        // Log the request for debugging
+        Log::info('Clear all attendance request received', [
+            'user' => $user->id,
+            'role' => $user->role,
+            'url' => $request->fullUrl(),
+            'method' => $request->method()
+        ]);
+        
+        try {
+            // Get count from service_attendances table
+            $count = ServiceAttendance::count();
+            
+            Log::info("Clear all attendance - Found {$count} records in service_attendances table", [
+                'user_id' => $user->id,
+                'user_role' => $user->role
+            ]);
+            
+            if ($count === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No attendance records to delete in service_attendances table'
+                ], 400);
+            }
+
+            // Permanently delete all attendance records from service_attendances table
+            $deleted = ServiceAttendance::query()->delete();
+
+            Log::info("Deleted {$deleted} ServiceAttendance records from service_attendances table by user {$user->id} ({$user->role})");
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$count} attendance record(s) from database",
+                'deleted_count' => $count
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Clear all attendances error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete attendance records: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Manually trigger attendance notifications
      */

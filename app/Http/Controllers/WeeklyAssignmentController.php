@@ -59,7 +59,9 @@ class WeeklyAssignmentController extends Controller
                             ->paginate(15);
 
         // Get active leaders grouped by position for filters
+        // Only include leaders that have associated members
         $leadersByPosition = Leader::with('member')
+            ->whereHas('member') // Only get leaders that have associated members
             ->active()
             ->get()
             ->groupBy('position');
@@ -93,7 +95,9 @@ class WeeklyAssignmentController extends Controller
     public function create()
     {
         // Get active leaders grouped by position
+        // Only include leaders that have associated members
         $leadersByPosition = Leader::with('member')
+            ->whereHas('member') // Only get leaders that have associated members
             ->active()
             ->get()
             ->groupBy('position');
@@ -195,7 +199,9 @@ class WeeklyAssignmentController extends Controller
      */
     public function edit(WeeklyAssignment $weeklyAssignment)
     {
+        // Only include leaders that have associated members
         $leadersByPosition = Leader::with('member')
+            ->whereHas('member') // Only get leaders that have associated members
             ->active()
             ->get()
             ->groupBy('position');

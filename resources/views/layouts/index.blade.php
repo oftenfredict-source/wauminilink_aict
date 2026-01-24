@@ -1901,8 +1901,31 @@
                             </div>
                             @endif
                             
-                            @if(auth()->user()->isMember())
-                            {{-- Member Menu --}}
+                            @php
+                                $user = auth()->user();
+                                // Check for active leadership positions in database ONLY - no role fallback
+                                $hasActiveLeadership = false;
+                                $activeLeaderPositions = [];
+                                if ($user && $user->member_id) {
+                                    $member = $user->member;
+                                    if ($member) {
+                                        $activePositions = \App\Models\Leader::where('member_id', $member->id)
+                                            ->where('is_active', true)
+                                            ->where(function($query) {
+                                                $query->whereNull('end_date')
+                                                      ->orWhere('end_date', '>=', now()->toDateString());
+                                            })
+                                            ->get();
+                                        $hasActiveLeadership = $activePositions->count() > 0;
+                                        $activeLeaderPositions = $activePositions->pluck('position')->toArray();
+                                    }
+                                }
+                                // Only check active positions from database - no role fallback
+                                $isLeader = $hasActiveLeadership;
+                            @endphp
+                            
+                            @if($user->member_id)
+                            {{-- Member Portal - Show for ALL users with member_id (members and leaders) --}}
                             <div class="sb-sidenav-menu-heading">Member Portal</div>
                             <a class="nav-link" href="{{ route('member.dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
@@ -1943,7 +1966,32 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
                                 Change Password
                             </a>
-                            @elseif(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin())
+                            @endif
+                            
+                            @if($isLeader)
+                            {{-- Leader Functions - Show only for active leaders from database --}}
+                            <div class="sb-sidenav-menu-heading">Leader Functions</div>
+                            @if(in_array('pastor', $activeLeaderPositions) || in_array('assistant_pastor', $activeLeaderPositions))
+                            <a class="nav-link" href="{{ route('dashboard.pastor') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
+                                Pastor Dashboard
+                            </a>
+                            @endif
+                            @if(in_array('secretary', $activeLeaderPositions) || in_array('assistant_secretary', $activeLeaderPositions))
+                            <a class="nav-link" href="{{ route('dashboard.secretary') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
+                                Secretary Dashboard
+                            </a>
+                            @endif
+                            @if(in_array('treasurer', $activeLeaderPositions) || in_array('assistant_treasurer', $activeLeaderPositions))
+                            <a class="nav-link" href="{{ route('finance.dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                                Finance Dashboard
+                            </a>
+                            @endif
+                            @endif
+                            
+                            @if(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin() && !$isLeader)
                             <div class="sb-sidenav-menu-heading">Main</div>
                             <a class="nav-link" href="{{ route('dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>

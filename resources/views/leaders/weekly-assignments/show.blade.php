@@ -58,8 +58,12 @@
                         <div class="col-md-6">
                             <strong>Leader:</strong>
                             <div class="mt-1">
-                                {{ $weeklyAssignment->leader->member->full_name }}
-                                <small class="text-muted">({{ $weeklyAssignment->leader->member->member_id }})</small>
+                                @if($weeklyAssignment->leader->member)
+                                    {{ $weeklyAssignment->leader->member->full_name }}
+                                    <small class="text-muted">({{ $weeklyAssignment->leader->member->member_id }})</small>
+                                @else
+                                    <span class="text-danger">Member Not Found (Leader ID: {{ $weeklyAssignment->leader->id }})</span>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-6">

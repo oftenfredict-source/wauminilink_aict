@@ -35,11 +35,13 @@
                             @foreach($leadersByPosition as $position => $leaders)
                                 <optgroup label="{{ $positions[$position] ?? ucfirst(str_replace('_', ' ', $position)) }}">
                                     @foreach($leaders as $leader)
-                                        <option value="{{ $leader->id }}" 
-                                            data-position="{{ $leader->position }}"
-                                            {{ old('leader_id') == $leader->id ? 'selected' : '' }}>
-                                            {{ $leader->member->full_name }} ({{ $leader->member->member_id }})
-                                        </option>
+                                        @if($leader->member)
+                                            <option value="{{ $leader->id }}" 
+                                                data-position="{{ $leader->position }}"
+                                                {{ old('leader_id') == $leader->id ? 'selected' : '' }}>
+                                                {{ $leader->member->full_name }} ({{ $leader->member->member_id }})
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </optgroup>
                             @endforeach

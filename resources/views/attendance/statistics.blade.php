@@ -26,9 +26,9 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="fas fa-filter text-primary"></i>
                                     <span class="fw-semibold">Filters</span>
-                                    @if(request('from') || request('to') || request('service_type') || request('service_id'))
+                                    @if(request('from') || request('to') || request('service_type') || request('service_id') || request('service_type_only'))
                                         <span class="badge bg-primary rounded-pill" id="activeFiltersCount">
-                                            {{ (request('from') ? 1 : 0) + (request('to') ? 1 : 0) + (request('service_type') ? 1 : 0) + (request('service_id') ? 1 : 0) }}
+                                            {{ (request('from') ? 1 : 0) + (request('to') ? 1 : 0) + (request('service_type') ? 1 : 0) + (request('service_id') ? 1 : 0) + (request('service_type_only') ? 1 : 0) }}
                                         </span>
                                     @endif
                                 </div>
@@ -55,38 +55,44 @@
                                     <input type="date" class="form-control form-control-sm" id="to" name="to" value="{{ request('to') }}">
                                 </div>
                                 
-                                <!-- Service Type -->
-                                <div class="col-12 col-md-3">
-                                    <label for="service_type" class="form-label small text-muted mb-1">
-                                        <i class="fas fa-church me-1 text-primary"></i>Service Type
+                                <!-- Service Filter - Combined dropdown for all services -->
+                                <div class="col-12 col-md-6">
+                                    <label for="service_filter" class="form-label small text-muted mb-1">
+                                        <i class="fas fa-filter me-1 text-primary"></i>Filter by Service
                                     </label>
-                                    <select class="form-select form-select-sm" id="service_type" name="service_type" onchange="updateServiceSelect()">
+                                    <select class="form-select form-select-sm" id="service_filter" name="service_filter" onchange="updateServiceFilter()">
                                         <option value="">All Services</option>
-                                        <option value="sunday_service" {{ request('service_type') == 'sunday_service' ? 'selected' : '' }}>Sunday Service</option>
-                                        <option value="special_event" {{ request('service_type') == 'special_event' ? 'selected' : '' }}>Special Event</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Specific Service/Event -->
-                                <div class="col-12 col-md-3">
-                                    <label for="service_id" class="form-label small text-muted mb-1">
-                                        <i class="fas fa-list me-1 text-secondary"></i>Specific Service/Event
-                                    </label>
-                                    <select class="form-select form-select-sm" id="service_id" name="service_id">
-                                        <option value="">All</option>
-                                        @if(request('service_type') == 'sunday_service')
+                                        <optgroup label="Sunday Services">
                                             @foreach($sundayServices as $service)
-                                                <option value="{{ $service->id }}" {{ request('service_id') == $service->id ? 'selected' : '' }}>
+                                                <option value="sunday_service_{{ $service->id }}" 
+                                                    {{ request('service_type') == 'sunday_service' && request('service_id') == $service->id ? 'selected' : '' }}>
                                                     {{ $service->service_date->format('M d, Y') }} - {{ $service->theme ?? 'Service' }}
                                                 </option>
                                             @endforeach
-                                        @elseif(request('service_type') == 'special_event')
+                                        </optgroup>
+                                        <optgroup label="Special Events">
                                             @foreach($specialEvents as $event)
-                                                <option value="{{ $event->id }}" {{ request('service_id') == $event->id ? 'selected' : '' }}>
+                                                <option value="special_event_{{ $event->id }}" 
+                                                    {{ request('service_type') == 'special_event' && request('service_id') == $event->id ? 'selected' : '' }}>
                                                     {{ $event->event_date->format('M d, Y') }} - {{ $event->title ?? 'Event' }}
                                                 </option>
                                             @endforeach
-                                        @endif
+                                        </optgroup>
+                                    </select>
+                                    <!-- Hidden fields to maintain compatibility with backend -->
+                                    <input type="hidden" id="service_type" name="service_type" value="{{ request('service_type') }}">
+                                    <input type="hidden" id="service_id" name="service_id" value="{{ request('service_id') }}">
+                                </div>
+                                
+                                <!-- Service Type Filter (Optional - for filtering by type only) -->
+                                <div class="col-12 col-md-3">
+                                    <label for="service_type_only" class="form-label small text-muted mb-1">
+                                        <i class="fas fa-church me-1 text-secondary"></i>Service Type Only
+                                    </label>
+                                    <select class="form-select form-select-sm" id="service_type_only" name="service_type_only" onchange="updateServiceTypeOnly()">
+                                        <option value="">All Types</option>
+                                        <option value="sunday_service" {{ request('service_type') == 'sunday_service' && !request('service_id') ? 'selected' : '' }}>Sunday Services Only</option>
+                                        <option value="special_event" {{ request('service_type') == 'special_event' && !request('service_id') ? 'selected' : '' }}>Special Events Only</option>
                                     </select>
                                 </div>
                             </div>
@@ -111,6 +117,33 @@
                         </div>
                     </form>
 
+                    <!-- Service/Event Info Header (if specific service selected) -->
+                    @if($selectedService || $selectedEvent)
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        @if($selectedService)
+                                            Sunday Service - {{ $selectedService->service_date->format('l, F d, Y') }}
+                                            @if($selectedService->theme)
+                                                <br><small class="text-muted">{{ $selectedService->theme }}</small>
+                                            @endif
+                                        @elseif($selectedEvent)
+                                            Special Event - {{ $selectedEvent->event_date->format('l, F d, Y') }}
+                                            @if($selectedEvent->title)
+                                                <br><small class="text-muted">{{ $selectedEvent->title }}</small>
+                                            @endif
+                                        @endif
+                                    </h5>
+                                </div>
+                                <a href="{{ route('attendance.statistics') }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-times"></i> Clear Filter
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Overall Statistics -->
                     <div class="row mb-4">
                         <div class="col-md-3">
@@ -124,8 +157,18 @@
                         <div class="col-md-3">
                             <div class="card bg-success text-white">
                                 <div class="card-body text-center">
-                                    <h3 class="card-title">{{ number_format($sundayAttendances) }}</h3>
-                                    <p class="card-text mb-0">Sunday Services</p>
+                                    <p class="card-text mb-2 fw-bold">Sunday Services</p>
+                                    @if(isset($sundayServicesWithAttendance) && $sundayServicesWithAttendance->count() > 0)
+                                        <div class="mt-2">
+                                            @foreach($sundayServicesWithAttendance as $service)
+                                                <small class="d-block text-white-50 mb-1">{{ $service->service_date->format('M d, Y') }}</small>
+                                            @endforeach
+                                        </div>
+                                    @elseif($selectedService)
+                                        <small class="text-white-50">{{ $selectedService->service_date->format('M d, Y') }}</small>
+                                    @else
+                                        <small class="text-white-50">No services</small>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -134,6 +177,9 @@
                                 <div class="card-body text-center">
                                     <h3 class="card-title">{{ number_format($specialEventAttendances) }}</h3>
                                     <p class="card-text mb-0">Special Events</p>
+                                    @if($selectedEvent)
+                                        <small class="text-white-50">{{ $selectedEvent->event_date->format('M d, Y') }}</small>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -411,8 +457,13 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                                    @if(auth()->user()->isAdmin() || auth()->user()->isPastor() || auth()->user()->isSecretary())
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="clearAllAttendance()">
+                                            <i class="fas fa-trash-alt"></i> Clear All Attendance
+                                        </button>
+                                    @endif
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -489,16 +540,24 @@ function loadMissedMembers() {
     }
     container.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     
-    fetch('{{ route("attendance.missed.members") }}', {
+    const missedMembersUrl = '{{ url("/stats/missed-members") }}';
+    fetch(missedMembersUrl, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
         .then(response => {
+            console.log('Missed members response status:', response.status);
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json().then(err => {
+                    throw new Error(err.message || `Server error: ${response.status}`);
+                }).catch(() => {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                });
             }
             return response.json();
         })
@@ -610,17 +669,30 @@ function triggerNotifications(dryRun) {
                 }
             });
             
-            fetch('{{ route("attendance.trigger.notifications") }}', {
+            const triggerNotificationsUrl = '{{ url("/attendance/trigger-notifications") }}';
+            fetch(triggerNotificationsUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     dry_run: dryRun
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Trigger notifications response status:', response.status);
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || `Server error: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     if (dryRun) {
@@ -719,9 +791,19 @@ document.addEventListener('DOMContentLoaded', function() {
         loadMissedMembers();
     }, 100);
     
+    // Initialize service filter display based on current selection
+    const serviceType = '{{ request('service_type') }}';
+    const serviceId = '{{ request('service_id') }}';
+    const serviceFilter = document.getElementById('service_filter');
+    
+    if (serviceType && serviceId && serviceFilter) {
+        const filterValue = serviceType + '_' + serviceId;
+        serviceFilter.value = filterValue;
+    }
+    
     // Auto-expand filters on mobile if filters are active
     if (window.innerWidth <= 768) {
-        const hasActiveFilters = {{ (request('from') || request('to') || request('service_type') || request('service_id')) ? 'true' : 'false' }};
+        const hasActiveFilters = {{ (request('from') || request('to') || request('service_type') || request('service_id') || request('service_type_only')) ? 'true' : 'false' }};
         const filterBody = document.getElementById('filterBody');
         const filterIcon = document.getElementById('filterToggleIcon');
         
@@ -749,7 +831,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // On mobile, show chevron and hide body by default (unless active)
             filterIcon.style.display = 'block';
-            const hasActiveFilters = {{ (request('from') || request('to') || request('service_type') || request('service_id')) ? 'true' : 'false' }};
+            const hasActiveFilters = {{ (request('from') || request('to') || request('service_type') || request('service_id') || request('service_type_only')) ? 'true' : 'false' }};
             if (!hasActiveFilters) {
                 filterBody.style.display = 'none';
                 filterIcon.classList.remove('fa-chevron-up');
@@ -780,28 +862,230 @@ const specialEventsData = [
     @endforeach
 ];
 
-// Update service/event select based on service type
-function updateServiceSelect() {
-    const serviceType = document.getElementById('service_type').value;
-    const serviceIdSelect = document.getElementById('service_id');
+// Update service filter - handles combined service selection
+function updateServiceFilter() {
+    const serviceFilter = document.getElementById('service_filter').value;
+    const serviceTypeInput = document.getElementById('service_type');
+    const serviceIdInput = document.getElementById('service_id');
+    const serviceTypeOnly = document.getElementById('service_type_only');
     
-    // Clear existing options except "All"
-    serviceIdSelect.innerHTML = '<option value="">All</option>';
+    if (!serviceFilter) {
+        // Clear all filters
+        serviceTypeInput.value = '';
+        serviceIdInput.value = '';
+        if (serviceTypeOnly) serviceTypeOnly.value = '';
+    } else {
+        // Parse the selected value (format: "service_type_id")
+        const parts = serviceFilter.split('_');
+        if (parts.length >= 3) {
+            const type = parts[0] + '_' + parts[1]; // "sunday_service" or "special_event"
+            const id = parts[2]; // service/event ID
+            
+            serviceTypeInput.value = type;
+            serviceIdInput.value = id;
+            if (serviceTypeOnly) serviceTypeOnly.value = ''; // Clear type-only filter
+        }
+    }
+}
+
+// Clear all attendance records
+function clearAllAttendance() {
+    Swal.fire({
+        title: '⚠️ Clear All Attendance?',
+        html: `
+            <div class="text-start">
+                <p><strong>WARNING: This will permanently delete ALL attendance records!</strong></p>
+                <p>This action:</p>
+                <ul class="text-start">
+                    <li>Will delete <strong>ALL</strong> attendance records from the database</li>
+                    <li>Cannot be undone</li>
+                    <li>Will affect all statistics and reports</li>
+                </ul>
+                <p class="text-danger"><strong>Are you absolutely sure?</strong></p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete All',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Second confirmation
+            Swal.fire({
+                title: '⚠️ Final Confirmation',
+                html: `
+                    <div class="text-start">
+                        <p class="text-danger"><strong>LAST CHANCE!</strong></p>
+                        <p>You are about to permanently delete <strong>ALL</strong> attendance records.</p>
+                        <p>This action <strong>CANNOT</strong> be undone.</p>
+                        <p>Type <strong>DELETE ALL</strong> to confirm:</p>
+                        <input type="text" id="confirmDelete" class="form-control mt-2" placeholder="Type: DELETE ALL">
+                    </div>
+                `,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Delete All',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true,
+                input: 'text',
+                inputPlaceholder: 'Type: DELETE ALL',
+                inputValidator: (value) => {
+                    if (value !== 'DELETE ALL') {
+                        return 'You must type "DELETE ALL" to confirm';
+                    }
+                },
+                preConfirm: () => {
+                    const confirmValue = document.getElementById('swal2-input').value;
+                    if (confirmValue !== 'DELETE ALL') {
+                        Swal.showValidationMessage('You must type "DELETE ALL" to confirm');
+                        return false;
+                    }
+                    return confirmValue;
+                }
+            }).then((confirmResult) => {
+                if (confirmResult.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait while we delete all attendance records.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Make API call - use test route directly since main route has 404 issues
+                    const clearAllUrl = '{{ url("/test-attendance-clear-post") }}';
+                    console.log('Clearing attendance at:', clearAllUrl);
+                    console.log('Note: Using test route to bypass route matching issues');
+                    
+                    fetch(clearAllUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status, response.statusText);
+                        if (!response.ok) {
+                            // If 404, try the fallback route
+                            if (response.status === 404) {
+                                console.log('Main route returned 404, trying fallback route...');
+                                return fetch(testUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                }).then(fallbackResponse => {
+                                    if (!fallbackResponse.ok) {
+                                        return fallbackResponse.json().then(err => {
+                                            throw new Error(err.message || `Server error: ${fallbackResponse.status}`);
+                                        }).catch(() => {
+                                            throw new Error(`Server error: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
+                                        });
+                                    }
+                                    return fallbackResponse.json();
+                                });
+                            }
+                            return response.json().then(err => {
+                                throw new Error(err.message || `Server error: ${response.status}`);
+                            }).catch(() => {
+                                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                html: `
+                                    <div class="text-center">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <p>Successfully deleted <strong>${data.deleted_count}</strong> attendance record(s).</p>
+                                    </div>
+                                `,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#28a745'
+                            }).then(() => {
+                                // Reload page to refresh statistics
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to delete attendance records',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        console.error('Error details:', {
+                            message: error.message,
+                            stack: error.stack,
+                            url: clearAllUrl
+                        });
+                        Swal.fire({
+                            title: 'Error',
+                            html: `
+                                <div class="text-start">
+                                    <p><strong>Failed to clear attendance records</strong></p>
+                                    <p class="text-danger">${error.message}</p>
+                                    <p class="text-muted small mt-2">URL: ${clearAllUrl}</p>
+                                    <p class="text-muted small">Please check:</p>
+                                    <ul class="text-start small">
+                                        <li>You are logged in</li>
+                                        <li>You have the correct permissions (Administrator, Pastor, or Secretary role)</li>
+                                        <li>Treasurers are NOT allowed to clear attendance</li>
+                                        <li>The route is accessible</li>
+                                        <li>Try refreshing the page and clearing browser cache</li>
+                                    </ul>
+                                </div>
+                            `,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    });
+                }
+            });
+        }
+    });
+}
+
+// Update service type only filter
+function updateServiceTypeOnly() {
+    const serviceTypeOnly = document.getElementById('service_type_only').value;
+    const serviceTypeInput = document.getElementById('service_type');
+    const serviceIdInput = document.getElementById('service_id');
+    const serviceFilter = document.getElementById('service_filter');
     
-    if (serviceType === 'sunday_service') {
-        sundayServicesData.forEach(function(service) {
-            const option = document.createElement('option');
-            option.value = service.id;
-            option.textContent = service.date + ' - ' + service.theme;
-            serviceIdSelect.appendChild(option);
-        });
-    } else if (serviceType === 'special_event') {
-        specialEventsData.forEach(function(event) {
-            const option = document.createElement('option');
-            option.value = event.id;
-            option.textContent = event.date + ' - ' + event.title;
-            serviceIdSelect.appendChild(option);
-        });
+    if (!serviceTypeOnly) {
+        // Clear type filter
+        serviceTypeInput.value = '';
+        serviceIdInput.value = '';
+        if (serviceFilter) serviceFilter.value = '';
+    } else {
+        // Set type only (no specific service)
+        serviceTypeInput.value = serviceTypeOnly;
+        serviceIdInput.value = '';
+        if (serviceFilter) serviceFilter.value = ''; // Clear specific service filter
     }
 }
 </script>

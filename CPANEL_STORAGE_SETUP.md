@@ -257,3 +257,11 @@ ls -la public/storage
 4. Verify image displays at `https://yourdomain.com/storage/members/profile-pictures/filename.jpg`
 
 
+
+
+
+
+
+
+
+

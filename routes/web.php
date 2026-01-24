@@ -311,6 +311,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     
     // Children routes
     Route::post('/children', [MemberController::class, 'storeChild'])->name('children.store');
+    Route::delete('/children/{child}', [MemberController::class, 'destroyChild'])->name('children.destroy');
     
     // List all members for debugging
     Route::get('/list-members', function() {

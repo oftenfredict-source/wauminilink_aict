@@ -13,6 +13,9 @@ use App\Models\Offering;
 use App\Models\Donation;
 use App\Models\Expense;
 use App\Models\Announcement;
+use App\Models\AnnouncementView;
+use App\Models\Pledge;
+use App\Models\PledgePayment;
 use App\Models\Leader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,9 +77,12 @@ class DashboardController extends Controller
 
         $netIncome = ($monthlyTithes + $monthlyOfferings + $monthlyDonations) - $monthlyExpenses;
 
-        // Get secretary information
+        // Get logged-in secretary information
         $secretary = null;
+        $secretaryMember = null;
+        $secretaryDuties = [];
         $user = Auth::user();
+        
         if ($user) {
             // Try to find secretary leader record
             if ($user->member_id) {
@@ -85,6 +91,9 @@ class DashboardController extends Controller
                     ->whereIn('position', ['secretary', 'assistant_secretary'])
                     ->where('is_active', true)
                     ->first();
+                
+                // Get member information
+                $secretaryMember = $user->member;
             }
             
             // If no leader record found, try to find by email
@@ -96,13 +105,109 @@ class DashboardController extends Controller
                         ->whereIn('position', ['secretary', 'assistant_secretary'])
                         ->where('is_active', true)
                         ->first();
+                    $secretaryMember = $member;
                 }
             }
+        }
+        
+        // Get secretary's duties/responsibilities
+        if ($secretary) {
+            $secretaryDuties = [
+                'position' => $secretary->position_display,
+                'description' => $secretary->description,
+                'appointment_date' => $secretary->appointment_date,
+                'end_date' => $secretary->end_date,
+                'notes' => $secretary->notes,
+            ];
         }
 
         // Calculate family-inclusive demographics
         $familyDemographics = $this->calculateFamilyDemographics();
         
+        // Get member portal data if secretary has member record
+        $memberInfo = null;
+        $financialSummary = null;
+        $announcements = null;
+        $unreadCount = 0;
+        $leadershipData = null;
+        
+        if ($secretaryMember) {
+            // Get member information
+            $memberInfo = [
+                'member_id' => $secretaryMember->member_id,
+                'full_name' => $secretaryMember->full_name,
+                'email' => $secretaryMember->email,
+                'phone_number' => $secretaryMember->phone_number,
+                'date_of_birth' => $secretaryMember->date_of_birth,
+                'gender' => $secretaryMember->gender,
+                'membership_type' => $secretaryMember->membership_type,
+                'member_type' => $secretaryMember->member_type,
+                'profession' => $secretaryMember->profession,
+                'address' => $secretaryMember->address,
+                'region' => $secretaryMember->region,
+                'district' => $secretaryMember->district,
+            ];
+
+            // Get financial summary
+            $currentYear = Carbon::now()->year;
+            $currentMonth = Carbon::now()->month;
+            
+            $financialSummary = [
+                'total_tithes' => Tithe::where('member_id', $secretaryMember->id)->approved()->sum('amount'),
+                'monthly_tithes' => Tithe::where('member_id', $secretaryMember->id)->approved()
+                    ->whereYear('tithe_date', $currentYear)->whereMonth('tithe_date', $currentMonth)->sum('amount'),
+                'total_offerings' => Offering::where('member_id', $secretaryMember->id)->approved()->sum('amount'),
+                'monthly_offerings' => Offering::where('member_id', $secretaryMember->id)->approved()
+                    ->whereYear('offering_date', $currentYear)->whereMonth('offering_date', $currentMonth)->sum('amount'),
+                'total_donations' => Donation::where('member_id', $secretaryMember->id)->approved()->sum('amount'),
+                'monthly_donations' => Donation::where('member_id', $secretaryMember->id)->approved()
+                    ->whereYear('donation_date', $currentYear)->whereMonth('donation_date', $currentMonth)->sum('amount'),
+                'total_pledges' => Pledge::where('member_id', $secretaryMember->id)->sum('pledge_amount'),
+                'total_pledge_payments' => PledgePayment::whereHas('pledge', function($q) use ($secretaryMember) {
+                    $q->where('member_id', $secretaryMember->id);
+                })->approved()->sum('amount'),
+                'remaining_pledges' => 0,
+            ];
+            $financialSummary['remaining_pledges'] = $financialSummary['total_pledges'] - $financialSummary['total_pledge_payments'];
+
+            // Get announcements
+            $now = Carbon::now();
+            $next30Days = $now->copy()->addDays(30);
+            $announcementsList = Announcement::active()
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+            $viewedAnnouncementIds = AnnouncementView::where('member_id', $secretaryMember->id)
+                ->whereIn('announcement_id', $announcementsList->pluck('id'))
+                ->pluck('announcement_id')
+                ->toArray();
+            foreach ($announcementsList as $announcement) {
+                $announcement->is_unread = !in_array($announcement->id, $viewedAnnouncementIds);
+            }
+            $activeAnnouncements = Announcement::active()->pluck('id');
+            $unreadCount = $activeAnnouncements->diff($viewedAnnouncementIds)->count();
+            
+            $announcements = [
+                'announcements' => $announcementsList,
+                'events' => SpecialEvent::whereDate('event_date', '>=', $now->toDateString())
+                    ->whereDate('event_date', '<=', $next30Days->toDateString())
+                    ->orderBy('event_date')->get(),
+                'celebrations' => Celebration::whereDate('celebration_date', '>=', $now->toDateString())
+                    ->whereDate('celebration_date', '<=', $next30Days->toDateString())
+                    ->orderBy('celebration_date')->get(),
+            ];
+
+            // Get leadership data
+            $memberPositions = $secretaryMember->activeLeadershipPositions()
+                ->where(function($query) {
+                    $query->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+                })->get();
+            $leadershipData = [
+                'member_positions' => $memberPositions,
+                'has_leadership_position' => $memberPositions->count() > 0
+            ];
+        }
+
         return view('dashboard', compact(
             'registeredMembers',
             'activeEvents', 
@@ -115,6 +220,13 @@ class DashboardController extends Controller
             'monthlyExpenses',
             'netIncome',
             'secretary',
+            'secretaryMember',
+            'secretaryDuties',
+            'memberInfo',
+            'financialSummary',
+            'announcements',
+            'unreadCount',
+            'leadershipData',
             'user'
         ) + $familyDemographics);
     }

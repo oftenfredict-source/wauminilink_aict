@@ -64,3 +64,11 @@ try {
     Write-Host "- Server details are correct"
 }
 
+
+
+
+
+
+
+
+

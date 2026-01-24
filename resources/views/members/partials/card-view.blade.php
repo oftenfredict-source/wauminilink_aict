@@ -115,21 +115,21 @@
                     </div>
                     
                     <!-- Card Footer with Actions -->
-                    <div class="card-footer member-footer">
-                        <div class="btn-group w-100" role="group">
-                            <button class="btn btn-outline-info btn-sm action-btn" onclick="viewDetails({{ $member->id }})" title="View Details">
-                                <i class="fas fa-eye me-1"></i>View
+                    <div class="card-footer member-footer bg-white border-top">
+                        <div class="d-flex flex-row gap-1 justify-content-center align-items-center" style="flex-wrap: nowrap;">
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $member->id }}); } else { alert('View details function is not available. Please refresh the page.'); }" title="View Details">
+                                <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-outline-primary btn-sm action-btn" onclick="openEdit({{ $member->id }})" title="Edit Member">
-                                <i class="fas fa-edit me-1"></i>Edit
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="if(typeof window.openEdit === 'function') { window.openEdit({{ $member->id }}); } else { alert('Edit function is not available. Please refresh the page.'); }" title="Edit Member">
+                                <i class="fas fa-edit"></i>
                             </button>
                             @if(auth()->user()->isAdmin())
-                                <button class="btn btn-outline-success btn-sm action-btn" onclick="resetPassword({{ $member->id }})" title="Reset Password">
-                                    <i class="fas fa-key me-1"></i>Reset
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="if(typeof window.resetPassword === 'function') { window.resetPassword({{ $member->id }}); } else { alert('Reset password function is not available. Please refresh the page.'); }" title="Reset Password">
+                                    <i class="fas fa-key"></i>
                                 </button>
                             @endif
-                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="confirmDelete({{ $member->id }})" title="Archive Member">
-                                <i class="fas fa-archive me-1"></i>Archive
+                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="if(typeof window.confirmDelete === 'function') { window.confirmDelete({{ $member->id }}); } else { alert('Archive function is not available. Please refresh the page.'); }" title="Archive Member">
+                                <i class="fas fa-archive"></i>
                             </button>
                         </div>
                     </div>
@@ -233,21 +233,21 @@
                     </div>
                     
                     <!-- Card Footer with Actions -->
-                    <div class="card-footer member-footer">
-                        <div class="btn-group w-100" role="group">
-                            <button class="btn btn-outline-info btn-sm action-btn" onclick="viewDetails({{ $member->id }})" title="View Details">
-                                <i class="fas fa-eye me-1"></i>View
+                    <div class="card-footer member-footer bg-white border-top">
+                        <div class="d-flex flex-row gap-1 justify-content-center align-items-center" style="flex-wrap: nowrap;">
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $member->id }}); } else { alert('View details function is not available. Please refresh the page.'); }" title="View Details">
+                                <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-outline-primary btn-sm action-btn" onclick="openEdit({{ $member->id }})" title="Edit Member">
-                                <i class="fas fa-edit me-1"></i>Edit
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="if(typeof window.openEdit === 'function') { window.openEdit({{ $member->id }}); } else { alert('Edit function is not available. Please refresh the page.'); }" title="Edit Member">
+                                <i class="fas fa-edit"></i>
                             </button>
                             @if(auth()->user()->isAdmin())
-                                <button class="btn btn-outline-success btn-sm action-btn" onclick="resetPassword({{ $member->id }})" title="Reset Password">
-                                    <i class="fas fa-key me-1"></i>Reset
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="if(typeof window.resetPassword === 'function') { window.resetPassword({{ $member->id }}); } else { alert('Reset password function is not available. Please refresh the page.'); }" title="Reset Password">
+                                    <i class="fas fa-key"></i>
                                 </button>
                             @endif
-                            <button class="btn btn-outline-warning btn-sm action-btn" onclick="confirmDelete({{ $member->id }})" title="Archive Member">
-                                <i class="fas fa-archive me-1"></i>Archive
+                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="if(typeof window.confirmDelete === 'function') { window.confirmDelete({{ $member->id }}); } else { alert('Archive function is not available. Please refresh the page.'); }" title="Archive Member">
+                                <i class="fas fa-archive"></i>
                             </button>
                         </div>
                     </div>
@@ -335,14 +335,14 @@
                         </div>
                     </div>
                     
-                    <!-- Card Footer with Actions -->
-                    <div class="card-footer member-footer">
-                        <div class="btn-group w-100" role="group">
-                            <button class="btn btn-outline-info btn-sm action-btn" onclick="viewDetails({{ $member->member_id }})" title="View Details">
-                                <i class="fas fa-eye me-1"></i>View
+                    <!-- Card Footer with Actions for Archived Members -->
+                    <div class="card-footer member-footer bg-white border-top">
+                        <div class="d-flex flex-row gap-1 justify-content-center align-items-center" style="flex-wrap: nowrap;">
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $member->member_id }}); } else { alert('View details function is not available. Please refresh the page.'); }" title="View Details">
+                                <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-outline-success btn-sm action-btn" onclick="restoreMember({{ $member->member_id }})" title="Restore Member">
-                                <i class="fas fa-undo me-1"></i>Restore
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="if(typeof window.restoreMember === 'function') { window.restoreMember({{ $member->member_id }}); } else { alert('Restore function is not available. Please refresh the page.'); }" title="Restore Member">
+                                <i class="fas fa-undo"></i>
                             </button>
                         </div>
                     </div>

@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Leader;
 use App\Models\Member;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Services\SmsService;
 use App\Services\SettingsService;
 
@@ -96,6 +99,9 @@ class LeaderController extends Controller
         // Load member relationship for notification
         $leader->load('member');
 
+        // Automatically create/update user account for leader positions that require login
+        $this->createOrUpdateLeaderUserAccount($leader);
+
         // Send database notification to the appointed leader
         if ($leader->member) {
             $leader->member->notify(new \App\Notifications\LeaderAppointmentNotification($leader));
@@ -105,7 +111,7 @@ class LeaderController extends Controller
         $this->sendLeaderAppointmentSms($leader);
 
         return redirect()->route('leaders.index')
-            ->with('success', 'Leader position assigned successfully! Notification sent to the appointed leader.');
+            ->with('success', 'Leader position assigned successfully! User account created/updated. Notification sent to the appointed leader.');
     }
 
     /**
@@ -168,10 +174,39 @@ class LeaderController extends Controller
             }
         }
 
+        $oldIsActive = $leader->is_active;
         $leader->update($request->all());
+        
+        // Reload leader with member relationship
+        $leader->load('member');
+        
+        // Update user account if leader is active
+        if ($leader->is_active) {
+            $this->createOrUpdateLeaderUserAccount($leader);
+        } else {
+            // If position was deactivated, check if user role needs to be updated
+            if ($oldIsActive && !$leader->is_active && $leader->member) {
+                $member = $leader->member;
+                $activePositions = Leader::where('member_id', $member->id)
+                    ->where('is_active', true)
+                    ->get();
+                
+                if ($activePositions->isEmpty()) {
+                    // No active positions, change user role to 'member'
+                    $user = User::where('member_id', $member->id)->first();
+                    if ($user) {
+                        $user->update(['role' => 'member']);
+                        Log::info('User role changed to member after position update to inactive', [
+                            'member_id' => $member->id,
+                            'user_id' => $user->id
+                        ]);
+                    }
+                }
+            }
+        }
 
         return redirect()->route('leaders.index')
-            ->with('success', 'Leader position updated successfully!');
+            ->with('success', 'Leader position updated successfully! User account updated.');
     }
 
     /**
@@ -179,10 +214,32 @@ class LeaderController extends Controller
      */
     public function destroy(Leader $leader)
     {
+        // Get member before deleting
+        $member = $leader->member;
+        
         $leader->delete();
+        
+        // Update user account - remove leader role if no active leadership positions
+        if ($member) {
+            $activePositions = Leader::where('member_id', $member->id)
+                ->where('is_active', true)
+                ->get();
+            
+            if ($activePositions->isEmpty()) {
+                // No active positions, change user role to 'member'
+                $user = User::where('member_id', $member->id)->first();
+                if ($user) {
+                    $user->update(['role' => 'member']);
+                    Log::info('User role changed to member after leader deletion', [
+                        'member_id' => $member->id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('leaders.index')
-            ->with('success', 'Leader position removed successfully!');
+            ->with('success', 'Leader position removed successfully! User account updated.');
     }
 
     /**
@@ -191,9 +248,32 @@ class LeaderController extends Controller
     public function deactivate(Leader $leader)
     {
         $leader->update(['is_active' => false]);
+        
+        // Reload leader with member relationship
+        $leader->load('member');
+        
+        // Update user account - remove leader role if no active leadership positions
+        if ($leader->member) {
+            $member = $leader->member;
+            $activePositions = Leader::where('member_id', $member->id)
+                ->where('is_active', true)
+                ->get();
+            
+            if ($activePositions->isEmpty()) {
+                // No active positions, change user role to 'member'
+                $user = User::where('member_id', $member->id)->first();
+                if ($user) {
+                    $user->update(['role' => 'member']);
+                    Log::info('User role changed to member after deactivation', [
+                        'member_id' => $member->id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('leaders.index')
-            ->with('success', 'Leader position deactivated successfully!');
+            ->with('success', 'Leader position deactivated successfully! User account updated.');
     }
 
     /**
@@ -202,9 +282,32 @@ class LeaderController extends Controller
     public function reactivate(Leader $leader)
     {
         $leader->update(['is_active' => true]);
+        
+        // Reload leader with member relationship
+        $leader->load('member');
+        
+        // Update user account when reactivated
+        $this->createOrUpdateLeaderUserAccount($leader);
+        
+        // Also update role based on position
+        if ($leader->member) {
+            $role = $this->mapPositionToRole($leader->position);
+            if ($role) {
+                $user = User::where('member_id', $leader->member->id)->first();
+                if ($user) {
+                    $user->update(['role' => $role]);
+                    Log::info('User role updated after reactivation', [
+                        'member_id' => $leader->member->id,
+                        'user_id' => $user->id,
+                        'role' => $role,
+                        'position' => $leader->position
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('leaders.index')
-            ->with('success', 'Leader position reactivated successfully!');
+            ->with('success', 'Leader position reactivated successfully! User account updated.');
     }
 
     /**
@@ -434,5 +537,86 @@ class LeaderController extends Controller
             'prayer_leader' => 'Prayer Leader',
             'other' => 'Other (Custom Position)'
         ];
+    }
+
+    /**
+     * Create or update user account for leader
+     * Username: member_id
+     * Password: last name in capital letters
+     */
+    private function createOrUpdateLeaderUserAccount(Leader $leader)
+    {
+        if (!$leader->member) {
+            Log::warning('Cannot create user account: Leader has no member', ['leader_id' => $leader->id]);
+            return;
+        }
+
+        $member = $leader->member;
+        
+        // Map leader position to user role
+        $role = $this->mapPositionToRole($leader->position);
+        
+        if (!$role) {
+            Log::info('Position does not require user account', ['position' => $leader->position]);
+            return; // Some positions don't need user accounts
+        }
+
+        // Extract last name from full_name (assume last word is last name)
+        $nameParts = explode(' ', trim($member->full_name));
+        $lastName = !empty($nameParts) ? strtoupper(end($nameParts)) : 'PASSWORD';
+        
+        // Username is member_id
+        $username = $member->member_id;
+        
+        // Check if user already exists
+        $user = User::where('member_id', $member->id)->first();
+        
+        if ($user) {
+            // Update existing user
+            $user->update([
+                'name' => $member->full_name,
+                'email' => $username, // Store member_id in email field for login
+                'password' => Hash::make($lastName),
+                'role' => $role,
+                'member_id' => $member->id,
+            ]);
+            Log::info('User account updated for leader', [
+                'member_id' => $member->id,
+                'member_id_string' => $username,
+                'role' => $role,
+                'position' => $leader->position
+            ]);
+        } else {
+            // Create new user
+            $user = User::create([
+                'name' => $member->full_name,
+                'email' => $username, // Store member_id in email field for login
+                'password' => Hash::make($lastName),
+                'role' => $role,
+                'member_id' => $member->id,
+            ]);
+            Log::info('User account created for leader', [
+                'member_id' => $member->id,
+                'member_id_string' => $username,
+                'role' => $role,
+                'position' => $leader->position
+            ]);
+        }
+    }
+
+    /**
+     * Map leader position to user role
+     */
+    private function mapPositionToRole($position)
+    {
+        return match($position) {
+            'pastor', 'assistant_pastor' => 'pastor',
+            'secretary', 'assistant_secretary' => 'secretary',
+            'treasurer', 'assistant_treasurer' => 'treasurer',
+            'elder', 'deacon', 'deaconess', 'youth_leader', 'children_leader', 
+            'worship_leader', 'choir_leader', 'usher_leader', 'evangelism_leader', 
+            'prayer_leader', 'other' => 'member', // Other positions get member role
+            default => null
+        };
     }
 }

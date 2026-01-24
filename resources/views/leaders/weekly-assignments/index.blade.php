@@ -242,8 +242,13 @@
                                     <small class="text-muted">{{ $assignment->week_start_date->format('l') }} to {{ $assignment->week_end_date->format('l') }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $assignment->leader->member->full_name }}</div>
-                                    <small class="text-muted">{{ $assignment->leader->member->member_id }}</small>
+                                    @if($assignment->leader->member)
+                                        <div class="fw-bold">{{ $assignment->leader->member->full_name }}</div>
+                                        <small class="text-muted">{{ $assignment->leader->member->member_id }}</small>
+                                    @else
+                                        <div class="fw-bold text-danger">Member Not Found</div>
+                                        <small class="text-muted">Leader ID: {{ $assignment->leader->id }}</small>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge bg-primary">{{ $assignment->position_display }}</span>

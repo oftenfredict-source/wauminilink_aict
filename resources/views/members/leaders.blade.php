@@ -79,6 +79,7 @@
     @endif
 
     <!-- All Leaders -->
+    @if($leaders->count() > 0)
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -137,7 +138,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                @if($leader->member->phone_number)
+                                                @if($leader->member && $leader->member->phone_number)
                                                     <a href="tel:{{ $leader->member->phone_number }}" class="text-decoration-none">
                                                         <i class="fas fa-phone text-success me-1"></i>
                                                         {{ $leader->member->phone_number }}
@@ -147,7 +148,7 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($leader->member->email)
+                                                @if($leader->member && $leader->member->email)
                                                     <a href="mailto:{{ $leader->member->email }}" class="text-decoration-none">
                                                         <i class="fas fa-envelope text-info me-1"></i>
                                                         {{ $leader->member->email }}
@@ -193,6 +194,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Leaders by Position (Grouped View) -->
     @if($leadersByPosition->count() > 0)
@@ -228,7 +230,7 @@
                                                             <i class="fas fa-id-card me-1"></i>
                                                             {{ $leader->member->member_id ?? 'N/A' }}
                                                         </small>
-                                                        @if($leader->member->phone_number)
+                                                        @if($leader->member && $leader->member->phone_number)
                                                             <small class="text-muted d-block">
                                                                 <i class="fas fa-phone me-1"></i>
                                                                 <a href="tel:{{ $leader->member->phone_number }}" class="text-decoration-none">
@@ -236,7 +238,7 @@
                                                                 </a>
                                                             </small>
                                                         @endif
-                                                        @if($leader->member->email)
+                                                        @if($leader->member && $leader->member->email)
                                                             <small class="text-muted d-block">
                                                                 <i class="fas fa-envelope me-1"></i>
                                                                 <a href="mailto:{{ $leader->member->email }}" class="text-decoration-none">

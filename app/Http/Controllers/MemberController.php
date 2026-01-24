@@ -875,8 +875,8 @@ public function show(Request $request, $id)
         if ($wantsJson) {
             return response()->json($member);
         } else {
-            // Redirect to members list page (the view page handles showing member details in a modal)
-            return redirect()->route('members.index')->with('show_member_id', $id);
+            // Redirect to members list page with show parameter (the view page handles showing member details in a modal)
+            return redirect()->route('members.index', ['show' => $id]);
         }
     }
     
@@ -900,7 +900,7 @@ public function show(Request $request, $id)
         if ($wantsJson) {
             return response()->json($memberData);
         } else {
-            return redirect()->route('members.index')->with('show_member_id', $id);
+            return redirect()->route('members.index', ['show' => $id]);
         }
     }
     
@@ -916,27 +916,58 @@ public function show(Request $request, $id)
 
 public function update(Request $request, Member $member)
 {
+    \Log::info('MEMBER_UPDATE_REQUEST', [
+        'member_id' => $member->id,
+        'payload' => $request->all(),
+    ]);
+
     $rules = [
         'full_name' => 'sometimes|required|string|max:255',
         'email' => 'sometimes|nullable|email|max:255',
         'phone_number' => 'sometimes|required|string|max:20',
+        'education_level' => 'sometimes|nullable|string|max:100',
+        'profession' => 'sometimes|nullable|string|max:255',
+        'member_type' => 'sometimes|nullable|in:father,mother,independent',
         'membership_type' => 'sometimes|required|in:permanent,temporary',
         'date_of_birth' => 'sometimes|required|date|before:today',
         'gender' => 'sometimes|required|in:male,female',
         'nida_number' => 'nullable|string|max:20',
-        'tribe' => 'sometimes|required|string|max:100',
-        'other_tribe' => 'nullable|required_if:tribe,Other|string|max:100',
-        'region' => 'sometimes|required|string|max:100',
-        'district' => 'sometimes|required|string|max:100',
-        'ward' => 'sometimes|required|string|max:100',
-        'street' => 'sometimes|required|string|max:255',
-        'address' => 'sometimes|required|string',
-        'living_with_family' => 'sometimes|required|in:yes,no',
+        // Location fields - made optional since they're not in edit form
+        'tribe' => 'nullable|string|max:100',
+        'other_tribe' => 'nullable|string|max:100',
+        'region' => 'nullable|string|max:100',
+        'district' => 'nullable|string|max:100',
+        'ward' => 'nullable|string|max:100',
+        'street' => 'nullable|string|max:255',
+        'address' => 'sometimes|nullable|string',
+        // Family / guardian
+        'living_with_family' => 'sometimes|nullable|in:yes,no',
         'family_relationship' => 'nullable|required_if:living_with_family,yes|string|max:100',
+        'guardian_name' => 'sometimes|nullable|string|max:255',
+        'guardian_phone' => 'sometimes|nullable|string|max:20',
+        'guardian_relationship' => 'sometimes|nullable|string|max:100',
+        // Marital / spouse
+        'marital_status' => 'sometimes|nullable|in:married,divorced,widowed,separated',
+        'spouse_full_name' => 'sometimes|nullable|string|max:255',
+        'spouse_date_of_birth' => 'sometimes|nullable|date',
+        'spouse_education_level' => 'sometimes|nullable|string|max:100',
+        'spouse_profession' => 'sometimes|nullable|string|max:255',
+        'spouse_nida_number' => 'sometimes|nullable|string|max:20',
+        'spouse_email' => 'sometimes|nullable|email|max:255',
+        'spouse_phone_number' => 'sometimes|nullable|string|max:20',
+        'spouse_tribe' => 'nullable|string|max:100',
+        'spouse_other_tribe' => 'nullable|string|max:100',
+        'spouse_church_member' => 'sometimes|nullable|in:yes,no',
     ];
 
     $validated = $request->validate($rules);
     $member->update($validated);
+    $member->refresh();
+    \Log::info('MEMBER_UPDATE_SAVED', [
+        'member_id' => $member->id,
+        'saved_email' => $member->email,
+        'validated' => $validated,
+    ]);
     return response()->json(['success' => true, 'message' => 'Member updated successfully', 'member' => $member]);
 }
 
@@ -1335,7 +1366,35 @@ public function storeChild(Request $request)
             'message' => 'Failed to save child: ' . $e->getMessage()
         ], 500);
     }
-}
+    }
+    
+    /**
+     * Delete a child record
+     */
+    public function destroyChild($child)
+    {
+        try {
+            $childRecord = \App\Models\Child::findOrFail($child);
+            
+            $childRecord->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Child deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting child: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'child_id' => $child
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete child: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Reset member password - Admin only

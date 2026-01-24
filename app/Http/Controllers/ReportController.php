@@ -16,6 +16,23 @@ use Carbon\Carbon;
 class ReportController extends Controller
 {
     /**
+     * Helper method to generate PDF or HTML fallback
+     */
+    private function generatePdfResponse($view, $data, $filename)
+    {
+        // Check if DomPDF is available
+        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($view, $data)->setPaper('a4', 'portrait');
+            return $pdf->download($filename);
+        } else {
+            // Fallback to HTML if DomPDF not installed
+            return response()->view($view, $data)
+                ->header('Content-Type', 'text/html; charset=utf-8')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        }
+    }
+
+    /**
      * System-wide reports overview: members and finance at a glance
      */
     public function overview(Request $request)
@@ -1477,9 +1494,9 @@ class ReportController extends Controller
 
         $netIncome = $totalIncome - $totalExpenses;
 
-        $filename = 'income-vs-expenditure-report-' . ($month ? $month : $start->format('Y-m-d') . '-to-' . $end->format('Y-m-d')) . '.html';
+        $filename = 'income-vs-expenditure-report-' . ($month ? $month : $start->format('Y-m-d') . '-to-' . $end->format('Y-m-d')) . '.pdf';
         
-        return response()->view('finance.reports.pdf.income-vs-expenditure', [
+        return $this->generatePdfResponse('finance.reports.pdf.income-vs-expenditure', [
             'reportType' => 'income-vs-expenditure',
             'start' => $start,
             'end' => $end,
@@ -1492,8 +1509,7 @@ class ReportController extends Controller
             'netIncome' => $netIncome,
             'expensesByCategory' => $expensesByCategory,
             'monthlyData' => $monthlyData,
-        ])->header('Content-Type', 'text/html')
-          ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        ], $filename);
     }
 
     /**
@@ -1581,9 +1597,9 @@ class ReportController extends Controller
             $current->addMonth();
         }
         
-        $filename = 'member-giving-report-' . $member->member_id . '-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.html';
+        $filename = 'member-giving-report-' . $member->member_id . '-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.pdf';
         
-        return response()->view('finance.reports.pdf.member-giving', compact(
+        return $this->generatePdfResponse('finance.reports.pdf.member-giving', compact(
             'member',
             'tithes',
             'offerings',
@@ -1598,8 +1614,7 @@ class ReportController extends Controller
             'monthlyData',
             'startDate',
             'endDate'
-        ))->header('Content-Type', 'text/html')
-          ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        ), $filename);
     }
 
     /**
@@ -1637,17 +1652,16 @@ class ReportController extends Controller
             ->orderBy('total_pledged', 'desc')
             ->get();
         
-        $filename = 'department-giving-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.html';
+        $filename = 'department-giving-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.pdf';
         
-        return response()->view('finance.reports.pdf.department-giving', compact(
+        return $this->generatePdfResponse('finance.reports.pdf.department-giving', compact(
             'combinedByPurpose',
             'offeringTypes',
             'donationTypes',
             'pledgeTypes',
             'startDate',
             'endDate'
-        ))->header('Content-Type', 'text/html')
-          ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        ), $filename);
     }
 
     /**
@@ -1793,9 +1807,9 @@ class ReportController extends Controller
             ->limit(20)
             ->get();
 
-        $filename = 'monthly-financial-report-' . $month . '.html';
+        $filename = 'monthly-financial-report-' . $month . '.pdf';
         
-        return response()->view('finance.reports.pdf.monthly-financial', compact(
+        return $this->generatePdfResponse('finance.reports.pdf.monthly-financial', compact(
             'start',
             'end',
             'month',
@@ -1816,8 +1830,7 @@ class ReportController extends Controller
             'netIncome',
             'dailyData',
             'topContributors'
-        ))->header('Content-Type', 'text/html')
-          ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        ), $filename);
     }
 
     /**
@@ -1930,9 +1943,9 @@ class ReportController extends Controller
             ->get();
 
         // Use PDF-specific view (without sidebar/topbar)
-        $filename = 'weekly-financial-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.html';
+        $filename = 'weekly-financial-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.pdf';
         
-        return response()->view('finance.reports.pdf.weekly-financial', compact(
+        return $this->generatePdfResponse('finance.reports.pdf.weekly-financial', compact(
             'startDate',
             'endDate',
             'totalTithes',
@@ -1952,8 +1965,7 @@ class ReportController extends Controller
             'netIncome',
             'dailyData',
             'topContributors'
-        ))->header('Content-Type', 'text/html')
-          ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        ), $filename);
     }
 
     /**

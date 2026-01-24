@@ -1,35 +1,65 @@
+@extends('layouts.index')
 
+@section('styles')
+<style>
+/* Force modal and backdrop to appear on top */
+.modal-backdrop.show {
+    z-index: 2050 !important;
+}
+.modal.show {
+    z-index: 2100 !important;
+    display: block !important;
+}
+#archiveMemberModal {
+    z-index: 2100 !important;
+}
 
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <style>
-        /* Force modal and backdrop to appear on top */
-        .modal-backdrop.show {
-            z-index: 2050 !important;
-        }
-        .modal.show {
-            z-index: 2100 !important;
-            display: block !important;
-        }
-        #archiveMemberModal {
-            z-index: 2100 !important;
-        }
-        </style>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Dashboard</title>
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-        <!-- SweetAlert2 CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
+<style>
+            /* Compact Filter Section Styles */
+            #filtersForm {
+                transition: all 0.3s ease;
+            }
+            #filtersForm .card-header {
+                transition: background-color 0.2s ease;
+            }
+            #filterBody {
+                transition: all 0.3s ease;
+            }
+            
+            /* Desktop: Always show filters, make header non-clickable */
+            @media (min-width: 769px) {
+                .filter-header {
+                    cursor: default !important;
+                    pointer-events: none !important;
+                }
+                .filter-header .fa-chevron-down {
+                    display: none !important;
+                }
+                #filterBody {
+                    display: block !important;
+                }
+            }
+            
+            /* Mobile: Collapsible */
+            @media (max-width: 768px) {
+                .filter-header {
+                    cursor: pointer !important;
+                    pointer-events: auto !important;
+                }
+                #filterBody {
+                    display: none;
+                }
+                #filterToggleIcon {
+                    font-size: 1.1rem !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    cursor: pointer !important;
+                }
+            }
+            
             /* Compact Filter Section Styles */
             #filtersForm {
                 transition: all 0.3s ease;
@@ -918,349 +948,11 @@
                 }
             }
         </style>
-    </head>
-    <body class="sb-nav-fixed">
-        <!-- Header -->
-        @php
-            $navClasses = 'sb-topnav navbar navbar-expand navbar-dark';
-            $navStyle = 'background: #212529 !important;';
-        @endphp
-        <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
-            <!-- Navbar Brand - Hidden on Mobile -->
-            <a class="navbar-brand ps-3 d-none d-lg-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <!-- Sidebar Toggle - First on Mobile -->
-            <button class="btn btn-link btn-sm order-first order-lg-0 me-3 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
-            <!-- Welcome Message -->
-            <div class="navbar-text me-auto ms-2 ms-md-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <strong>AIC Moshi Kilimanjaro</strong>
-            </div>
-            <!-- Date and Time Display -->
-            <div class="d-none d-md-flex align-items-center ms-auto me-0 me-md-3">
-                <div class="text-end" style="color: #ffffff !important;">
-                    <div id="currentDate" style="font-size: 0.9rem; font-weight: 500; color: #ffffff !important;"></div>
-                    <div id="currentTime" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important;"></div>
-                </div>
-            </div>
+@endsection
 
-            <!-- Navbar-->
-            <ul class="navbar-nav ms-auto me-2 me-md-3 me-lg-4">
-                <!-- Notification Icon -->
-                <li class="nav-item dropdown me-2 me-md-3" id="notificationDropdown">
-                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" style="color: #ffffff !important;">
-                        <!-- Inline SVG bell to avoid external icon dependency -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ffffff" viewBox="0 0 16 16" class="align-text-top" style="color: #ffffff !important;">
-                            <path d="M8 16a2 2 0 0 0 1.985-1.75H6.015A2 2 0 0 0 8 16m.104-14.983a1 1 0 1 0-.208 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 3.06-1.638 4.723-.2.29-.295.63-.295.977 0 .713.54 1.3 1.207 1.3h11.452c.667 0 1.207-.587 1.207-1.3 0-.347-.095-.687-.295-.977C13.5 9.06 13 7.098 13 6a5.002 5.002 0 0 0-4.896-4.983"/>
-                        </svg>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
-                            0
-                        </span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 400px; max-height: 70vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: none;">
-                        <div class="dropdown-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0; padding: 1rem 1.5rem;">
-                            <h6 class="mb-0 fw-bold"><i class="fas fa-bell me-2"></i>Notifications</h6>
-                            <small class="opacity-75" id="lastUpdated">Just now</small>
-                        </div>
-                        
-                        <div class="notification-content" style="padding: 1rem 1.5rem; max-height: calc(70vh - 80px); overflow-y: auto;">
-                            <!-- Upcoming Events -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-primary">
-                                        <i class="fas fa-calendar-alt me-2"></i>Special Events
-                                    </h6>
-                                    <span class="notification-count-badge bg-primary" id="eventsCount">0</span>
-                                </div>
-                                <div id="eventsList" class="notification-list">
-                                    <!-- Events will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Upcoming Celebrations -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-warning">
-                                        <i class="fas fa-birthday-cake me-2"></i>Celebrations
-                                    </h6>
-                                    <span class="notification-count-badge bg-warning" id="celebrationsCount">0</span>
-                                </div>
-                                <div id="celebrationsList" class="notification-list">
-                                    <!-- Celebrations will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Upcoming Services -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-success">
-                                        <i class="fas fa-church me-2"></i>Services
-                                    </h6>
-                                    <span class="notification-count-badge bg-success" id="servicesCount">0</span>
-                                </div>
-                                <div id="servicesList" class="notification-list">
-                                    <!-- Services will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <div class="text-center py-2 pb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>Click on any item to view details
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff !important;"><i class="fas fa-user fa-fw" style="color: #ffffff !important;"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{{ route('member.settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}" 
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <div id="layoutSidenav">
-            <!-- Sidebar -->
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu">
-                        <div class="nav">
-                            @if(auth()->user()->isAdmin())
-                            {{-- Admin Menu --}}
-                            <div class="sb-sidenav-menu-heading">Administration</div>
-                            <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-shield-alt"></i></div>
-                                Admin Dashboard
-                            </a>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseAdmin" aria-expanded="false" aria-controls="collapseAdmin">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>
-                                System Management
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseAdmin" aria-labelledby="headingAdmin" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('admin.logs') }}">
-                                        <i class="fas fa-list-alt me-2"></i>Logs
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.sessions') }}">
-                                        <i class="fas fa-user-check me-2"></i>User Sessions
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.users') }}">
-                                        <i class="fas fa-users me-2"></i>Manage Users
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.roles-permissions') }}">
-                                        <i class="fas fa-shield-alt me-2"></i>Roles & Permissions
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.system-monitor') }}">
-                                        <i class="fas fa-server me-2"></i>System Monitor
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.otps') }}">
-                                        <i class="fas fa-key me-2"></i>OTP Management
-                                    </a>
-                                </nav>
-                            </div>
-                            @endif
-                            
-                            @if(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @elseif(auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @endif
-                            
-                            @if(!auth()->user()->isTreasurer() || auth()->user()->isAdmin())
-                            @if(!auth()->user()->isMember())
-                            
-                            <div class="sb-sidenav-menu-heading">Management</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Members
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if(auth()->user()->hasPermission('members.create') || auth()->user()->isAdmin())
-                                    <a class="nav-link" href="{{ route('members.add') }}">
-                                        <i class="fas fa-user-plus me-2"></i>Add New Member
-                                    </a>
-                                    @endif
-                                    @if(auth()->user()->hasPermission('members.view') || auth()->user()->isAdmin())
-                                    <a class="nav-link" href="{{ route('members.view') }}">
-                                        <i class="fas fa-list me-2"></i>All Members
-                                    </a>
-                                    @endif
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLeadership" aria-expanded="false" aria-controls="collapseLeadership">
-                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
-                                Leadership
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseLeadership" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('leaders.index') }}">
-                                        <i class="fas fa-list me-2"></i>All Leaders
-                                    </a>
-                                    <a class="nav-link" href="{{ route('leaders.reports') }}">
-                                        <i class="fas fa-chart-bar me-2"></i>Reports
-                                    </a>
-                                    @if(auth()->user()->canManageLeadership())
-                                        <a class="nav-link" href="{{ route('leaders.create') }}">
-                                            <i class="fas fa-plus me-2"></i>Assign Position
-                                        </a>
-                                    @endif
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link" href="{{ route('announcements.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
-                                Announcements
-                            </a>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
-                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                                Events & Services
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Services</a>
-                                    <a class="nav-link" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="{{ route('attendance.index') }}"><i class="fas fa-users me-2"></i>Record Attendance</a>
-                                    <a class="nav-link" href="{{ route('attendance.statistics') }}"><i class="fas fa-chart-bar me-2"></i>Attendance Statistics</a>
-                                    <a class="nav-link" href="{{ route('promise-guests.index') }}"><i class="fas fa-user-check me-2"></i>Promise Guests</a>
-                                    <a class="nav-link" href="{{ route('celebrations.index') }}"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                                    <a class="nav-link" href="{{ route('bereavement.index') }}"><i class="fas fa-heart-broken me-2"></i>Bereavement</a>
-                                </nav>
-                            </div>
-                            @endif
-                            @endif
-                            
-                            @if(auth()->user()->isTreasurer())
-                            {{-- For Treasurer: Show finance menu items directly without dropdown --}}
-                            <a class="nav-link" href="{{ route('finance.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @if(auth()->user()->canApproveFinances())
-                            <a class="nav-link" href="{{ route('finance.approval.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-check-circle"></i></div>
-                                Approval Dashboard
-                            </a>
-                            @endif
-                            <a class="nav-link" href="{{ route('finance.tithes') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-coins"></i></div>
-                                Tithes
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.offerings') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>
-                                Offerings
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.donations') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-heart"></i></div>
-                                Donations
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.pledges') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-handshake"></i></div>
-                                Pledges
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.budgets') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                                Budgets
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.expenses') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
-                                Expenses
-                            </a>
-                            <a class="nav-link" href="{{ route('reports.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-pie"></i></div>
-                                Reports
-                            </a>
-                            <div class="sb-sidenav-menu-heading">Account</div>
-                            <a class="nav-link" href="{{ route('leader.change-password') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
-                                Change Password
-                            </a>
-                            @elseif(!auth()->user()->isMember())
-                            {{-- For other users (not treasurer, not member): Show finance menu as collapsed dropdown --}}
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Finance
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('finance.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
-                                    @if(auth()->user()->canApproveFinances())
-                                    <a class="nav-link" href="{{ route('finance.approval.dashboard') }}"><i class="fas fa-check-circle me-2"></i>Approval Dashboard</a>
-                                    @endif
-                                    <a class="nav-link" href="{{ route('finance.tithes') }}"><i class="fas fa-coins me-2"></i>Tithes</a>
-                                    <a class="nav-link" href="{{ route('finance.offerings') }}"><i class="fas fa-gift me-2"></i>Offerings</a>
-                                    <a class="nav-link" href="{{ route('finance.donations') }}"><i class="fas fa-heart me-2"></i>Donations</a>
-                                    <a class="nav-link" href="{{ route('finance.pledges') }}"><i class="fas fa-handshake me-2"></i>Pledges</a>
-                                    <a class="nav-link" href="{{ route('finance.budgets') }}"><i class="fas fa-wallet me-2"></i>Budgets</a>
-                                    <a class="nav-link" href="{{ route('finance.expenses') }}"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                    <a class="nav-link" href="{{ route('reports.index') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a>
-                                </nav>
-                            </div>
-                            @endif
-                            
-                            @if((!auth()->user()->isTreasurer() || auth()->user()->isAdmin()) && !auth()->user()->isMember())
-                            <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="{{ route('analytics.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Analytics
-                            </a>
-                            <a class="nav-link" href="{{ route('reports.overview') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                All Reports
-                            </a>
-                            
-                            @if(!auth()->user()->isMember())
-                            <div class="sb-sidenav-menu-heading">Account</div>
-                            <a class="nav-link" href="{{ route('leader.change-password') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
-                                Change Password
-                            </a>
-                            @endif
-                            @endif
-                            
-                            @if(auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Settings</div>
-                            <a class="nav-link" href="{{ route('settings.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
-                                System Settings
-                            </a>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Logged in as:</div>
-                        {{ Auth::user()->name ?? 'User' }}
-                    </div>
-                </nav>
-            </div>
-            
-            <div id="layoutSidenav_content">
-                <main>
-                    <div class="container-fluid px-4 pt-0">
+@section('content')
+            <!-- Navbar Brand - Hidden on Mobile -->
+<div class="container-fluid px-4 pt-0">
                         <!-- Page Title and Quick Actions - Compact Collapsible -->
                         <div class="card border-0 shadow-sm mb-2 mt-1 actions-card">
                             <div class="card-header bg-white border-bottom p-2 px-3 d-flex align-items-center justify-content-between actions-header" onclick="toggleActions()">
@@ -1305,16 +997,6 @@
                                         <span class="d-sm-none">Add</span>
                                     </a>
                                     @endif
-                                    <a href="{{ route('members.export.csv', request()->query()) }}" class="btn btn-outline-success btn-sm">
-                                        <i class="fas fa-file-excel me-1"></i>
-                                        <span class="d-none d-sm-inline">Export</span>
-                                        <span class="d-sm-none">Export</span>
-                                    </a>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-                                        <i class="fas fa-print me-1"></i>
-                                        <span class="d-none d-sm-inline">Print</span>
-                                        <span class="d-sm-none">Print</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1391,6 +1073,7 @@
                                                             <th>Date of Birth</th>
                                                             <th>Parent/Guardian</th>
                                                             <th>Age Group</th>
+                                                            <th class="text-end" style="width: 100px;">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -1451,6 +1134,18 @@
                                                                         <span class="badge bg-dark">Adult (18+)</span>
                                                                     @endif
                                                                 </td>
+                                                                <td class="text-end">
+                                                                    <div class="d-flex flex-row gap-1 justify-content-end align-items-center" style="flex-wrap: nowrap;">
+                                                                        @if($child->member)
+                                                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $child->member->id }}); } else { alert('View details function is not available. Please refresh the page.'); }" title="View Parent Details">
+                                                                                <i class="fas fa-eye"></i>
+                                                                            </button>
+                                                                        @endif
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(typeof window.deleteChild === 'function') { window.deleteChild({{ $child->id }}); } else { alert('Delete function is not available. Please refresh the page.'); }" title="Delete Child">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
                                                             </tr>
                                                         @endforeach
                                                     </tbody>
@@ -1475,9 +1170,11 @@
                         <div id="cardView" style="display: none;">
                             @include('members.partials.card-view', ['members' => $members, 'archivedMembers' => $archivedMembers ?? collect()])
                         </div>
-                </main>
+</div>
+@endsection
 
-                <!-- Details Modal -->
+@section('modals')
+<!-- Details Modal -->
                 <div class="modal fade" id="memberDetailsModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-lg modal-dialog-scrollable">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
@@ -1514,258 +1211,184 @@
                     </div>
                 </div>
 
-                <!-- Edit Section Chooser Modal -->
-                <div class="modal fade" id="editSectionChooserModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-sm">
-                        <div class="modal-content border-0 shadow" style="border-radius: 14px; overflow: hidden;">
-                            <div class="modal-header text-white" style="background: linear-gradient(135deg,#5b2a86 0%, #0ea5ea 100%); border: none;">
-                                <h6 class="modal-title"><i class="fas fa-edit me-2"></i>Select Section to Edit</h6>
+                <!-- Edit Member Modal -->
+                <div class="modal fade" id="memberEditModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                            <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem;">
+                                <h5 class="modal-title d-flex align-items-center gap-2">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Edit Member Information</span>
+                                </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-primary" id="btnEditPersonal"><i class="fas fa-user me-2"></i>Personal</button>
-                                    <button class="btn btn-outline-primary" id="btnEditLocation"><i class="fas fa-map-marker-alt me-2"></i>Location</button>
-                                    <button class="btn btn-outline-primary" id="btnEditFamily"><i class="fas fa-home me-2"></i>Family</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Edit Personal Modal -->
-                <div class="modal fade" id="memberEditPersonalModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-md">
-                        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
-                            <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-user text-primary"></i><span>Edit Personal</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="editPersonalForm">
-                                    <input type="hidden" id="edit_personal_id">
+                            <div class="modal-body bg-light" style="padding: 2rem;">
+                                <form id="editMemberForm" method="POST" action="#" class="needs-validation" novalidate onsubmit="event.preventDefault(); event.stopPropagation(); return false;">
+                                    <input type="hidden" id="edit_member_id" name="member_id">
+                                    <input type="hidden" name="_method" value="PUT">
+                                    
                                     <div class="row g-3">
-                                        <div class="col-12">
-                                            <label class="form-label">Full Name</label>
-                                            <input type="text" class="form-control" id="edit_personal_full_name" required>
+                                        <div class="col-md-6">
+                                            <label for="edit_full_name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_full_name" name="full_name" required>
+                                            <div class="invalid-feedback">Please provide a valid full name.</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="edit_personal_email">
+                                            <label for="edit_email" class="form-label fw-semibold">Email Address</label>
+                                            <input type="email" class="form-control form-control-lg" id="edit_email" name="email">
+                                            <div class="invalid-feedback">Please provide a valid email address.</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Phone</label>
-                                            <input type="text" class="form-control" id="edit_personal_phone_number">
+                                            <label for="edit_phone_number" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_phone_number" name="phone_number" required>
+                                            <div class="invalid-feedback">Please provide a valid phone number.</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="edit_gender" class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+                                            <select class="form-select form-select-lg" id="edit_gender" name="gender" required>
+                                                <option value="">Select Gender</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                            </select>
+                                            <div class="invalid-feedback">Please select a gender.</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="edit_date_of_birth" class="form-label fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control form-control-lg" id="edit_date_of_birth" name="date_of_birth" required>
+                                            <div class="invalid-feedback">Please provide a valid date of birth.</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_education_level" class="form-label fw-semibold">Education Level</label>
+                                            <select class="form-select form-select-lg" id="edit_education_level" name="education_level">
+                                                <option value="">Select Education</option>
+                                                <option value="primary">Primary</option>
+                                                <option value="secondary">Secondary</option>
+                                                <option value="chuo_cha_kati">Chuo cha Kati</option>
+                                                <option value="university">University</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_profession" class="form-label fw-semibold">Profession</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_profession" name="profession">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_nida_number" class="form-label fw-semibold">NIDA Number</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_nida_number" name="nida_number">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Membership Type</label>
-                                            <select id="edit_personal_membership_type" class="form-select">
+                                            <label for="edit_membership_type" class="form-label fw-semibold">Membership Type <span class="text-danger">*</span></label>
+                                            <select class="form-select form-select-lg" id="edit_membership_type" name="membership_type" required>
                                                 <option value="permanent">Permanent</option>
                                                 <option value="temporary">Temporary</option>
                                             </select>
                                         </div>
+                                        <div class="col-md-6">
+                                            <label for="edit_member_type" class="form-label fw-semibold">Member Type</label>
+                                            <select class="form-select form-select-lg" id="edit_member_type" name="member_type">
+                                                <option value="">Select Type</option>
+                                                <option value="father">Father</option>
+                                                <option value="mother">Mother</option>
+                                                <option value="independent">Independent</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Family/Guardian Information -->
+                                        <div class="col-12">
+                                            <hr class="my-4">
+                                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-users me-2"></i>Family & Guardian Information</h6>
+                                        </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Gender</label>
-                                            <select id="edit_personal_gender" class="form-select">
+                                            <label for="edit_living_with_family" class="form-label fw-semibold">Living with Family</label>
+                                            <select class="form-select form-select-lg" id="edit_living_with_family" name="living_with_family">
                                                 <option value="">Select</option>
-                                                <option value="male">Male</option>
-                                                <option value="female">Female</option>
+                                                <option value="yes">Yes</option>
+                                                <option value="no">No</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Date of Birth</label>
-                                            <input type="date" class="form-control" id="edit_personal_date_of_birth">
+                                            <label for="edit_family_relationship" class="form-label fw-semibold">Family Relationship</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_family_relationship" name="family_relationship">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">NIDA Number</label>
-                                            <input type="text" class="form-control" id="edit_personal_nida_number">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Tribe</label>
-                                            <select id="edit_personal_tribe" class="form-select"></select>
-                                        </div>
-                                        <div class="col-md-6" id="edit_personal_other_tribe_group" style="display:none;">
-                                            <label class="form-label">Other Tribe</label>
-                                            <input type="text" class="form-control" id="edit_personal_other_tribe" placeholder="Specify tribe">
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Save</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Edit Location Modal -->
-                <div class="modal fade" id="memberEditLocationModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-md">
-                        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
-                            <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-map-marker-alt text-primary"></i><span>Edit Location</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="editLocationForm">
-                                    <input type="hidden" id="edit_location_id">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Region</label>
-                                            <select id="edit_location_region" class="form-select"></select>
+                                            <label for="edit_guardian_name" class="form-label fw-semibold">Guardian Name</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_guardian_name" name="guardian_name">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">District</label>
-                                            <select id="edit_location_district" class="form-select"></select>
+                                            <label for="edit_guardian_phone" class="form-label fw-semibold">Guardian Phone</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_guardian_phone" name="guardian_phone">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Ward</label>
-                                            <select id="edit_location_ward" class="form-select"></select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Street</label>
-                                            <input type="text" class="form-control" id="edit_location_street">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Address</label>
-                                            <input type="text" class="form-control" id="edit_location_address">
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Save</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Edit Family Modal -->
-                <div class="modal fade" id="memberEditFamilyModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
-                            <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-home text-primary"></i><span>Edit Family Information</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="editFamilyForm">
-                                    <input type="hidden" id="edit_family_id">
-                                    <input type="hidden" id="edit_family_member_type">
-                                    <input type="hidden" id="edit_family_membership_type">
-                                    
-                                    <!-- Marital Status Section (for permanent father/mother) -->
-                                    <div id="edit_family_marital_section" style="display:none;">
-                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-heart me-2"></i>Marital Status</h6>
-                                        <div class="row g-3 mb-4">
-                                            <div class="col-12">
-                                                <label class="form-label">Marital Status</label>
-                                                <select id="edit_family_marital_status" class="form-select">
-                                                    <option value="">Select</option>
-                                                    <option value="married">Married</option>
-                                                    <option value="divorced">Divorced</option>
-                                                    <option value="widowed">Widowed</option>
-                                                    <option value="separated">Separated</option>
-                                                </select>
-                                            </div>
+                                            <label for="edit_guardian_relationship" class="form-label fw-semibold">Guardian Relationship</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_guardian_relationship" name="guardian_relationship">
                                         </div>
                                         
-                                        <!-- Spouse Information (shown when married) -->
-                                        <div id="edit_family_spouse_section" style="display:none;">
-                                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user me-2"></i>Spouse Information</h6>
-                                            <div class="row g-3 mb-4">
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Full Name</label>
-                                                    <input type="text" class="form-control" id="edit_family_spouse_full_name">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Date of Birth</label>
-                                                    <input type="date" class="form-control" id="edit_family_spouse_date_of_birth">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Education Level</label>
-                                                    <select id="edit_family_spouse_education_level" class="form-select">
-                                                        <option value="">Select</option>
-                                                        <option value="primary">Primary</option>
-                                                        <option value="secondary">Secondary</option>
-                                                        <option value="high_level">High Level</option>
-                                                        <option value="certificate">Certificate</option>
-                                                        <option value="diploma">Diploma</option>
-                                                        <option value="bachelor_degree">Bachelor Degree</option>
-                                                        <option value="masters">Masters</option>
-                                                        <option value="phd">PhD</option>
-                                                        <option value="professor">Professor</option>
-                                                        <option value="not_studied">Not Studied</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Profession</label>
-                                                    <input type="text" class="form-control" id="edit_family_spouse_profession">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse NIDA Number</label>
-                                                    <input type="text" class="form-control" id="edit_family_spouse_nida_number">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Email</label>
-                                                    <input type="email" class="form-control" id="edit_family_spouse_email">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Phone Number</label>
-                                                    <input type="text" class="form-control" id="edit_family_spouse_phone_number" placeholder="+255744000000">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Spouse Tribe</label>
-                                                    <select id="edit_family_spouse_tribe" class="form-select"></select>
-                                                </div>
-                                                <div class="col-md-6" id="edit_family_spouse_other_tribe_group" style="display:none;">
-                                                    <label class="form-label">Spouse Other Tribe</label>
-                                                    <input type="text" class="form-control" id="edit_family_spouse_other_tribe" placeholder="Specify tribe">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Is Spouse a Church Member?</label>
-                                                    <select id="edit_family_spouse_church_member" class="form-select">
-                                                        <option value="">Select</option>
-                                                        <option value="yes">Yes</option>
-                                                        <option value="no">No</option>
-                                                    </select>
-                                                </div>
-                                            </div>
+                                        <!-- Marital/Spouse Information -->
+                                        <div class="col-12">
+                                            <hr class="my-4">
+                                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-heart me-2"></i>Marital & Spouse Information</h6>
                                         </div>
-                                    </div>
-                                    
-                                    <!-- Guardian Section (for temporary members and independent permanent) -->
-                                    <div id="edit_family_guardian_section" style="display:none;">
-                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user-shield me-2"></i>Guardian Information</h6>
-                                        <div class="row g-3 mb-4">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Guardian Name</label>
-                                                <input type="text" class="form-control" id="edit_family_guardian_name">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Guardian Phone</label>
-                                                <input type="text" class="form-control" id="edit_family_guardian_phone" placeholder="+255744000000">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Guardian Relationship</label>
-                                                <select id="edit_family_guardian_relationship" class="form-select">
-                                                    <option value="">Select</option>
-                                                    <option value="parent">Parent</option>
-                                                    <option value="guardian">Guardian</option>
-                                                    <option value="relative">Relative</option>
-                                                    <option value="other">Other</option>
-                                                </select>
-                                            </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_marital_status" class="form-label fw-semibold">Marital Status</label>
+                                            <select class="form-select form-select-lg" id="edit_marital_status" name="marital_status">
+                                                <option value="">Select Status</option>
+                                                <option value="married">Married</option>
+                                                <option value="divorced">Divorced</option>
+                                                <option value="widowed">Widowed</option>
+                                                <option value="separated">Separated</option>
+                                            </select>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Save</button>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_full_name" class="form-label fw-semibold">Spouse Full Name</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_spouse_full_name" name="spouse_full_name">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_date_of_birth" class="form-label fw-semibold">Spouse Date of Birth</label>
+                                            <input type="date" class="form-control form-control-lg" id="edit_spouse_date_of_birth" name="spouse_date_of_birth">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_education_level" class="form-label fw-semibold">Spouse Education Level</label>
+                                            <select class="form-select form-select-lg" id="edit_spouse_education_level" name="spouse_education_level">
+                                                <option value="">Select Education</option>
+                                                <option value="primary">Primary</option>
+                                                <option value="secondary">Secondary</option>
+                                                <option value="chuo_cha_kati">Chuo cha Kati</option>
+                                                <option value="university">University</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_profession" class="form-label fw-semibold">Spouse Profession</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_spouse_profession" name="spouse_profession">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_nida_number" class="form-label fw-semibold">Spouse NIDA Number</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_spouse_nida_number" name="spouse_nida_number">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_email" class="form-label fw-semibold">Spouse Email</label>
+                                            <input type="email" class="form-control form-control-lg" id="edit_spouse_email" name="spouse_email">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_phone_number" class="form-label fw-semibold">Spouse Phone Number</label>
+                                            <input type="text" class="form-control form-control-lg" id="edit_spouse_phone_number" name="spouse_phone_number">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="edit_spouse_church_member" class="form-label fw-semibold">Spouse Church Member</label>
+                                            <select class="form-select form-select-lg" id="edit_spouse_church_member" name="spouse_church_member">
+                                                <option value="">Select</option>
+                                                <option value="yes">Yes</option>
+                                                <option value="no">No</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </form>
+                            </div>
+                            <div class="modal-footer bg-white border-0" style="padding: 1.5rem;">
+                                <button type="button" class="btn btn-outline-secondary btn-lg px-4" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="button" id="editMemberSubmitBtn" class="btn btn-primary btn-lg px-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;" onclick="if(typeof handleEditFormSubmit === 'function') { handleEditFormSubmit(event); } else { console.error('handleEditFormSubmit not defined'); }">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1832,27 +1455,6 @@
                         </div>
                     </div>
                 </div>
-
-                <footer class="bg-dark text-light py-4 mt-auto">
-  <div class="container px-4">
-    <div class="row align-items-center">
-      <!-- Left Side -->
-      <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-        <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
-      </div>
-
-      <!-- Right Side -->
-      <div class="col-md-6 text-center text-md-end">
-        <small>
-          Powered by 
-          <a href="https://emca.tech/#" class="text-decoration-none fw-semibold" style="color: #940000 !important;">
-            EmCa Technologies
-          </a>
-        </small>
-      </div>
-    </div>
-  </div>
-                </footer>
                 
                 <!-- Add Child Modal -->
                 <div class="modal fade" id="addChildModal" tabindex="-1" aria-labelledby="addChildModalLabel" aria-hidden="true">
@@ -1983,147 +1585,1266 @@
                 </div>
             </div>
         </div>
-        <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
-        <script src="{{ asset('js/scripts.js') }}"></script>
-        <script>
-        // Define action functions IMMEDIATELY so they're available for onclick handlers
-        // These will store the full implementations when they're defined later
-        (function() {
-            // Store references to full implementations
-            let _viewDetails, _openEdit, _confirmDelete, _resetPassword, _restoreMember;
+@endsection
+
+@section('scripts')
+<script>
+        // ============================================
+        // EDIT FORM SUBMIT HANDLER - DEFINE FIRST
+        // ============================================
+        // CRITICAL: Define this function immediately so inline onclick can use it
+        window.handleEditFormSubmit = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
             
-            // Helper to check if SweetAlert2 is available
-            const hasSwal = typeof Swal !== 'undefined';
+            console.log('✓ Submit button clicked - processing form submission');
             
-            // Early function definitions that will call full implementations when available
-            window.viewDetails = function(id) {
-                if (_viewDetails) {
-                    return _viewDetails(id);
+            const form = document.getElementById('editMemberForm');
+            if (!form) {
+                console.error('Form not found');
+                return;
+            }
+            
+            // Check form validity
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
                 }
-                console.warn('viewDetails full implementation not yet loaded, ID:', id);
-                // Fallback: try to navigate to member page
-                if (id) {
-                    if (hasSwal) {
+                return;
+            }
+            
+            // Get member ID
+            let memberId = window.currentEditMember?.id;
+            if (!memberId) {
+                const hiddenIdInput = document.getElementById('edit_member_id');
+                if (hiddenIdInput && hiddenIdInput.value) {
+                    memberId = parseInt(hiddenIdInput.value);
+                    console.log('Got member ID from hidden input:', memberId);
+                }
+            }
+            
+            if (!memberId) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Member ID not found. Please close the modal, refresh the page, and try again.'
+                    });
+                } else {
+                    alert('Member ID not found. Please close the modal, refresh the page, and try again.');
+                }
+                return;
+            }
+            
+            // Collect form data
+            const formData = new FormData(form);
+            formData.append('_method', 'PUT');
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            const emailValue = document.getElementById('edit_email')?.value.trim() || '';
+            formData.set('email', emailValue);
+            
+            console.log('Submitting edit form for member ID:', memberId);
+            
+            // Show loading
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Updating Member...',
+                    text: 'Please wait while we save your changes',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+            
+            // Submit
+            const updateUrl = `{{ url('/members') }}/${memberId}`;
+            fetch(updateUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData,
+                cache: 'no-cache'
+            })
+            .then(response => {
+                return response.text().then(text => {
+                    try {
+                        const json = JSON.parse(text);
+                        if (!response.ok) {
+                            if (response.status === 422 && json.errors) {
+                                const errorMessages = Object.entries(json.errors)
+                                    .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                                    .join('\n');
+                                throw new Error('Validation failed:\n' + errorMessages);
+                            }
+                            throw new Error(json.message || json.error || 'Update failed');
+                        }
+                        return json;
+                    } catch (e) {
+                        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                            throw new Error('Server returned HTML instead of JSON. Check server logs.');
+                        }
+                        throw new Error('Invalid response format: ' + text.substring(0, 100));
+                    }
+                });
+            })
+            .then(data => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('memberEditModal'));
+                    if (modal) modal.hide();
+                    
+                    if (typeof Swal !== 'undefined') {
                         Swal.fire({
-                            icon: 'info',
-                            title: 'Loading...',
-                            text: 'Opening member details...',
-                            timer: 1000,
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Member information updated successfully',
+                            timer: 1500,
                             showConfirmButton: false
                         }).then(() => {
-                            window.location.href = '{{ url("/members") }}/' + id;
+                            const cleanUrl = window.location.pathname;
+                            window.history.replaceState({}, '', cleanUrl);
+                            setTimeout(() => {
+                                window.location.href = cleanUrl;
+                            }, 50);
                         });
                     } else {
-                        window.location.href = '{{ url("/members") }}/' + id;
+                        alert('Member updated successfully!');
+                        window.location.reload();
                     }
+                } else {
+                    throw new Error(data.message || 'Update failed');
                 }
-            };
-            
-            window.openEdit = function(id) {
-                if (_openEdit) {
-                    return _openEdit(id);
+            })
+            .catch(error => {
+                console.error('Error updating member:', error);
+                let errorMessage = error.message || 'Failed to update member. Please check your input and try again.';
+                if (errorMessage.includes('\n')) {
+                    errorMessage = errorMessage.split('\n').join('<br>');
                 }
-                console.warn('openEdit full implementation not yet loaded, ID:', id);
-                if (hasSwal) {
+                if (typeof Swal !== 'undefined') {
                     Swal.fire({
-                        icon: 'info',
-                        title: 'Loading...',
-                        text: 'Edit function is loading. Please wait a moment and try again.',
+                        icon: 'error',
+                        title: 'Update Failed',
+                        html: `<p>${errorMessage}</p><p class="text-muted small mt-2">Check the browser console (F12) for more details.</p>`,
+                        confirmButtonText: 'OK',
+                        width: '500px'
+                    });
+                } else {
+                    alert('Update failed: ' + errorMessage);
+                }
+            });
+        };
+        
+        // ============================================
+        // ARCHIVE MEMBER FUNCTION - DEFINE EARLY
+        // ============================================
+        // Make confirmDelete globally accessible immediately
+        window.confirmDelete = function(id) {
+            console.log('confirmDelete called with ID:', id);
+            if (!id) {
+                console.error('confirmDelete: No ID provided');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Member ID is required',
                         confirmButtonText: 'OK'
                     });
                 } else {
-                    alert('Edit function loading... Please wait a moment and try again.');
+                    alert('Member ID is required');
                 }
+                return;
+            }
+            console.log('Attempting to archive member with ID:', id);
+            
+            // Check if we're in the archived tab
+            const isArchived = document.querySelector('.nav-link[href="#archived"]')?.classList.contains('active');
+            console.log('Is archived tab:', isArchived);
+            
+            // Show reason input form
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Archive Member',
+                    html: `
+                        <div class="mb-3">
+                            <label for="archive-reason" class="form-label">Reason for archiving:</label>
+                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Archive Member',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true,
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const reason = document.getElementById('archive-reason').value.trim();
+                        if (!reason) {
+                            Swal.showValidationMessage('Please provide a reason for archiving');
+                            return false;
+                        }
+                        return reason;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed && result.value) {
+                        const reason = result.value;
+                        console.log('Archive confirmed with reason:', reason);
+                        
+                        // Show loading
+                        Swal.fire({
+                            title: 'Archiving Member...',
+                            text: 'Please wait',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        // Submit archive request
+                        const formData = new FormData();
+                        formData.append('reason', reason);
+                        formData.append('_method', 'DELETE');
+                        
+                        fetch(`{{ url('/members') }}/${id}/archive`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'Archive failed');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Member Archived',
+                                    text: 'The member has been successfully archived.',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                throw new Error(data.message || 'Archive failed');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Archive error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Archive Failed',
+                                text: error.message || 'Failed to archive member. Please try again.',
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
+            } else {
+                const reason = prompt('Please provide a reason for archiving this member:');
+                if (reason) {
+                    const formData = new FormData();
+                    formData.append('reason', reason);
+                    formData.append('_method', 'DELETE');
+                    
+                    fetch(`{{ url('/members') }}/${id}/archive`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Member archived successfully');
+                            window.location.reload();
+                        } else {
+                            alert('Archive failed: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Archive error:', error);
+                        alert('Failed to archive member. Please try again.');
+                    });
+                }
+            }
+        };
+        
+        // ============================================
+        // RESTORE MEMBER FUNCTION - DEFINE EARLY
+        // ============================================
+        // Make restoreMember globally accessible immediately
+        window.restoreMember = function(memberId) {
+            if (!memberId) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Member ID is required',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    alert('Member ID is required');
+                }
+                return;
+            }
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Restore Member',
+                    text: 'Are you sure you want to restore this member? They will be moved back to active members.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Restore',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#28a745',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Restoring...',
+                            text: 'Please wait while we restore the member.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(`{{ url('/members/archived') }}/${memberId}/restore`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else if (response.status === 403) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'You do not have permission to restore members.');
+                                });
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || `Server error: ${response.status}`);
+                                }).catch(() => {
+                                    throw new Error(`Server error: ${response.status}`);
+                                });
+                            }
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Member Restored',
+                                    text: data.message || 'Member has been restored successfully.',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Restore Failed',
+                                    text: data.message || 'Please try again.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Restore error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Restore Failed',
+                                text: error.message || 'An error occurred while restoring the member.',
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
+            } else {
+                if (confirm('Are you sure you want to restore this member?')) {
+                    fetch(`{{ url('/members/archived') }}/${memberId}/restore`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Member restored successfully');
+                            location.reload();
+                        } else {
+                            alert('Restore failed: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Restore error:', error);
+                        alert('Failed to restore member. Please try again.');
+                    });
+                }
+            }
+        };
+        
+        // ============================================
+        // DELETE CHILD FUNCTION - DEFINE EARLY
+        // ============================================
+        // Make deleteChild globally accessible immediately
+        window.deleteChild = function(childId) {
+            if (!childId) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Child ID is required',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    alert('Child ID is required');
+                }
+                return;
+            }
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Delete Child',
+                    text: 'Are you sure you want to delete this child? This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#dc3545',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Deleting...',
+                            text: 'Please wait while we delete the child.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(`{{ url('/children') }}/${childId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || `Server error: ${response.status}`);
+                                }).catch(() => {
+                                    throw new Error(`Server error: ${response.status}`);
+                                });
+                            }
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Child Deleted',
+                                    text: data.message || 'Child has been deleted successfully.',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                throw new Error(data.message || 'Delete failed');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Delete child error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Delete Failed',
+                                text: error.message || 'An error occurred while deleting the child.',
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    }
+                });
+            } else {
+                if (confirm('Are you sure you want to delete this child?')) {
+                    fetch(`{{ url('/children') }}/${childId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Child deleted successfully');
+                            location.reload();
+                        } else {
+                            alert('Delete failed: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Delete child error:', error);
+                        alert('Failed to delete child. Please try again.');
+                    });
+                }
+            }
+        };
+        
+        // ============================================
+        // FORM SUBMISSION PREVENTION - RUNS FIRST
+        // ============================================
+        // CRITICAL: Prevent form from submitting to /members/view
+        // This must run BEFORE anything else
+        (function() {
+            // Override form submit immediately - multiple layers
+            const preventSubmit = function(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                console.error('BLOCKED: Form tried to submit to /members/view');
+                return false;
             };
             
-            window.confirmDelete = function(id) {
-                if (_confirmDelete) {
-                    return _confirmDelete(id);
+            // Function to secure a form
+            const secureForm = function(f) {
+                if (!f || f.dataset.secured === 'true') return;
+                f.method = 'GET'; // Change method to GET so it can't POST
+                f.action = 'javascript:void(0);'; // Change action
+                f.onsubmit = preventSubmit;
+                f.addEventListener('submit', preventSubmit, true); // Capture phase
+                f.addEventListener('submit', preventSubmit, false); // Bubble phase
+                f.dataset.secured = 'true';
+                console.log('✓ Form secured:', f.id);
+            };
+            
+            // Try to attach immediately
+            const form = document.getElementById('editMemberForm');
+            if (form) {
+                secureForm(form);
+            }
+            
+            // Also attach when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    const f = document.getElementById('editMemberForm');
+                    if (f) secureForm(f);
+                });
+            }
+            
+            // Watch for form being added to DOM (MutationObserver)
+            const observer = new MutationObserver(function(mutations) {
+                const f = document.getElementById('editMemberForm');
+                if (f) secureForm(f);
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        })();
+        
+        // ============================================
+        // URL CLEANUP - RUNS FIRST, BEFORE ANYTHING ELSE
+        // ============================================
+        // Remove ALL form data parameters from URL immediately
+        (function cleanUrlImmediately() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const allowedParams = ['tab', 'show', 'search', 'gender', 'region', 'district', 'ward'];
+            
+            // Complete list of ALL form field names that should NEVER be in URL
+            const formFields = [
+                'member_id', 'full_name', 'email', 'phone_number', 'date_of_birth',
+                'education_level', 'profession', 'nida_number', 'membership_type', 'member_type',
+                'living_with_family', 'family_relationship', 'guardian_name', 'guardian_phone',
+                'guardian_relationship', 'marital_status', 'spouse_full_name', 'spouse_date_of_birth',
+                'spouse_education_level', 'spouse_profession', 'spouse_nida_number', 'spouse_email',
+                'spouse_phone_number', 'spouse_church_member', 'tribe', 'other_tribe', 'street',
+                'address', 'spouse_tribe', 'spouse_other_tribe'
+            ];
+            
+            let urlChanged = false;
+            
+            // Remove ALL form field parameters
+            for (const [key, value] of urlParams.entries()) {
+                // Remove if it's a form field (regardless of value, even empty)
+                if (formFields.includes(key)) {
+                    urlParams.delete(key);
+                    urlChanged = true;
                 }
-                console.warn('confirmDelete full implementation not yet loaded, ID:', id);
-                if (id) {
-                    if (hasSwal) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Archive Member?',
-                            text: 'Are you sure you want to archive this member?',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, Archive',
-                            cancelButtonText: 'Cancel',
-                            confirmButtonColor: '#dc3545'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Fallback: show archive modal if available
-                                if (typeof openArchiveModal === 'function') {
-                                    openArchiveModal(id);
+                // Also remove empty values from allowed params (like empty gender="")
+                else if (allowedParams.includes(key) && (!value || value.trim() === '')) {
+                    urlParams.delete(key);
+                    urlChanged = true;
+                }
+            }
+            
+            // Update URL immediately if it changed
+            if (urlChanged) {
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+                console.log('✓ URL cleaned - removed form data parameters');
+            }
+        })();
+        
+        // CRITICAL: Define action functions FIRST, before anything else, to ensure they're always available
+        // This prevents "Function is not available" errors
+        
+        // Define resetPassword function immediately
+        window.resetPassword = function(memberId) {
+            console.log('resetPassword function called with memberId:', memberId);
+            if (!memberId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Member ID is required'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Reset Password',
+                text: 'Are you sure you want to reset this member\'s password? A new password will be generated and sent via SMS if available.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Reset Password',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const baseUrl = '{{ url("/") }}';
+                    const url = `${baseUrl}/members/${memberId}/reset-password`;
+                    console.log('Resetting password for member ID:', memberId);
+                    console.log('Request URL:', url);
+                    
+                    return fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const contentType = response.headers.get('content-type');
+                            if (contentType && contentType.includes('application/json')) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
+                            } else {
+                                const text = await response.text();
+                                if (response.status === 404) {
+                                    throw new Error('Route not found. Please check if the route is properly configured.');
+                                } else if (response.status === 419) {
+                                    throw new Error('CSRF token mismatch. Please refresh the page and try again.');
+                                } else if (response.status === 403) {
+                                    throw new Error('You do not have permission to perform this action.');
                                 } else {
-                                    Swal.fire({
-                                        icon: 'info',
-                                        title: 'Loading...',
-                                        text: 'Archive function is loading. Please wait a moment and try again.',
-                                        confirmButtonText: 'OK'
-                                    });
+                                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
                                 }
                             }
-                        });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to reset password');
+                        }
+                        return data;
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error.message}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const data = result.value;
+                    let message = `Password reset successfully!\n\n`;
+                    message += `New Password: <strong>${data.password}</strong>\n\n`;
+                    
+                    if (data.sms_sent) {
+                        message += `✓ SMS sent to ${data.phone_number || 'member'}`;
                     } else {
-                        if (confirm('Archive this member?')) {
-                            if (typeof openArchiveModal === 'function') {
-                                openArchiveModal(id);
-                            } else {
-                                alert('Archive function loading... Please wait a moment and try again.');
-                            }
+                        message += `⚠ SMS could not be sent. Please share the password manually.`;
+                    }
+                    
+                    Swal.fire({
+                        title: 'Password Reset Successful',
+                        html: message,
+                        icon: 'success',
+                        confirmButtonText: 'Copy Password',
+                        showCancelButton: true,
+                        cancelButtonText: 'Close'
+                    }).then((copyResult) => {
+                        if (copyResult.isConfirmed) {
+                            navigator.clipboard.writeText(data.password).then(() => {
+                                Swal.fire({
+                                    title: 'Copied!',
+                                    text: 'Password copied to clipboard',
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            }).catch(() => {
+                                const tempInput = document.createElement('input');
+                                tempInput.value = data.password;
+                                document.body.appendChild(tempInput);
+                                tempInput.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(tempInput);
+                                Swal.fire({
+                                    title: 'Copied!',
+                                    text: 'Password copied to clipboard',
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        };
+        
+        // Define openEdit function
+        window.openEdit = function(id) {
+            console.log('[FULL] openEdit called with ID:', id);
+            if (!id) {
+                console.error('openEdit: No ID provided');
+                return;
+            }
+            fetch(`{{ url('/members') }}/${id}`, { 
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-cache'
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(m => {
+                    console.log('Member data loaded for edit:', m);
+                    // Store in global variable
+                    window.currentEditMember = m;
+                    console.log('✓ Stored member in window.currentEditMember, ID:', m.id);
+                    
+                    // Open edit modal first
+                    const editModal = document.getElementById('memberEditModal');
+                    if (editModal) {
+                        const modal = bootstrap.Modal.getOrCreateInstance(editModal);
+                        
+                        // Populate form when modal is fully shown
+                        const populateHandler = function() {
+                            console.log('Modal shown, populating form with data:', m);
+                            // Ensure member is stored BEFORE populating form
+                            window.currentEditMember = m;
+                            console.log('✓ Member stored in window.currentEditMember before populating, ID:', m.id);
+                            
+                            // Small delay to ensure DOM is ready
+                            setTimeout(() => {
+                                populateEditForm(m);
+                                // Verify member ID is stored after populating
+                                console.log('After populateEditForm - window.currentEditMember:', window.currentEditMember);
+                                console.log('Member ID available:', window.currentEditMember?.id);
+                                
+                                // Double-check: if somehow lost, restore it
+                                if (!window.currentEditMember || !window.currentEditMember.id) {
+                                    console.warn('Member ID lost, restoring...');
+                                    window.currentEditMember = m;
+                                }
+                            }, 100);
+                        };
+                        
+                        // Remove any existing listeners first
+                        editModal.removeEventListener('shown.bs.modal', populateHandler);
+                        editModal.addEventListener('shown.bs.modal', populateHandler, { once: true });
+                        
+                        // Show modal
+                        modal.show();
+                    } else {
+                        console.error('memberEditModal not found');
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Edit modal not found. Please refresh the page.'
+                            });
                         }
                     }
-                }
-            };
+                })
+                .catch(err => {
+                    console.error('Error loading member for edit:', err);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to load member',
+                            text: err && err.message ? err.message : 'Please try again.'
+                        });
+                    }
+                });
+        };
+        
+        // Function to populate edit form with member data
+        function populateEditForm(m) {
+            console.log('=== Starting to populate edit form ===');
+            console.log('Member data:', m);
             
-            window.resetPassword = function(id) {
-                if (_resetPassword) {
-                    return _resetPassword(id);
-                }
-                console.warn('resetPassword full implementation not yet loaded, ID:', id);
-                if (hasSwal) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Loading...',
-                        text: 'Reset password function is loading. Please wait a moment and try again.',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    alert('Reset password function loading... Please wait a moment and try again.');
-                }
-            };
+            if (!m) {
+                console.error('No member data provided to populateEditForm');
+                return;
+            }
             
-            window.restoreMember = function(id) {
-                if (_restoreMember) {
-                    return _restoreMember(id);
-                }
-                console.warn('restoreMember full implementation not yet loaded, ID:', id);
-                if (hasSwal) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Loading...',
-                        text: 'Restore function is loading. Please wait a moment and try again.',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    alert('Restore function loading... Please wait a moment and try again.');
-                }
-            };
+            // Ensure member is stored globally
+            window.currentEditMember = m;
             
-            // Function to update with full implementations
-            window._updateActionFunctions = function(viewDetails, openEdit, confirmDelete, resetPassword, restoreMember) {
-                _viewDetails = viewDetails;
-                _openEdit = openEdit;
-                _confirmDelete = confirmDelete;
-                _resetPassword = resetPassword;
-                _restoreMember = restoreMember;
-                console.log('Action functions updated with full implementations');
-            };
+            // Also store in hidden input if it exists
+            const hiddenIdInput = document.getElementById('edit_member_id');
+            if (hiddenIdInput) {
+                hiddenIdInput.value = m.id || '';
+                console.log('✓ Stored member ID in hidden input:', m.id);
+            }
             
-            console.log('Action functions defined early - onclick handlers can now call them');
-        })();
+            // Personal Information
+            console.log('Setting personal information...');
+            setValue('edit_full_name', m.full_name || '');
+            setValue('edit_email', m.email || '');
+            setValue('edit_phone_number', m.phone_number || '');
+            setValue('edit_gender', m.gender || '');
+            setValue('edit_date_of_birth', m.date_of_birth ? m.date_of_birth.split('T')[0] : '');
+            setValue('edit_education_level', m.education_level || '');
+            setValue('edit_profession', m.profession || '');
+            setValue('edit_nida_number', m.nida_number || '');
+            setValue('edit_membership_type', m.membership_type || 'permanent');
+            setValue('edit_member_type', m.member_type || '');
+            
+            // Family/Guardian Information
+            console.log('Setting family/guardian information...');
+            setValue('edit_living_with_family', m.living_with_family || '');
+            setValue('edit_family_relationship', m.family_relationship || '');
+            setValue('edit_guardian_name', m.guardian_name || '');
+            setValue('edit_guardian_phone', m.guardian_phone || '');
+            setValue('edit_guardian_relationship', m.guardian_relationship || '');
+            
+            // Marital/Spouse Information
+            console.log('Setting marital/spouse information...');
+            setValue('edit_marital_status', m.marital_status || '');
+            setValue('edit_spouse_full_name', m.spouse_full_name || '');
+            setValue('edit_spouse_date_of_birth', m.spouse_date_of_birth ? m.spouse_date_of_birth.split('T')[0] : '');
+            setValue('edit_spouse_education_level', m.spouse_education_level || '');
+            setValue('edit_spouse_profession', m.spouse_profession || '');
+            setValue('edit_spouse_nida_number', m.spouse_nida_number || '');
+            setValue('edit_spouse_email', m.spouse_email || '');
+            setValue('edit_spouse_phone_number', m.spouse_phone_number || '');
+            setValue('edit_spouse_church_member', m.spouse_church_member || '');
+            
+            // Remove validation classes when populating
+            const form = document.getElementById('editMemberForm');
+            if (form) {
+                form.classList.remove('was-validated');
+                console.log('✓ Validation classes removed');
+            } else {
+                console.error('❌ editMemberForm not found!');
+            }
+            
+            // Verify some key fields were set
+            const fullNameEl = document.getElementById('edit_full_name');
+            if (fullNameEl) {
+                console.log('✓ Full name field found and set to:', fullNameEl.value);
+            } else {
+                console.error('❌ edit_full_name field NOT FOUND in DOM!');
+            }
+            
+            console.log('=== Edit form population complete ===');
+        }
+        
+        // Helper function to set form field values
+        function setValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = value || '';
+                // Trigger change event to ensure any listeners are notified
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                console.warn(`Element with ID '${id}' not found when trying to set value:`, value);
+            }
+        }
+        
+        // Define viewDetails function IMMEDIATELY so it's available when buttons are clicked
+        window.viewDetails = function(id) {
+            console.log('viewDetails called with ID:', id);
+            if (!id) {
+                console.error('viewDetails: No ID provided');
+                return;
+            }
+            fetch(`{{ url('/members') }}/${id}`, { 
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-cache'
+            })
+                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(async m => {
+                    console.log('Member details loaded:', m);
+                    // Store member data globally for use in other functions
+                    if (typeof window.currentDetailsMember === 'undefined') {
+                        window.currentDetailsMember = null;
+                    }
+                    window.currentDetailsMember = m;
+                    
+                    // Check if we have spouse details from the API response
+                    if (m.spouse_details) {
+                        console.log('Spouse details loaded from API:', m.spouse_details);
+                        m.mainMemberSpouseInfo = m.spouse_details;
+                    } else if (m.main_member_details) {
+                        console.log('Main member details loaded from API:', m.main_member_details);
+                        m.mainMemberSpouseInfo = m.main_member_details;
+                    }
+                    // Determine if archived (by checking if member_snapshot exists)
+                    let isArchived = false;
+                    let snap = null;
+                    let archiveReason = null;
+                    if (m.member_snapshot) {
+                        isArchived = true;
+                        snap = m.member_snapshot;
+                        archiveReason = m.reason || null;
+                    }
+                    const data = isArchived ? snap : m;
+                    
+                    // Helper functions
+                    const actionCell = (content, actionsHtml = '') => `<div class="d-flex align-items-center justify-content-between">${content}<span class="ms-2 d-inline-flex gap-2">${actionsHtml}</span></div>`;
+                    const badge = (text, tone = 'secondary') => `<span class="badge bg-${tone}">${text}</span>`;
+                    const copyBtn = (text, title, icon) => `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('${(text||'').toString().replace(/'/g, "&#39;") }').then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' }))" title="${title}" aria-label="${title}"><i class="${icon}"></i></button>`;
+                    const mailto = (email) => {
+                        if (!email) return '';
+                        const raw = String(email).trim();
+                        const escaped = raw.replace(/[&"<>]/g, c => ({'&':'&amp;','"':'&quot;','<':'&lt;','>':'&gt;'}[c]));
+                        return `<a href="mailto:${escaped}" onclick="window.location.href=this.href; return false;" class="btn btn-sm btn-outline-primary" title="Send email" aria-label="Send email"><i class="fas fa-paper-plane"></i></a>`;
+                    };
+                    const telto = (phone) => {
+                        if (!phone) return '';
+                        const sanitized = String(phone).replace(/[^+\d]/g, '');
+                        return `<a href="tel:${sanitized}" onclick="window.location.href=this.href; return false;" class="btn btn-sm btn-outline-primary" title="Call" aria-label="Call"><i class="fas fa-phone"></i></a>`;
+                    };
+                    const mapsBtn = (q) => q ? `<a href="#" onclick="return handleAction(()=>window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}','_blank'))" class="btn btn-sm btn-outline-success" title="Open in Maps" aria-label="Open in Maps"><i class="fas fa-map-marked-alt"></i></a>` : '';
+                    const row = (icon, label, value, actions = '') => `
+                        <tr>
+                            <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
+                            <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
+                        </tr>`;
+                    
+                    // Format date helper (use global if available, otherwise simple format)
+                    const formatDateDisplay = (dateStr) => {
+                        if (!dateStr) return '—';
+                        if (typeof window.formatDateDisplay === 'function') {
+                            return window.formatDateDisplay(dateStr);
+                        }
+                        try {
+                            const d = new Date(dateStr);
+                            return d.toLocaleDateString();
+                        } catch (e) {
+                            return dateStr;
+                        }
+                    };
+                    
+                    // Compose QR payload with all fields
+                    const lines = [
+                        `Full Name: ${data.full_name || '-'}`,
+                        `Member ID: ${data.member_id || '-'}`,
+                        `Membership Type: ${data.membership_type || '-'}`,
+                        `Member Type: ${data.member_type || '-'}`,
+                        `Phone: ${data.phone_number || '-'}`,
+                        `Email: ${data.email || '-'}`,
+                        `Gender: ${data.gender ? data.gender.charAt(0).toUpperCase()+data.gender.slice(1) : '-'}`,
+                        `Date of Birth: ${formatDateDisplay(data.date_of_birth)}`,
+                        `Education Level: ${data.education_level || '-'}`,
+                        `Profession: ${data.profession || '-'}`,
+                        `NIDA Number: ${data.nida_number || '-'}`,
+                        `Region: ${data.region || '-'}`,
+                        `District: ${data.district || '-'}`,
+                        `Ward: ${data.ward || '-'}`,
+                        `Street: ${data.street || '-'}`,
+                        `Address: ${data.address || '-'}`,
+                        `Living with family: ${data.living_with_family || '-'}`,
+                        `Family relationship: ${data.family_relationship || '-'}`,
+                        `Tribe: ${(data.tribe || '-') + (data.other_tribe ? ` (${data.other_tribe})` : '')}`,
+                    ];
+                    if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
+                        lines.push(`Guardian Name: ${data.guardian_name || '-'}`);
+                        lines.push(`Guardian Phone: ${data.guardian_phone || '-'}`);
+                        lines.push(`Guardian Relationship: ${data.guardian_relationship || '-'}`);
+                    }
+                    if (archiveReason) {
+                        lines.push(`Archive Reason: ${archiveReason}`);
+                    }
+                    const qrPayload = lines.join('\n');
+                    
+                    // Build HTML
+                    // Get profile picture URL - handle both old storage path and new assets path
+                    const baseUrl = '{{ url("/") }}';
+                    let profilePictureUrl = '';
+                    if (data.profile_picture) {
+                        if (data.profile_picture.startsWith('assets/images/')) {
+                            profilePictureUrl = `${baseUrl}/${data.profile_picture}`;
+                        } else {
+                            profilePictureUrl = `${baseUrl}/storage/${data.profile_picture}`;
+                        }
+                    }
+                    
+                    let html = `<div id="memberDetailsPrint" class="p-2">
+                        <div class="d-flex justify-content-center gap-4 mb-3">
+                            ${profilePictureUrl ? `
+                            <div class="text-center">
+                                <img src="${profilePictureUrl}" alt="Passport Photo" class="img-thumbnail" style="width: 150px; height: 180px; object-fit: cover; border: 2px solid #5b2a86; border-radius: 8px;"/>
+                                <div class="text-muted small mt-1">Passport Photo</div>
+                            </div>
+                            ` : ''}
+                            <div class="text-center">
+                                <img id="inlineQrImg" alt="Member details QR" width="120" height="120"/>
+                                <div class="text-muted small mt-1">Scan for details</div>
+                            </div>
+                        </div>
+                        <div class="small text-uppercase text-muted mt-2 mb-1">Personal</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${row('fas fa-user', 'Full Name', data.full_name)}
+                            ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
+                            ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
+                            ${row('fas fa-user-tag', 'Member Type', data.member_type)}
+                            ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
+                            ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
+                            ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase()+data.gender.slice(1), (data.gender||'').toLowerCase()==='male' ? 'primary' : 'danger') : '—')}
+                            ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
+                            ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
+                            ${row('fas fa-briefcase', 'Profession', data.profession)}
+                            ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
+                        </tbody></table>
+                        <div class="small text-uppercase text-muted mt-3 mb-1">Location</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region,'Tanzania'].filter(Boolean).join(', ')))}
+                            ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
+                            ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
+                            ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street,data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
+                            ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address,data.street,data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
+                        </tbody></table>
+                        <div class="small text-uppercase text-muted mt-3 mb-1">Family</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${(() => { 
+                                const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_phone_number || data.spouse_email;
+                                const hasChildren = Array.isArray(data.children) && data.children.length > 0;
+                                const inferred = (hasSpouseDetails || hasChildren) ? 'yes' : 'no';
+                                const v = (data.living_with_family && typeof data.living_with_family === 'string') ? data.living_with_family.toLowerCase() : '';
+                                const value = v === 'yes' || v === 'no' ? v : inferred;
+                                const pretty = value === 'yes' ? 'Yes' : (value === 'no' ? 'No' : '—');
+                                return row('fas fa-users', 'Living with family', pretty);
+                            })()}
+                            ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
+                            ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
+                        </tbody></table>`;
+                    
+                    // Add spouse section if available
+                    const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_email || data.spouse_phone_number;
+                    if (hasSpouseDetails) {
+                        let spouseData, spouseTitle, spouseTribe, spouseId;
+                        if (data.spouse_details) {
+                            spouseData = data.spouse_details;
+                            spouseTitle = (data.gender === 'male' ? 'Wife' : 'Husband');
+                            spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
+                            spouseId = spouseData.id;
+                        } else if (data.main_member_details) {
+                            spouseData = data.main_member_details;
+                            spouseTitle = (data.gender === 'male' ? 'Husband' : 'Wife');
+                            spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
+                            spouseId = spouseData.id;
+                        } else {
+                            spouseData = data;
+                            spouseTitle = (data.member_type === 'father' ? 'Wife' : (data.member_type === 'mother' ? 'Husband' : 'Spouse'));
+                            spouseTribe = (data.spouse_tribe || '') + (data.spouse_tribe === 'Other' && data.spouse_other_tribe ? ` (${data.spouse_other_tribe})` : '');
+                            spouseId = data.spouse_member_id;
+                        }
+                        html += `
+                        <div class="small text-uppercase text-muted mt-3 mb-1">${spouseTitle}</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
+                            ${row('fas fa-user', spouseTitle+' Name', spouseData.full_name || data.spouse_full_name)}
+                            ${row('fas fa-church', spouseTitle+' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
+                            ${row('fas fa-id-badge', spouseTitle+' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
+                            ${row('fas fa-birthday-cake', spouseTitle+' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
+                            ${row('fas fa-graduation-cap', spouseTitle+' Education', spouseData.education_level || data.spouse_education_level)}
+                            ${row('fas fa-briefcase', spouseTitle+' Profession', spouseData.profession || data.spouse_profession)}
+                            ${row('fas fa-id-card', spouseTitle+' NIDA', spouseData.nida_number || data.spouse_nida_number)}
+                            ${row('fas fa-envelope', spouseTitle+' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
+                            ${row('fas fa-phone', spouseTitle+' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
+                            ${row('fas fa-flag', spouseTitle+' Tribe', spouseTribe)}
+                        </tbody></table>`;
+                    }
+                    
+                    // Guardian section
+                    if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
+                        html += `<div class="small text-uppercase text-muted mt-3 mb-1">Guardian</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
+                            ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
+                            ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
+                        </tbody></table>`;
+                    }
+                    
+                    // Children section
+                    if (data.membership_type === 'permanent' && (data.member_type === 'father' || data.member_type === 'mother') && Array.isArray(data.children) && data.children.length > 0) {
+                        html += `<div class="small text-uppercase text-muted mt-3 mb-1">Children</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
+                        data.children.forEach(child => {
+                            html += `<tr><td>${child.full_name || '-'}</td><td>${child.gender || '-'}</td><td>${formatDateDisplay(child.date_of_birth)}</td></tr>`;
+                        });
+                        html += `</tbody></table>`;
+                    }
+                    
+                    // Archive info
+                    if (isArchived) {
+                        html += `<div class="small text-uppercase text-muted mt-3 mb-1">Archive Info</div>
+                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                            ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
+                            ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
+                        </tbody></table>`;
+                    }
+                    html += `</div>`;
+                    
+                    // Update modal content
+                    const memberDetailsBody = document.getElementById('memberDetailsBody');
+                    if (memberDetailsBody) {
+                        memberDetailsBody.innerHTML = html;
+                    }
+                    
+                    // Show attendance history button and store member ID
+                    const attendanceBtn = document.getElementById('btnAttendanceHistory');
+                    if (attendanceBtn) {
+                        attendanceBtn.style.display = 'inline-block';
+                        attendanceBtn.setAttribute('data-member-id', m.id);
+                    }
+                    
+                    const idCardBtn = document.getElementById('btnIdCard');
+                    if (idCardBtn) {
+                        idCardBtn.style.display = 'inline-block';
+                        idCardBtn.setAttribute('data-member-id', m.id);
+                    }
+                    
+                    // Show modal
+                    const detailsModalEl = document.getElementById('memberDetailsModal');
+                    if (detailsModalEl) {
+                        const modal = new bootstrap.Modal(detailsModalEl);
+                        
+                        // Attach refresh handler when modal closes (attach it fresh each time)
+                        const refreshHandler = function() {
+                            console.log('Member details modal closed - refreshing page...');
+                            // Remove the listener to prevent multiple refreshes
+                            detailsModalEl.removeEventListener('hidden.bs.modal', refreshHandler);
+                            // Refresh the page
+                            window.location.reload();
+                        };
+                        
+                        // Remove any existing listeners and attach fresh one
+                        detailsModalEl.removeEventListener('hidden.bs.modal', refreshHandler);
+                        detailsModalEl.addEventListener('hidden.bs.modal', refreshHandler);
+                        
+                        // Set QR image src
+                        const qrData = encodeURIComponent(qrPayload);
+                        setTimeout(() => {
+                            const img = document.getElementById('inlineQrImg');
+                            if (img) {
+                                try {
+                                    const spinner = document.createElement('div');
+                                    spinner.id = 'qrSpinner';
+                                    spinner.className = 'spinner-border text-primary';
+                                    spinner.setAttribute('role', 'status');
+                                    if (img.parentElement) img.parentElement.insertBefore(spinner, img);
+                                    img.style.display = 'none';
+                                    img.onload = () => { spinner && (spinner.style.display = 'none'); img.style.display = 'inline-block'; };
+                                    img.onerror = () => { spinner && (spinner.style.display = 'none'); };
+                                } catch (e) {}
+                                img.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
+                            }
+                        }, 0);
+                        modal.show();
+                        
+                        // Attach actions for export/print (if functions exist)
+                        const btnPrint = document.getElementById('btnPrintDetails');
+                        const btnCsv = document.getElementById('btnDownloadExcel');
+                        const btnPdf = document.getElementById('btnDownloadPDF');
+                        if (btnPrint && typeof confirmThen === 'function' && typeof printMemberDetails === 'function') {
+                            btnPrint.onclick = () => confirmThen('Proceed to print this member details?', () => printMemberDetails());
+                        }
+                        if (btnCsv && typeof confirmThen === 'function' && typeof downloadMemberCSV === 'function') {
+                            btnCsv.onclick = () => confirmThen('Download details as CSV?', () => downloadMemberCSV(m));
+                        }
+                        if (btnPdf && typeof confirmThen === 'function' && typeof downloadMemberPDF === 'function') {
+                            btnPdf.onclick = () => confirmThen('Generate a PDF of these details?', () => downloadMemberPDF());
+                        }
+                        
+                        // Copy all details
+                        const btnCopyAll = document.getElementById('btnCopyAllDetails');
+                        if (btnCopyAll && typeof confirmThen === 'function') {
+                            btnCopyAll.onclick = () => confirmThen('Copy all details to clipboard?', () => { 
+                                navigator.clipboard.writeText(`${qrPayload}`).then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' })); 
+                            });
+                        }
+                    }
+                })
+                .catch((err) => {
+                    const memberDetailsBody = document.getElementById('memberDetailsBody');
+                    if (memberDetailsBody) {
+                        memberDetailsBody.innerHTML = `
+                            <div class="text-danger">Failed to load member details. ${err && err.message ? '('+err.message+')' : ''}</div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="window.viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
+                            </div>`;
+                    }
+                    const detailsModalEl = document.getElementById('memberDetailsModal');
+                    if (detailsModalEl) {
+                        new bootstrap.Modal(detailsModalEl).show();
+                    }
+                });
+        };
+        
+        console.log('✓ viewDetails and openEdit functions defined - available immediately');
         </script>
         <script>
         // Archive member logic (robust, attaches only once)
@@ -2170,6 +2891,41 @@
             });
             form._archiveHandlerAttached = true;
         }
+        // Additional cleanup after page fully loads (backup)
+        setTimeout(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const allowedParams = ['tab', 'show', 'search', 'gender', 'region', 'district', 'ward'];
+            const formFields = [
+                'member_id', 'full_name', 'email', 'phone_number', 'date_of_birth',
+                'education_level', 'profession', 'nida_number', 'membership_type', 'member_type',
+                'living_with_family', 'family_relationship', 'guardian_name', 'guardian_phone',
+                'guardian_relationship', 'marital_status', 'spouse_full_name', 'spouse_date_of_birth',
+                'spouse_education_level', 'spouse_profession', 'spouse_nida_number', 'spouse_email',
+                'spouse_phone_number', 'spouse_church_member', 'tribe', 'other_tribe', 'street',
+                'address', 'spouse_tribe', 'spouse_other_tribe'
+            ];
+            let urlChanged = false;
+            
+            for (const [key, value] of urlParams.entries()) {
+                // Remove form fields
+                if (formFields.includes(key)) {
+                    urlParams.delete(key);
+                    urlChanged = true;
+                }
+                // Remove empty allowed params
+                else if (allowedParams.includes(key) && (!value || value.trim() === '')) {
+                    urlParams.delete(key);
+                    urlChanged = true;
+                }
+            }
+            
+            if (urlChanged) {
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+                console.log('✓ URL cleaned again (backup cleanup)');
+            }
+        }, 100);
+        
         // Activate correct tab based on ?tab=permanent|temporary|archived
         (function() {
             function getQueryParam(name) {
@@ -2193,21 +2949,74 @@
         })();
         
         // Auto-show member details modal if redirected from /members/{id}
-        @if(session('show_member_id'))
-            document.addEventListener('DOMContentLoaded', function() {
-                const memberId = {{ session('show_member_id') }};
-                if (memberId && typeof window.viewDetails === 'function') {
-                    // Small delay to ensure all scripts are loaded
-                    setTimeout(function() {
-                        window.viewDetails(memberId);
-                    }, 500);
+        // Use URL parameter instead of session to avoid infinite loops
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const showMemberId = urlParams.get('show');
+            if (showMemberId) {
+                const memberId = parseInt(showMemberId);
+                let attempts = 0;
+                const maxAttempts = 30; // 30 attempts * 200ms = 6 seconds max wait
+                
+                // Function to check if full implementation is loaded
+                const checkAndShow = function() {
+                    attempts++;
+                    
+                    // Check if viewDetails function is available
+                    if (typeof window.viewDetails === 'function') {
+                        console.log('Full implementation loaded, showing member details for ID:', memberId);
+                        // Remove the parameter from URL first to prevent re-triggering
+                        urlParams.delete('show');
+                        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                        window.history.replaceState({}, '', newUrl);
+                        
+                        // Call viewDetails
+                        try {
+                            window.viewDetails(memberId);
+                        } catch (e) {
+                            console.error('Error calling viewDetails:', e);
+                            // Fallback: try to find and click the view button
+                            const viewBtn = document.querySelector(`[onclick*="viewDetails(${memberId})"]`);
+                            if (viewBtn) {
+                                viewBtn.click();
+                            }
+                        }
+                    } else if (attempts < maxAttempts) {
+                        // Try again after a short delay
+                        setTimeout(checkAndShow, 200);
+                    } else {
+                        console.warn('Full implementation not loaded after', maxAttempts, 'attempts. Trying fallback.');
+                        // Final fallback: try to find and click the view button
+                        urlParams.delete('show');
+                        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                        window.history.replaceState({}, '', newUrl);
+                        const viewBtn = document.querySelector(`[onclick*="viewDetails(${memberId})"]`);
+                        if (viewBtn) {
+                            viewBtn.click();
+                        } else {
+                            console.error('Could not find view button for member ID:', memberId);
+                        }
+                    }
+                };
+                
+                // Start checking after DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        setTimeout(checkAndShow, 500); // Wait 500ms after DOMContentLoaded
+                    });
+                } else {
+                    // DOM already loaded, start checking immediately
+                    setTimeout(checkAndShow, 500);
                 }
-            });
-        @endif
+            }
+        })();
         </script>
         <script>
             // Globals to share state between details/print
-            let currentDetailsMember = null;
+            // Use window.currentDetailsMember instead of local variable to avoid conflicts
+            if (typeof window.currentDetailsMember === 'undefined') {
+                window.currentDetailsMember = null;
+            }
             function formatDateDisplay(value){
                 if(!value) return '-';
                 try{
@@ -2350,443 +3159,48 @@
                 }
             });
 
-            function viewDetails(id) {
-                console.log('viewDetails called with ID:', id);
-                if (!id) {
-                    console.error('viewDetails: No ID provided');
-                    return;
-                }
-                fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
-                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(async m => {
-                        console.log('Member details loaded:', m);
-                        currentDetailsMember = m;
-                        
-                        // Check if we have spouse details from the API response
-                        if (m.spouse_details) {
-                            console.log('Spouse details loaded from API:', m.spouse_details);
-                            m.mainMemberSpouseInfo = m.spouse_details;
-                        } else if (m.main_member_details) {
-                            console.log('Main member details loaded from API:', m.main_member_details);
-                            m.mainMemberSpouseInfo = m.main_member_details;
-                        }
-                        // Determine if archived (by checking if member_snapshot exists)
-                        let isArchived = false;
-                        let snap = null;
-                        let archiveReason = null;
-                        if (m.member_snapshot) {
-                            isArchived = true;
-                            snap = m.member_snapshot;
-                            archiveReason = m.reason || null;
-                        }
-                        const data = isArchived ? snap : m;
-                        // Helper functions
-                        const actionCell = (content, actionsHtml = '') => `<div class="d-flex align-items-center justify-content-between">${content}<span class="ms-2 d-inline-flex gap-2">${actionsHtml}</span></div>`;
-                        const badge = (text, tone = 'secondary') => `<span class="badge bg-${tone}">${text}</span>`;
-                        const copyBtn = (text, title, icon) => `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('${(text||'').toString().replace(/'/g, "&#39;") }').then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' }))" title="${title}" aria-label="${title}"><i class="${icon}"></i></button>`;
-                        const mailto = (email) => {
-                            if (!email) return '';
-                            const raw = String(email).trim();
-                            const escaped = raw.replace(/[&"<>]/g, c => ({'&':'&amp;','"':'&quot;','<':'&lt;','>':'&gt;'}[c]));
-                            return `<a href="mailto:${escaped}" onclick="window.location.href=this.href; return false;" class="btn btn-sm btn-outline-primary" title="Send email" aria-label="Send email"><i class="fas fa-paper-plane"></i></a>`;
-                        };
-                        const telto = (phone) => {
-                            if (!phone) return '';
-                            const sanitized = String(phone).replace(/[^+\d]/g, '');
-                            return `<a href="tel:${sanitized}" onclick="window.location.href=this.href; return false;" class="btn btn-sm btn-outline-primary" title="Call" aria-label="Call"><i class="fas fa-phone"></i></a>`;
-                        };
-                        const mapsBtn = (q) => q ? `<a href="#" onclick="return handleAction(()=>window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}','_blank'))" class="btn btn-sm btn-outline-success" title="Open in Maps" aria-label="Open in Maps"><i class="fas fa-map-marked-alt"></i></a>` : '';
-                        const row = (icon, label, value, actions = '') => `
-                            <tr>
-                                <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
-                                <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
-                            </tr>`;
-                        // Compose QR payload with all fields
-                        const lines = [
-                            `Full Name: ${data.full_name || '-'}`,
-                            `Member ID: ${data.member_id || '-'}`,
-                            `Membership Type: ${data.membership_type || '-'}`,
-                            `Member Type: ${data.member_type || '-'}`,
-                            `Phone: ${data.phone_number || '-'}`,
-                            `Email: ${data.email || '-'}`,
-                            `Gender: ${data.gender ? data.gender.charAt(0).toUpperCase()+data.gender.slice(1) : '-'}`,
-                            `Date of Birth: ${formatDateDisplay(data.date_of_birth)}`,
-                            `Education Level: ${data.education_level || '-'}`,
-                            `Profession: ${data.profession || '-'}`,
-                            `NIDA Number: ${data.nida_number || '-'}`,
-                            `Region: ${data.region || '-'}`,
-                            `District: ${data.district || '-'}`,
-                            `Ward: ${data.ward || '-'}`,
-                            `Street: ${data.street || '-'}`,
-                            `Address: ${data.address || '-'}`,
-                            `Living with family: ${data.living_with_family || '-'}`,
-                            `Family relationship: ${data.family_relationship || '-'}`,
-                            `Tribe: ${(data.tribe || '-') + (data.other_tribe ? ` (${data.other_tribe})` : '')}`,
-                        ];
-                        if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
-                            lines.push(`Guardian Name: ${data.guardian_name || '-'}`);
-                            lines.push(`Guardian Phone: ${data.guardian_phone || '-'}`);
-                            lines.push(`Guardian Relationship: ${data.guardian_relationship || '-'}`);
-                        }
-                        if (archiveReason) {
-                            lines.push(`Archive Reason: ${archiveReason}`);
-                        }
-                        const qrPayload = lines.join('\n');
-                        // Build HTML
-                        // Get profile picture URL - handle both old storage path and new assets path
-                        const baseUrl = '{{ url("/") }}';
-                        let profilePictureUrl = '';
-                        if (data.profile_picture) {
-                            if (data.profile_picture.startsWith('assets/images/')) {
-                                profilePictureUrl = `${baseUrl}/${data.profile_picture}`;
-                            } else {
-                                profilePictureUrl = `${baseUrl}/storage/${data.profile_picture}`;
-                            }
-                        }
-                        
-                        let html = `<div id=\"memberDetailsPrint\" class=\"p-2\">
-                            <div class=\"d-flex justify-content-center gap-4 mb-3\">
-                                ${profilePictureUrl ? `
-                                <div class=\"text-center\">
-                                    <img src=\"${profilePictureUrl}\" alt=\"Passport Photo\" class=\"img-thumbnail\" style=\"width: 150px; height: 180px; object-fit: cover; border: 2px solid #5b2a86; border-radius: 8px;\"/>
-                                    <div class=\"text-muted small mt-1\">Passport Photo</div>
-                                </div>
-                                ` : ''}
-                                <div class=\"text-center\">
-                                    <img id=\"inlineQrImg\" alt=\"Member details QR\" width=\"120\" height=\"120\"/>
-                                    <div class=\"text-muted small mt-1\">Scan for details</div>
-                                </div>
-                            </div>
-                            <div class=\"small text-uppercase text-muted mt-2 mb-1\">Personal</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('fas fa-user', 'Full Name', data.full_name)}
-                                ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
-                                ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
-                                ${row('fas fa-user-tag', 'Member Type', data.member_type)}
-                                ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
-                                ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
-                                ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase()+data.gender.slice(1), (data.gender||'').toLowerCase()==='male' ? 'primary' : 'danger') : '—')}
-                                ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
-                                ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
-                                ${row('fas fa-briefcase', 'Profession', data.profession)}
-                                ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
-                            </tbody></table>
-                            <div class=\"small text-uppercase text-muted mt-3 mb-1\">Location</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region,'Tanzania'].filter(Boolean).join(', ')))}
-                                ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
-                                ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
-                                ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street,data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
-                                ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address,data.street,data.ward,data.district,data.region,'Tanzania'].filter(Boolean).join(', ')))}
-                            </tbody></table>
-                            <div class=\"small text-uppercase text-muted mt-3 mb-1\">Family</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${(() => { 
-                                    // Check if spouse information is present
-                                    const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_phone_number || data.spouse_email;
-                                    const hasChildren = Array.isArray(data.children) && data.children.length > 0;
-                                    const inferred = (hasSpouseDetails || hasChildren) ? 'yes' : 'no';
-                                    const v = (data.living_with_family && typeof data.living_with_family === 'string') ? data.living_with_family.toLowerCase() : '';
-                                    const value = v === 'yes' || v === 'no' ? v : inferred;
-                                    const pretty = value === 'yes' ? 'Yes' : (value === 'no' ? 'No' : '—');
-                                    return row('fas fa-users', 'Living with family', pretty);
-                                })()}
-                                ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
-                                ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
-                            </tbody></table>
-                            ${(() => {
-                                // Check if we have spouse information to display
-                                const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_email || data.spouse_phone_number;
-                                
-                                if (hasSpouseDetails) {
-                                    let spouseData, spouseTitle, spouseTribe, spouseId;
-                                    
-                                    if (data.spouse_details) {
-                                        // This member has a spouse member record
-                                        spouseData = data.spouse_details;
-                                        spouseTitle = (data.gender === 'male' ? 'Wife' : 'Husband');
-                                        spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
-                                        spouseId = spouseData.id;
-                                    } else if (data.main_member_details) {
-                                        // This is a spouse member - show main member info
-                                        spouseData = data.main_member_details;
-                                        spouseTitle = (data.gender === 'male' ? 'Husband' : 'Wife');
-                                        spouseTribe = (spouseData.tribe || '') + (spouseData.tribe === 'Other' && spouseData.other_tribe ? ` (${spouseData.other_tribe})` : '');
-                                        spouseId = spouseData.id;
-                                    } else {
-                                        // Fallback to old spouse fields
-                                        spouseData = data;
-                                        spouseTitle = (data.member_type === 'father' ? 'Wife' : (data.member_type === 'mother' ? 'Husband' : 'Spouse'));
-                                        spouseTribe = (data.spouse_tribe || '') + (data.spouse_tribe === 'Other' && data.spouse_other_tribe ? ` (${data.spouse_other_tribe})` : '');
-                                        spouseId = data.spouse_member_id;
-                                    }
-                                    
-                                    return `
-                                    <div class=\"small text-uppercase text-muted mt-3 mb-1\">${spouseTitle}</div>
-                                    <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                        ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
-                                        ${row('fas fa-user', spouseTitle+' Name', spouseData.full_name || data.spouse_full_name)}
-                                        ${row('fas fa-church', spouseTitle+' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
-                                        ${row('fas fa-id-badge', spouseTitle+' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
-                                        ${row('fas fa-birthday-cake', spouseTitle+' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
-                                        ${row('fas fa-graduation-cap', spouseTitle+' Education', spouseData.education_level || data.spouse_education_level)}
-                                        ${row('fas fa-briefcase', spouseTitle+' Profession', spouseData.profession || data.spouse_profession)}
-                                        ${row('fas fa-id-card', spouseTitle+' NIDA', spouseData.nida_number || data.spouse_nida_number)}
-                                        ${row('fas fa-envelope', spouseTitle+' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
-                                        ${row('fas fa-phone', spouseTitle+' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
-                                        ${row('fas fa-flag', spouseTitle+' Tribe', spouseTribe)}
-                                    </tbody></table>`;
-                                }
-                                return '';
-                            })()}`;
-                        // Guardian section (for temporary and independent members)
-                        if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
-                            html += `<div class=\"small text-uppercase text-muted mt-3 mb-1\">Guardian</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
-                                ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
-                                ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
-                            </tbody></table>`;
-                        }
-                        // Children section (for permanent father/mother only)
-                        if (data.membership_type === 'permanent' && (data.member_type === 'father' || data.member_type === 'mother') && Array.isArray(data.children) && data.children.length > 0) {
-                            html += `<div class=\"small text-uppercase text-muted mt-3 mb-1\">Children</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
-                            data.children.forEach(child => {
-                                html += `<tr><td>${child.full_name || '-'}</td><td>${child.gender || '-'}</td><td>${formatDateDisplay(child.date_of_birth)}</td></tr>`;
-                            });
-                            html += `</tbody></table>`;
-                        }
-                        // Archive info (for archived)
-                        if (isArchived) {
-                            html += `<div class=\"small text-uppercase text-muted mt-3 mb-1\">Archive Info</div>
-                            <table class=\"table table-bordered table-striped align-middle interactive-table\"><tbody>
-                                ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
-                                ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
-                            </tbody></table>`;
-                        }
-                        html += `</div>`;
-                        document.getElementById('memberDetailsBody').innerHTML = html;
-                        
-                        // Show attendance history button and store member ID
-                        const attendanceBtn = document.getElementById('btnAttendanceHistory');
-                        attendanceBtn.style.display = 'inline-block';
-                        attendanceBtn.setAttribute('data-member-id', m.id);
-                        
-                        const idCardBtn = document.getElementById('btnIdCard');
-                        idCardBtn.style.display = 'inline-block';
-                        idCardBtn.setAttribute('data-member-id', m.id);
-                        
-                        const detailsModalEl = document.getElementById('memberDetailsModal');
-                        const modal = new bootstrap.Modal(detailsModalEl);
-                        // Set QR image src to encoded details (no link shown when scanning)
-                        const qrData = encodeURIComponent(qrPayload);
-                        setTimeout(() => {
-                            const img = document.getElementById('inlineQrImg');
-                            if (img) {
-                                try {
-                                    const spinner = document.createElement('div');
-                                    spinner.id = 'qrSpinner';
-                                    spinner.className = 'spinner-border text-primary';
-                                    spinner.setAttribute('role', 'status');
-                                    if (img.parentElement) img.parentElement.insertBefore(spinner, img);
-                                    img.style.display = 'none';
-                                    img.onload = () => { spinner && (spinner.style.display = 'none'); img.style.display = 'inline-block'; };
-                                    img.onerror = () => { spinner && (spinner.style.display = 'none'); };
-                                } catch (e) {}
-                                img.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
-                            }
-                        }, 0);
-                        modal.show();
-                        // Attach actions for export/print
-                        const btnPrint = document.getElementById('btnPrintDetails');
-                        const btnCsv = document.getElementById('btnDownloadExcel');
-                        const btnPdf = document.getElementById('btnDownloadPDF');
-                        btnPrint && (btnPrint.onclick = () => confirmThen('Proceed to print this member details?', () => printMemberDetails()));
-                        btnCsv && (btnCsv.onclick = () => confirmThen('Download details as CSV?', () => downloadMemberCSV(m)));
-                        btnPdf && (btnPdf.onclick = () => confirmThen('Generate a PDF of these details?', () => downloadMemberPDF()))
-                        // Copy all details
-                        const btnCopyAll = document.getElementById('btnCopyAllDetails');
-                        btnCopyAll && (btnCopyAll.onclick = () => confirmThen('Copy all details to clipboard?', () => { navigator.clipboard.writeText(`${qrPayload}`).then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' })); }));
-                        // Header edit buttons removed per requirement
-                    })
-                    .catch((err) => {
-                        document.getElementById('memberDetailsBody').innerHTML = `
-                            <div class="text-danger">Failed to load member details. ${err && err.message ? '('+err.message+')' : ''}</div>
-                            <div class="mt-2">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
-                            </div>`;
-                        new bootstrap.Modal(document.getElementById('memberDetailsModal')).show();
-                    });
+            // viewDetails is already defined in head - verify it's still there
+            // Only redefine if it's completely missing (not if it exists but doesn't have 'fetch')
+            // This prevents overwriting the full implementation
+            if (typeof window.viewDetails !== 'function') {
+                console.warn('viewDetails function missing, defining placeholder...');
+                // Function should already be defined in head, but if not, define a placeholder
+                window.viewDetails = function(id) {
+                    console.error('viewDetails function not properly loaded');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Function Not Available',
+                            text: 'Please refresh the page.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                };
+            } else {
+                console.log('✓ viewDetails function verified - available');
             }
+            
+            // Use window.currentDetailsMember for backward compatibility
+            // All references should use window.currentDetailsMember to avoid conflicts
 
 			// Ensure openEdit sets state for chooser and header buttons
- 			let currentEditMember = null;
-            function openEdit(id) {
-				console.log('openEdit called with ID:', id);
-				confirmThen('Open edit for this member?', () => {
-					console.log('Edit confirmed for member ID:', id);
-					fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
-					.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(m => {
-						console.log('Member data loaded:', m);
-						currentEditMember = m;
-						const chooser = new bootstrap.Modal(document.getElementById('editSectionChooserModal'));
-						chooser.show();
-					})
-					.catch(err => {
-						console.error('Error loading member:', err);
-						Swal.fire({ icon: 'error', title: 'Failed to load member', text: err && err.message ? err.message : 'Please try again.' });
-					});
-				});
-			}
+			// currentEditMember is now stored in window.currentEditMember (defined in head)
+			// Use window.currentEditMember instead of local variable to avoid conflicts
+			
+            // openEdit is already defined in head - this is just for backward compatibility
+            // But we'll keep it here in case it's called directly
+            if (typeof window.openEdit !== 'function') {
+                window.openEdit = function(id) {
+                    console.error('openEdit not properly loaded');
+                };
+            }
+            
+            // EDIT functionality removed by request
 
             // Wire chooser buttons to open respective modals with prefill
             // Ensure these are attached after DOM is ready
-            function setupEditButtonListeners() {
-                const btnEditPersonal = document.getElementById('btnEditPersonal');
-                const btnEditLocation = document.getElementById('btnEditLocation');
-                const btnEditFamily = document.getElementById('btnEditFamily');
-                
-                if (btnEditPersonal) {
-                    btnEditPersonal.addEventListener('click', () => {
-                        if (!currentEditMember) return;
-                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                        chooser && chooser.hide();
-                        document.getElementById('edit_personal_id').value = currentEditMember.id;
-                        document.getElementById('edit_personal_full_name').value = currentEditMember.full_name || '';
-                        document.getElementById('edit_personal_email').value = currentEditMember.email || '';
-                        document.getElementById('edit_personal_phone_number').value = currentEditMember.phone_number || '';
-                        document.getElementById('edit_personal_gender').value = currentEditMember.gender || '';
-                        document.getElementById('edit_personal_date_of_birth').value = currentEditMember.date_of_birth || '';
-                        document.getElementById('edit_personal_nida_number').value = currentEditMember.nida_number || '';
-                        document.getElementById('edit_personal_membership_type').value = currentEditMember.membership_type || 'permanent';
-                        // tribe
-                        populateSelect(document.getElementById('edit_personal_tribe'), tribeList, 'Select tribe');
-                        const tribeEl = document.getElementById('edit_personal_tribe');
-                        const otherGroup = document.getElementById('edit_personal_other_tribe_group');
-                        const otherInput = document.getElementById('edit_personal_other_tribe');
-                        tribeEl.value = tribeList.includes(currentEditMember.tribe) ? currentEditMember.tribe : 'Other';
-                        otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none';
-                        otherInput.value = currentEditMember.other_tribe || '';
-                        tribeEl.onchange = () => { otherGroup.style.display = tribeEl.value === 'Other' ? '' : 'none'; if (tribeEl.value !== 'Other') otherInput.value = ''; };
-                        new bootstrap.Modal(document.getElementById('memberEditPersonalModal')).show();
-                    });
-                }
-
-                if (btnEditLocation) {
-                    btnEditLocation.addEventListener('click', () => {
-                        if (!currentEditMember) return;
-                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                        chooser && chooser.hide();
-                        document.getElementById('edit_location_id').value = currentEditMember.id;
-                        ensureLocationsLoaded().then(() => {
-                            populateSelect(document.getElementById('edit_location_region'), Object.keys(tzLocations), 'Select region');
-                            const regionEl = document.getElementById('edit_location_region');
-                            const districtEl = document.getElementById('edit_location_district');
-                            const wardEl = document.getElementById('edit_location_ward');
-                            function updateDistricts() {
-                                populateSelect(districtEl, regionEl.value ? Object.keys(tzLocations[regionEl.value] || {}) : [], 'Select district');
-                                updateWards();
-                            }
-                            function updateWards() {
-                                const wards = regionEl.value && districtEl.value ? (tzLocations[regionEl.value]?.[districtEl.value] || []) : [];
-                                populateSelect(wardEl, wards, 'Select ward');
-                            }
-                            regionEl.onchange = updateDistricts;
-                            districtEl.onchange = updateWards;
-                            regionEl.value = currentEditMember.region || '';
-                            updateDistricts();
-                            districtEl.value = currentEditMember.district || '';
-                            updateWards();
-                            wardEl.value = currentEditMember.ward || '';
-                        });
-                        document.getElementById('edit_location_street').value = currentEditMember.street || '';
-                        document.getElementById('edit_location_address').value = currentEditMember.address || '';
-                        new bootstrap.Modal(document.getElementById('memberEditLocationModal')).show();
-                    });
-                }
-
-                if (btnEditFamily) {
-                    btnEditFamily.addEventListener('click', () => {
-                        if (!currentEditMember) return;
-                        const chooser = bootstrap.Modal.getInstance(document.getElementById('editSectionChooserModal'));
-                        chooser && chooser.hide();
-                        
-                        const member = currentEditMember;
-                        document.getElementById('edit_family_id').value = member.id;
-                        document.getElementById('edit_family_member_type').value = member.member_type || '';
-                        document.getElementById('edit_family_membership_type').value = member.membership_type || '';
-                        
-                        // Show/hide sections based on member type
-                        const maritalSection = document.getElementById('edit_family_marital_section');
-                        const guardianSection = document.getElementById('edit_family_guardian_section');
-                        const isPermanentFatherOrMother = (member.membership_type === 'permanent' && (member.member_type === 'father' || member.member_type === 'mother'));
-                        const isTemporaryOrIndependent = (member.membership_type === 'temporary' || (member.membership_type === 'permanent' && member.member_type === 'independent'));
-                        
-                        if (isPermanentFatherOrMother) {
-                            maritalSection.style.display = 'block';
-                            // Set marital status
-                            document.getElementById('edit_family_marital_status').value = member.marital_status || '';
-                            
-                            // Show/hide spouse section based on marital status
-                            const spouseSection = document.getElementById('edit_family_spouse_section');
-                            if (member.marital_status === 'married') {
-                                spouseSection.style.display = 'block';
-                                // Populate spouse fields
-                                document.getElementById('edit_family_spouse_full_name').value = member.spouse_full_name || '';
-                                document.getElementById('edit_family_spouse_date_of_birth').value = member.spouse_date_of_birth || '';
-                                document.getElementById('edit_family_spouse_education_level').value = member.spouse_education_level || '';
-                                document.getElementById('edit_family_spouse_profession').value = member.spouse_profession || '';
-                                document.getElementById('edit_family_spouse_nida_number').value = member.spouse_nida_number || '';
-                                document.getElementById('edit_family_spouse_email').value = member.spouse_email || '';
-                                document.getElementById('edit_family_spouse_phone_number').value = member.spouse_phone_number || '';
-                                document.getElementById('edit_family_spouse_church_member').value = member.spouse_church_member || '';
-                                
-                                // Spouse tribe
-                                const spouseTribeEl = document.getElementById('edit_family_spouse_tribe');
-                                populateSelect(spouseTribeEl, tribeList, 'Select tribe');
-                                if (member.spouse_tribe) {
-                                    spouseTribeEl.value = member.spouse_tribe;
-                                    if (member.spouse_tribe === 'Other') {
-                                        document.getElementById('edit_family_spouse_other_tribe_group').style.display = 'block';
-                                        document.getElementById('edit_family_spouse_other_tribe').value = member.spouse_other_tribe || '';
-                                    }
-                                }
-                            } else {
-                                spouseSection.style.display = 'none';
-                            }
-                        } else {
-                            maritalSection.style.display = 'none';
-                        }
-                        
-                        if (isTemporaryOrIndependent) {
-                            guardianSection.style.display = 'block';
-                            document.getElementById('edit_family_guardian_name').value = member.guardian_name || '';
-                            document.getElementById('edit_family_guardian_phone').value = member.guardian_phone || '';
-                            document.getElementById('edit_family_guardian_relationship').value = member.guardian_relationship || '';
-                        } else {
-                            guardianSection.style.display = 'none';
-                        }
-                        
-                        // Add event listener for marital status change
-                        const maritalStatusEl = document.getElementById('edit_family_marital_status');
-                        maritalStatusEl.onchange = function() {
-                            const spouseSection = document.getElementById('edit_family_spouse_section');
-                            spouseSection.style.display = this.value === 'married' ? 'block' : 'none';
-                        };
-                        
-                        // Add event listener for spouse tribe change
-                        const spouseTribeEl = document.getElementById('edit_family_spouse_tribe');
-                        spouseTribeEl.onchange = function() {
-                            const otherTribeGroup = document.getElementById('edit_family_spouse_other_tribe_group');
-                            otherTribeGroup.style.display = this.value === 'Other' ? 'block' : 'none';
-                        };
-                        
-                        new bootstrap.Modal(document.getElementById('memberEditFamilyModal')).show();
-                    });
-                }
-            }
+            // Legacy hook (old chooser buttons were removed). Keeping as no-op for safety.
+            function setupEditButtonListeners() { /* no-op */ }
 
             // Setup edit button listeners when DOM is ready
             if (document.readyState === 'loading') {
@@ -2795,397 +3209,248 @@
                 setupEditButtonListeners();
             }
 
-            // Submit handlers for section forms
-            function setupFormSubmitHandlers() {
-                const editPersonalForm = document.getElementById('editPersonalForm');
-                const editLocationForm = document.getElementById('editLocationForm');
-                const editFamilyForm = document.getElementById('editFamilyForm');
+            // Centralized handler for edit form submission - make it globally accessible
+            // Define it immediately at the start of scripts section
+            window.handleEditFormSubmit = function(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
                 
-                if (editPersonalForm) {
-                    editPersonalForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        const id = document.getElementById('edit_personal_id').value;
-                        if (!id) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
-                            return;
-                        }
-                        const fd = new FormData();
-                        // Required fields
-                        fd.append('full_name', document.getElementById('edit_personal_full_name').value);
-                        fd.append('phone_number', document.getElementById('edit_personal_phone_number').value);
-                        fd.append('membership_type', document.getElementById('edit_personal_membership_type').value);
-                        fd.append('gender', document.getElementById('edit_personal_gender').value);
-                        
-                        // Optional fields - only send if they have values
-                        const email = document.getElementById('edit_personal_email').value.trim();
-                        if (email) fd.append('email', email);
-                        
-                        const dateOfBirth = document.getElementById('edit_personal_date_of_birth').value;
-                        if (dateOfBirth) fd.append('date_of_birth', dateOfBirth);
-                        
-                        const nidaNumber = document.getElementById('edit_personal_nida_number').value;
-                        if (nidaNumber) fd.append('nida_number', nidaNumber);
-                        
-                        const tribeVal = document.getElementById('edit_personal_tribe').value;
-                        if (tribeVal && tribeVal !== 'Other') {
-                            fd.append('tribe', tribeVal);
-                        } else if (tribeVal === 'Other') {
-                            const otherTribe = document.getElementById('edit_personal_other_tribe').value;
-                            if (otherTribe) {
-                                fd.append('tribe', 'Other');
-                                fd.append('other_tribe', otherTribe);
-                            }
-                        }
-                        
-                        fd.append('_method', 'PUT');
-                        
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                        if (!csrfToken) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
-                            return;
-                        }
-                        
-                        fetch(`{{ url('/members') }}/${id}`, { 
-                            method: 'POST', 
-                            headers: { 
-                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
-                                'Accept': 'application/json'
-                            }, 
-                            body: fd 
-                        })
-                        .then(async r => {
-                            // Clone response to avoid "body already read" error
-                            const clonedResponse = r.clone();
-                            const contentType = r.headers.get('content-type') || '';
-                            const isJson = contentType.includes('application/json');
-                            
-                            // Handle non-OK responses
-                            if (!r.ok) {
-                                let errorMessage = `Update failed (Status: ${r.status})`;
-                                
-                                try {
-                                    if (isJson) {
-                                        const res = await clonedResponse.json();
-                                        // Handle validation errors (422)
-                                        if (r.status === 422 && res.errors) {
-                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
-                                            errorMessage = errorMessages || res.message || 'Validation failed';
-                                        }
-                                        // Handle 404 (member not found)
-                                        else if (r.status === 404) {
-                                            errorMessage = 'Member not found. Please refresh the page and try again.';
-                                        }
-                                        // Handle 500 (server error)
-                                        else if (r.status === 500) {
-                                            errorMessage = res.message || 'Server error. Please try again later.';
-                                        }
-                                        // Other errors with message
-                                        else if (res.message) {
-                                            errorMessage = res.message;
-                                        }
-                                    } else {
-                                        // Not JSON, get text
-                                        const text = await clonedResponse.text();
-                                        errorMessage = text || errorMessage;
-                                    }
-                                } catch (parseError) {
-                                    // If parsing fails, use default message
-                                    console.error('Error parsing response:', parseError);
-                                    errorMessage = `Server error (Status: ${r.status})`;
-                                }
-                                
-                                throw new Error(errorMessage);
-                            }
-                            
-                            // Parse successful response
-                            if (isJson) {
-                                return await r.json();
-                            } else {
-                                const text = await r.text();
-                                throw new Error(text || 'Server returned non-JSON response');
-                            }
-                        })
-                        .then(res => {
-                            if (res.success) { 
-                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
-                            } else { 
-                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Update error:', err);
-                            Swal.fire({ 
-                                icon: 'error', 
-                                title: 'Update failed', 
-                                html: err.message || 'Network error. Please check your connection and try again.' 
-                            });
-                        });
-                    });
+                console.log('✓ Submit button clicked - processing form submission');
+                
+                const form = document.getElementById('editMemberForm');
+                if (!form) {
+                    console.error('Form not found');
+                    return;
                 }
-
-                if (editLocationForm) {
-                    editLocationForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        const id = document.getElementById('edit_location_id').value;
-                        if (!id) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
-                            return;
-                        }
-                        const fd = new FormData();
-                        fd.append('region', document.getElementById('edit_location_region').value);
-                        fd.append('district', document.getElementById('edit_location_district').value);
-                        fd.append('ward', document.getElementById('edit_location_ward').value);
-                        fd.append('street', document.getElementById('edit_location_street').value);
-                        fd.append('address', document.getElementById('edit_location_address').value);
-                        fd.append('_method', 'PUT');
-                        
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                        if (!csrfToken) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
-                            return;
-                        }
-                        
-                        fetch(`{{ url('/members') }}/${id}`, { 
-                            method: 'POST', 
-                            headers: { 
-                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
-                                'Accept': 'application/json'
-                            }, 
-                            body: fd 
-                        })
-                        .then(async r => {
-                            // Clone response to avoid "body already read" error
-                            const clonedResponse = r.clone();
-                            const contentType = r.headers.get('content-type') || '';
-                            const isJson = contentType.includes('application/json');
-                            
-                            // Handle non-OK responses
-                            if (!r.ok) {
-                                let errorMessage = `Update failed (Status: ${r.status})`;
-                                
-                                try {
-                                    if (isJson) {
-                                        const res = await clonedResponse.json();
-                                        // Handle validation errors (422)
-                                        if (r.status === 422 && res.errors) {
-                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
-                                            errorMessage = errorMessages || res.message || 'Validation failed';
-                                        }
-                                        // Handle 404 (member not found)
-                                        else if (r.status === 404) {
-                                            errorMessage = 'Member not found. Please refresh the page and try again.';
-                                        }
-                                        // Handle 500 (server error)
-                                        else if (r.status === 500) {
-                                            errorMessage = res.message || 'Server error. Please try again later.';
-                                        }
-                                        // Other errors with message
-                                        else if (res.message) {
-                                            errorMessage = res.message;
-                                        }
-                                    } else {
-                                        // Not JSON, get text
-                                        const text = await clonedResponse.text();
-                                        errorMessage = text || errorMessage;
-                                    }
-                                } catch (parseError) {
-                                    // If parsing fails, use default message
-                                    console.error('Error parsing response:', parseError);
-                                    errorMessage = `Server error (Status: ${r.status})`;
-                                }
-                                
-                                throw new Error(errorMessage);
-                            }
-                            
-                            // Parse successful response
-                            if (isJson) {
-                                return await r.json();
-                            } else {
-                                const text = await r.text();
-                                throw new Error(text || 'Server returned non-JSON response');
-                            }
-                        })
-                        .then(res => {
-                            if (res.success) { 
-                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
-                            } else { 
-                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Update error:', err);
-                            Swal.fire({ 
-                                icon: 'error', 
-                                title: 'Update failed', 
-                                html: err.message || 'Network error. Please check your connection and try again.' 
-                            });
-                        });
-                    });
+                
+                // Check form validity
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalid.focus();
+                    }
+                    return;
                 }
-
-                if (editFamilyForm) {
-                    editFamilyForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        const id = document.getElementById('edit_family_id').value;
-                        if (!id) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'Member ID is missing.' });
-                            return;
-                        }
-                        const fd = new FormData();
-                        const memberType = document.getElementById('edit_family_member_type').value;
-                        const membershipType = document.getElementById('edit_family_membership_type').value;
-                        
-                        // Marital status and spouse info (for permanent father/mother)
-                        if (membershipType === 'permanent' && (memberType === 'father' || memberType === 'mother')) {
-                            const maritalStatus = document.getElementById('edit_family_marital_status').value;
-                            if (maritalStatus) {
-                                fd.append('marital_status', maritalStatus);
-                            }
-                            
-                            // Spouse information (if married)
-                            if (maritalStatus === 'married') {
-                                const spouseFullName = document.getElementById('edit_family_spouse_full_name').value;
-                                if (spouseFullName) fd.append('spouse_full_name', spouseFullName);
-                                
-                                const spouseDob = document.getElementById('edit_family_spouse_date_of_birth').value;
-                                if (spouseDob) fd.append('spouse_date_of_birth', spouseDob);
-                                
-                                const spouseEducation = document.getElementById('edit_family_spouse_education_level').value;
-                                if (spouseEducation) fd.append('spouse_education_level', spouseEducation);
-                                
-                                const spouseProfession = document.getElementById('edit_family_spouse_profession').value;
-                                if (spouseProfession) fd.append('spouse_profession', spouseProfession);
-                                
-                                const spouseNida = document.getElementById('edit_family_spouse_nida_number').value;
-                                if (spouseNida) fd.append('spouse_nida_number', spouseNida);
-                                
-                                const spouseEmail = document.getElementById('edit_family_spouse_email').value;
-                                if (spouseEmail) fd.append('spouse_email', spouseEmail);
-                                
-                                const spousePhone = document.getElementById('edit_family_spouse_phone_number').value;
-                                if (spousePhone) fd.append('spouse_phone_number', spousePhone);
-                                
-                                const spouseChurchMember = document.getElementById('edit_family_spouse_church_member').value;
-                                if (spouseChurchMember) fd.append('spouse_church_member', spouseChurchMember);
-                                
-                                // Spouse tribe
-                                const spouseTribeVal = document.getElementById('edit_family_spouse_tribe').value;
-                                if (spouseTribeVal && spouseTribeVal !== 'Other') {
-                                    fd.append('spouse_tribe', spouseTribeVal);
-                                } else if (spouseTribeVal === 'Other') {
-                                    const spouseOtherTribe = document.getElementById('edit_family_spouse_other_tribe').value;
-                                    if (spouseOtherTribe) {
-                                        fd.append('spouse_tribe', 'Other');
-                                        fd.append('spouse_other_tribe', spouseOtherTribe);
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Guardian information (for temporary and independent permanent)
-                        if (membershipType === 'temporary' || (membershipType === 'permanent' && memberType === 'independent')) {
-                            const guardianName = document.getElementById('edit_family_guardian_name').value;
-                            if (guardianName) fd.append('guardian_name', guardianName);
-                            
-                            const guardianPhone = document.getElementById('edit_family_guardian_phone').value;
-                            if (guardianPhone) fd.append('guardian_phone', guardianPhone);
-                            
-                            const guardianRelationship = document.getElementById('edit_family_guardian_relationship').value;
-                            if (guardianRelationship) fd.append('guardian_relationship', guardianRelationship);
-                        }
-                        
-                        fd.append('_method', 'PUT');
-                        
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                        if (!csrfToken) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'CSRF token not found.' });
-                            return;
-                        }
-                        
-                        fetch(`{{ url('/members') }}/${id}`, { 
-                            method: 'POST', 
-                            headers: { 
-                                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
-                                'Accept': 'application/json'
-                            }, 
-                            body: fd 
-                        })
-                        .then(async r => {
-                            // Clone response to avoid "body already read" error
-                            const clonedResponse = r.clone();
-                            const contentType = r.headers.get('content-type') || '';
-                            const isJson = contentType.includes('application/json');
-                            
-                            // Handle non-OK responses
-                            if (!r.ok) {
-                                let errorMessage = `Update failed (Status: ${r.status})`;
-                                
-                                try {
-                                    if (isJson) {
-                                        const res = await clonedResponse.json();
-                                        // Handle validation errors (422)
-                                        if (r.status === 422 && res.errors) {
-                                            const errorMessages = Object.values(res.errors).flat().join('<br>');
-                                            errorMessage = errorMessages || res.message || 'Validation failed';
-                                        }
-                                        // Handle 404 (member not found)
-                                        else if (r.status === 404) {
-                                            errorMessage = 'Member not found. Please refresh the page and try again.';
-                                        }
-                                        // Handle 500 (server error)
-                                        else if (r.status === 500) {
-                                            errorMessage = res.message || 'Server error. Please try again later.';
-                                        }
-                                        // Other errors with message
-                                        else if (res.message) {
-                                            errorMessage = res.message;
-                                        }
-                                    } else {
-                                        // Not JSON, get text
-                                        const text = await clonedResponse.text();
-                                        errorMessage = text || errorMessage;
-                                    }
-                                } catch (parseError) {
-                                    // If parsing fails, use default message
-                                    console.error('Error parsing response:', parseError);
-                                    errorMessage = `Server error (Status: ${r.status})`;
-                                }
-                                
-                                throw new Error(errorMessage);
-                            }
-                            
-                            // Parse successful response
-                            if (isJson) {
-                                return await r.json();
-                            } else {
-                                const text = await r.text();
-                                throw new Error(text || 'Server returned non-JSON response');
-                            }
-                        })
-                        .then(res => {
-                            if (res.success) { 
-                                Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); 
-                            } else { 
-                                Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); 
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Update error:', err);
-                            Swal.fire({ 
-                                icon: 'error', 
-                                title: 'Update failed', 
-                                html: err.message || 'Network error. Please check your connection and try again.' 
-                            });
-                        });
+                
+                // Get member ID
+                let memberId = window.currentEditMember?.id;
+                if (!memberId) {
+                    const hiddenIdInput = document.getElementById('edit_member_id');
+                    if (hiddenIdInput && hiddenIdInput.value) {
+                        memberId = parseInt(hiddenIdInput.value);
+                        console.log('Got member ID from hidden input:', memberId);
+                    }
+                }
+                
+                if (!memberId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Member ID not found. Please close the modal, refresh the page, and try again.'
                     });
+                    return;
+                }
+                
+                // Collect form data
+                const formData = new FormData(form);
+                formData.append('_method', 'PUT');
+                formData.append('_token', '{{ csrf_token() }}');
+                
+                const emailValue = document.getElementById('edit_email')?.value.trim() || '';
+                formData.set('email', emailValue);
+                
+                console.log('Submitting edit form for member ID:', memberId);
+                
+                // Show loading
+                Swal.fire({
+                    title: 'Updating Member...',
+                    text: 'Please wait while we save your changes',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Submit
+                const updateUrl = `{{ url('/members') }}/${memberId}`;
+                fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData,
+                    cache: 'no-cache'
+                })
+                .then(response => {
+                    return response.text().then(text => {
+                        try {
+                            const json = JSON.parse(text);
+                            if (!response.ok) {
+                                if (response.status === 422 && json.errors) {
+                                    const errorMessages = Object.entries(json.errors)
+                                        .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                                        .join('\n');
+                                    throw new Error('Validation failed:\n' + errorMessages);
+                                }
+                                throw new Error(json.message || json.error || 'Update failed');
+                            }
+                            return json;
+                        } catch (e) {
+                            if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                                throw new Error('Server returned HTML instead of JSON. Check server logs.');
+                            }
+                            throw new Error('Invalid response format: ' + text.substring(0, 100));
+                        }
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('memberEditModal'));
+                        if (modal) modal.hide();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Member information updated successfully',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            const cleanUrl = window.location.pathname;
+                            window.history.replaceState({}, '', cleanUrl);
+                            setTimeout(() => {
+                                window.location.href = cleanUrl;
+                            }, 50);
+                        });
+                    } else {
+                        throw new Error(data.message || 'Update failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating member:', error);
+                    let errorMessage = error.message || 'Failed to update member. Please check your input and try again.';
+                    if (errorMessage.includes('\n')) {
+                        errorMessage = errorMessage.split('\n').join('<br>');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        html: `<p>${errorMessage}</p><p class="text-muted small mt-2">Check the browser console (F12) for more details.</p>`,
+                        confirmButtonText: 'OK',
+                        width: '500px'
+                    });
+                });
+            }
+            
+            // Setup edit member form submit handler - CRITICAL: Must prevent default form submission
+            function setupFormSubmitHandlers() {
+                const editForm = document.getElementById('editMemberForm');
+                const submitBtn = document.getElementById('editMemberSubmitBtn');
+                
+                if (editForm) {
+                    // CRITICAL: Prevent any default form submission
+                    editForm.onsubmit = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        console.error('BLOCKED: Form tried to submit normally');
+                        return false;
+                    };
+                    
+                    editForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        console.error('BLOCKED: Form submit event caught and blocked');
+                        return false;
+                    }, true); // Use capture phase
+                }
+                
+                // Handle button click - use direct onclick for reliability
+                if (submitBtn) {
+                    submitBtn.onclick = handleEditFormSubmit;
+                    console.log('✓ Submit button handler attached');
+                } else {
+                    console.warn('Submit button not found - will retry when modal opens');
                 }
             }
+            
+            // Attach handler when modal is shown - this is the most reliable way
+            const editModal = document.getElementById('memberEditModal');
+            if (editModal) {
+                editModal.addEventListener('shown.bs.modal', function() {
+                    console.log('✓ Modal shown - setting up handlers');
+                    
+                    // Prevent form submission
+                    const form = document.getElementById('editMemberForm');
+                    if (form) {
+                        form.method = 'GET';
+                        form.action = 'javascript:void(0);';
+                        form.onsubmit = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            console.error('BLOCKED: Form submit in modal');
+                            return false;
+                        };
+                        form.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            return false;
+                        }, true);
+                    }
+                    
+                    // Attach button handler - wait a bit for DOM to be ready
+                    setTimeout(function() {
+                        const btn = document.getElementById('editMemberSubmitBtn');
+                        if (btn) {
+                            // Remove any existing handlers by cloning
+                            const newBtn = btn.cloneNode(true);
+                            btn.parentNode.replaceChild(newBtn, btn);
+                            const freshBtn = document.getElementById('editMemberSubmitBtn');
+                            
+                            // Attach handler - use both addEventListener and onclick
+                            freshBtn.addEventListener('click', handleEditFormSubmit);
+                            freshBtn.onclick = handleEditFormSubmit; // Also set onclick as backup
+                            console.log('✓ Submit button handler attached to fresh button');
+                        } else {
+                            console.error('Submit button not found after modal shown');
+                        }
+                    }, 200);
+                });
+            }
+            
+            // Location cascading function removed - Location Information section removed from edit modal
+            
+            // Tribe dropdowns removed from edit modal
 
-            // Setup form submit handlers when DOM is ready
+            // Setup form submit handlers IMMEDIATELY - don't wait for DOMContentLoaded
+            // This is critical because the form might submit before DOMContentLoaded fires
+            setupFormSubmitHandlers();
+            
+            // Also set up again when DOM is fully ready (in case form is added dynamically)
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', setupFormSubmitHandlers);
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(setupFormSubmitHandlers, 0);
+                });
             } else {
-                setupFormSubmitHandlers();
+                // DOM already ready, set up again to be safe
+                setTimeout(setupFormSubmitHandlers, 0);
+            }
+            
+            // Also attach handler when modal is shown (in case form is recreated)
+            const editModal = document.getElementById('memberEditModal');
+            if (editModal) {
+                editModal.addEventListener('shown.bs.modal', function() {
+                    setTimeout(setupFormSubmitHandlers, 100);
+                });
             }
 
             // Quick Add modal cascading + tribe
@@ -3626,91 +3891,9 @@
                 }, 500);
             }
 
-            function confirmDelete(id) {
-                console.log('confirmDelete called with ID:', id);
-                if (!id) {
-                    console.error('confirmDelete: No ID provided');
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Member ID is required',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                console.log('Attempting to delete member with ID:', id);
-                
-                // Check if we're in the archived tab
-                const isArchived = document.querySelector('.nav-link[href="#archived"]')?.classList.contains('active');
-                console.log('Is archived tab:', isArchived);
-                
-                // First, test if the member exists
-                fetch(`/test-member/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
-                })
-                    .then(response => {
-                        // Check if response is ok BEFORE parsing JSON
-                        if (!response.ok) {
-                            // Try to parse error message
-                            return response.json().then(data => {
-                                throw new Error(data.message || `Server error: ${response.status}`);
-                            }).catch(() => {
-                                // If response is not JSON (like HTML 404 page), throw generic error
-                                throw new Error(`Server error: ${response.status} ${response.statusText}`);
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (!data.success) {
-                            // If not found in active members, check if it's archived
-                            if (isArchived) {
-                                console.log('Member not found in active members, checking archived...');
-                                // For archived members, we'll proceed with deletion attempt
-                                proceedWithDeletion(id, isArchived);
-                                return;
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Member Not Found',
-                                    text: data.message || 'The member you are trying to delete does not exist in active members.',
-                                    confirmButtonText: 'OK'
-                                });
-                                return;
-                            }
-                        }
-                        
-                        console.log('Member found:', data.member);
-                        // Proceed with deletion using the extracted function
-                        proceedWithDeletion(id, isArchived, data.member ? data.member.full_name : null);
-                    })
-                    .catch(error => {
-                        console.error('Member check error:', error);
-                        console.error('Error details:', {
-                            message: error.message,
-                            stack: error.stack
-                        });
-                        
-                        // If member check fails, automatically proceed with deletion
-                        // The delete endpoint will validate the member exists
-                        // This handles 404, network errors, and other issues gracefully
-                        console.warn('Member verification failed, proceeding with deletion anyway...');
-                        console.warn('Error was:', error.message);
-                        
-                        // Automatically proceed - don't show error to user
-                        // The delete endpoint will handle validation
-                        proceedWithDeletion(id, isArchived);
-                    });
-            }
-
-            // Helper function to proceed with deletion (extracted for reuse)
-            function proceedWithDeletion(id, isArchived, memberName = null) {
+            // confirmDelete is already defined at the top of the scripts section (line 1749)
+            // The old complex version below has been removed to avoid conflicts
+            // The simplified version at the top handles archiving directly
                 const displayName = memberName ? ` ${memberName}` : '';
                 // Show reason input form
                 Swal.fire({
@@ -3961,7 +4144,7 @@
                 const printedAt = new Date().toLocaleString();
                 const printedBy = `{{ Auth::user()->name ?? 'User' }}`;
                 const yearNow = new Date().getFullYear();
-                const m = currentDetailsMember || null;
+                const m = window.currentDetailsMember || null;
                 const payload = (function(mm){ if(!mm) return ''; return [
                     'Full Name: ' + (mm.full_name || '-'),
                     'Member ID: ' + (mm.member_id || '-'),
@@ -4082,7 +4265,7 @@
             }
 
             function downloadMemberPDF(){
-                const m = currentDetailsMember || null;
+                const m = window.currentDetailsMember || null;
                 if (!m) return Swal.fire({ icon:'error', title:'Open details first' });
                 // Build a hidden container to render into PDF
                 const container = document.createElement('div');
@@ -4158,14 +4341,20 @@
 
             // Cascading selects for Region -> District -> Ward and Tribe
             let tzLocations = null;
-            let tribeList = ['Chaga','Sukuma','Haya','Nyakyusa','Makonde','Hehe','Other'];
-            function ensureLocationsLoaded() {
+            // Make tribeList globally accessible
+            window.tribeList = ['Chaga','Sukuma','Haya','Nyakyusa','Makonde','Hehe','Other'];
+            let tribeList = window.tribeList; // Keep local reference for backward compatibility
+            
+            // Make functions globally accessible
+            window.ensureLocationsLoaded = function() {
                 if (tzLocations) return Promise.resolve(tzLocations);
                 return fetch(`{{ asset('data/tanzania-locations.json') }}`)
                     .then(r => r.json())
                     .then(json => { tzLocations = json; return tzLocations; });
-            }
-            function populateSelect(selectEl, items, placeholder = 'Select') {
+            };
+            
+            window.populateSelect = function(selectEl, items, placeholder = 'Select') {
+                if (!selectEl) return;
                 selectEl.innerHTML = '';
                 const opt = document.createElement('option');
                 opt.value = '';
@@ -4177,6 +4366,14 @@
                     o.textContent = v;
                     selectEl.appendChild(o);
                 });
+            };
+            
+            // Keep local references for backward compatibility
+            function ensureLocationsLoaded() {
+                return window.ensureLocationsLoaded();
+            }
+            function populateSelect(selectEl, items, placeholder = 'Select') {
+                return window.populateSelect(selectEl, items, placeholder);
             }
             function setupCascadingForEdit(prefill = {}) {
                 ensureLocationsLoaded().then(data => {
@@ -4230,15 +4427,46 @@
                 first && first.focus();
             });
             
-            document.getElementById('memberDetailsModal').addEventListener('hidden.bs.modal', function(){
-                // Hide attendance history button when modal is closed
-                const attendanceBtn = document.getElementById('btnAttendanceHistory');
-                attendanceBtn.style.display = 'none';
-                attendanceBtn.removeAttribute('data-member-id');
-                
-                const idCardBtn = document.getElementById('btnIdCard');
-                idCardBtn.style.display = 'none';
-                idCardBtn.removeAttribute('data-member-id');
+            // Attach refresh handler when modal closes - ensure it's attached after DOM loads
+            function attachModalRefreshHandler() {
+                const modal = document.getElementById('memberDetailsModal');
+                if (modal) {
+                    // Remove any existing listeners by cloning the element
+                    const newModal = modal.cloneNode(true);
+                    modal.parentNode.replaceChild(newModal, modal);
+                    
+                    // Attach the event listener
+                    document.getElementById('memberDetailsModal').addEventListener('hidden.bs.modal', function(){
+                        console.log('Member details modal closed - refreshing page...');
+                        // Hide attendance history button when modal is closed
+                        const attendanceBtn = document.getElementById('btnAttendanceHistory');
+                        if (attendanceBtn) {
+                            attendanceBtn.style.display = 'none';
+                            attendanceBtn.removeAttribute('data-member-id');
+                        }
+                        
+                        const idCardBtn = document.getElementById('btnIdCard');
+                        if (idCardBtn) {
+                            idCardBtn.style.display = 'none';
+                            idCardBtn.removeAttribute('data-member-id');
+                        }
+                        
+                        // Refresh the page when modal is closed
+                        window.location.reload();
+                    });
+                    console.log('Modal refresh handler attached');
+                } else {
+                    console.warn('memberDetailsModal not found, retrying...');
+                    setTimeout(attachModalRefreshHandler, 100);
+                }
+            }
+            
+            // Try to attach immediately
+            attachModalRefreshHandler();
+            
+            // Also attach after DOM loads as backup
+            document.addEventListener('DOMContentLoaded', function() {
+                attachModalRefreshHandler();
             });
 
             // Set footer year
@@ -4301,228 +4529,21 @@
                 });
             }
 
-            // Ensure global access for action handlers
-            function resetPassword(memberId) {
-                Swal.fire({
-                    title: 'Reset Password',
-                    text: 'Are you sure you want to reset this member\'s password? A new password will be generated and sent via SMS if available.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, Reset Password',
-                    cancelButtonText: 'Cancel',
-                    showLoaderOnConfirm: true,
-                    preConfirm: () => {
-                        // Construct URL using base path - route is /members/{id}/reset-password
-                        const baseUrl = '{{ url("/") }}';
-                        const url = `${baseUrl}/members/${memberId}/reset-password`;
-                        console.log('Resetting password for member ID:', memberId);
-                        console.log('Request URL:', url);
-                        
-                        return fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(async response => {
-                            // Check if response is OK
-                            if (!response.ok) {
-                                // Try to parse error message from JSON response
-                                const contentType = response.headers.get('content-type');
-                                if (contentType && contentType.includes('application/json')) {
-                                    const errorData = await response.json();
-                                    throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
-                                } else {
-                                    // If not JSON, it's likely an HTML error page
-                                    const text = await response.text();
-                                    if (response.status === 404) {
-                                        throw new Error('Route not found. Please check if the route is properly configured.');
-                                    } else if (response.status === 419) {
-                                        throw new Error('CSRF token mismatch. Please refresh the page and try again.');
-                                    } else if (response.status === 403) {
-                                        throw new Error('You do not have permission to perform this action.');
-                                    } else {
-                                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
-                                    }
-                                }
-                            }
-                            
-                            // Parse JSON response
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (!data.success) {
-                                throw new Error(data.message || 'Failed to reset password');
-                            }
-                            return data;
-                        })
-                        .catch(error => {
-                            Swal.showValidationMessage(`Request failed: ${error.message}`);
-                        });
-                    },
-                    allowOutsideClick: () => !Swal.isLoading()
-                }).then((result) => {
-                    if (result.isConfirmed && result.value) {
-                        const data = result.value;
-                        let message = `Password reset successfully!\n\n`;
-                        message += `New Password: <strong>${data.password}</strong>\n\n`;
-                        
-                        if (data.sms_sent) {
-                            message += `✓ SMS sent to ${data.phone_number || 'member'}`;
-                        } else {
-                            message += `⚠ SMS could not be sent. Please share the password manually.`;
-                        }
-                        
-                        Swal.fire({
-                            title: 'Password Reset Successful',
-                            html: message,
-                            icon: 'success',
-                            confirmButtonText: 'Copy Password',
-                            showCancelButton: true,
-                            cancelButtonText: 'Close'
-                        }).then((copyResult) => {
-                            if (copyResult.isConfirmed) {
-                                // Copy password to clipboard
-                                navigator.clipboard.writeText(data.password).then(() => {
-                                    Swal.fire({
-                                        title: 'Copied!',
-                                        text: 'Password copied to clipboard',
-                                        icon: 'success',
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-                                }).catch(() => {
-                                    // Fallback: select text
-                                    const tempInput = document.createElement('input');
-                                    tempInput.value = data.password;
-                                    document.body.appendChild(tempInput);
-                                    tempInput.select();
-                                    document.execCommand('copy');
-                                    document.body.removeChild(tempInput);
-                                    Swal.fire({
-                                        title: 'Copied!',
-                                        text: 'Password copied to clipboard',
-                                        icon: 'success',
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-                                });
-                            }
-                        });
-                    }
-                });
-            }
+            // resetPassword function is already defined at the top of the scripts section (line ~1508)
+            // restoreMember is now defined at the top of the scripts section (line ~1899)
+            // This duplicate definition has been removed to avoid conflicts
 
-            function restoreMember(memberId) {
-                Swal.fire({
-                    title: 'Restore Member',
-                    text: 'Are you sure you want to restore this member? They will be moved back to active members.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Restore',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#28a745',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Show loading state
-                        Swal.fire({
-                            title: 'Restoring...',
-                            text: 'Please wait while we restore the member.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
-                        fetch(`{{ url('/members/archived') }}/${memberId}/restore`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else if (response.status === 403) {
-                                return response.json().then(data => {
-                                    throw new Error(data.message || 'You do not have permission to restore members.');
-                                });
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(data.message || `Server error: ${response.status}`);
-                                }).catch(() => {
-                                    throw new Error(`Server error: ${response.status}`);
-                                });
-                            }
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Member Restored',
-                                    text: data.message || 'Member has been restored successfully.',
-                                    confirmButtonText: 'OK'
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Restore Failed',
-                                    text: data.message || 'Please try again.',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Restore error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Restore Failed',
-                                text: error.message || 'An error occurred while restoring the member.',
-                                confirmButtonText: 'OK'
-                            });
-                        });
-                    }
-                });
+            // Assign other functions to window
+            // NOTE: `window.openEdit` is already defined in the <head> section - DO NOT overwrite it here!
+            // NOTE: `window.confirmDelete` is now defined directly above - no need to reassign
+            // Only assign functions that are actually defined in this scope
+            // confirmDelete is already window.confirmDelete, so skip it
+            if (typeof resetPassword === 'function') {
+                window.resetPassword = resetPassword;
             }
-
-            // Override early function definitions with full implementations
-            // This ensures onclick handlers work immediately, then get full functionality
-            try {
-                // Update the stored implementations so early functions can call them
-                if (typeof window._updateActionFunctions === 'function') {
-                    window._updateActionFunctions(
-                        viewDetails,
-                        openEdit,
-                        confirmDelete,
-                        resetPassword,
-                        restoreMember
-                    );
-                }
-                
-                // Also directly assign to window for immediate access
-                if (typeof viewDetails !== 'undefined') window.viewDetails = viewDetails;
-                if (typeof openEdit !== 'undefined') window.openEdit = openEdit;
-                if (typeof confirmDelete !== 'undefined') window.confirmDelete = confirmDelete;
-                if (typeof resetPassword !== 'undefined') window.resetPassword = resetPassword;
-                if (typeof restoreMember !== 'undefined') window.restoreMember = restoreMember;
-                if (typeof switchView !== 'undefined') window.switchView = switchView;
-                if (typeof printMemberDetails !== 'undefined') window.printMemberDetails = printMemberDetails;
-                if (typeof downloadMemberPDF !== 'undefined') window.downloadMemberPDF = downloadMemberPDF;
-                console.log('All action functions registered successfully with full implementations');
-            } catch (e) {
-                console.error('Error registering functions:', e);
-            }
+            // restoreMember is already window.restoreMember, so skip it
+            console.log('✓ Member action functions assigned to window');
+            console.log('✓ window.openEdit status:', typeof window.openEdit === 'function' ? 'AVAILABLE' : 'MISSING');
             
             // Final check after page loads to ensure functions are accessible
             document.addEventListener('DOMContentLoaded', function() {
@@ -4671,17 +4692,18 @@
                             // Store data globally for event details
                             window.currentNotificationData = data;
                             
-                            // Update counts
+                            // Update counts - safely handle undefined counts
                             const eventsCountEl = document.getElementById('eventsCount');
                             const celebrationsCountEl = document.getElementById('celebrationsCount');
                             const servicesCountEl = document.getElementById('servicesCount');
                             
-                            if (eventsCountEl) eventsCountEl.textContent = data.counts.events || 0;
-                            if (celebrationsCountEl) celebrationsCountEl.textContent = data.counts.celebrations || 0;
-                            if (servicesCountEl) servicesCountEl.textContent = data.counts.services || 0;
+                            const counts = data.counts || {};
+                            if (eventsCountEl) eventsCountEl.textContent = counts.events || 0;
+                            if (celebrationsCountEl) celebrationsCountEl.textContent = counts.celebrations || 0;
+                            if (servicesCountEl) servicesCountEl.textContent = counts.services || 0;
                             
-                            // Update total notification count
-                            const totalCount = data.counts.total || 0;
+                            // Update total notification count - safely handle undefined counts
+                            const totalCount = (data.counts && data.counts.total) || 0;
                             const badge = document.getElementById('notificationBadge');
                             if (badge) {
                                 badge.textContent = totalCount;
@@ -5266,5 +5288,4 @@
             window.showEventDetails = showEventDetails;
             window.loadNotifications = loadNotifications;
         </script>
-    </body>
-</html>
+@endsection

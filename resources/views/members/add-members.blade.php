@@ -1,55 +1,7 @@
-@if(session('success'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var userId = @json(session('user_id'));
-                    var name = @json(session('name'));
-                    var membershipType = @json(session('membership_type'));
-                    var tab = (membershipType === 'temporary') ? 'temporary' : 'permanent';
-                    // Show processing spinner first
-                    Swal.fire({
-                        title: 'Processing...',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                    setTimeout(function() {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Registration Successful',
-                            html: `<div style='font-size:1.1em;text-align:left'><b>User ID:</b> ${userId}<br><b>Name:</b> ${name}<br><b>Membership Type:</b> ${membershipType}</div>`,
-                            showConfirmButton: true,
-                            confirmButtonText: 'OK',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false
-                        }).then(function(result) {
-                            if(result.isConfirmed) {
-                                window.location.href = "{{ route('members.view') }}?tab=" + tab;
-                            }
-                        });
-                    }, 1200); // 1.2 seconds spinner
-                });
-            </script>
-        @endif
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Dashboard</title>
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-        <!-- SweetAlert2 CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
+@extends('layouts.index')
+
+@section('styles')
+<style>
             .logo-white-section {
                 background-color: white !important;
                 border-radius: 8px;
@@ -465,371 +417,46 @@
                 }
             }
         </style>
-    </head>
-    <body class="sb-nav-fixed">
-        <!-- Header -->
-        @php
-            $navClasses = 'sb-topnav navbar navbar-expand navbar-dark';
-            $navStyle = 'background: #212529 !important;';
-        @endphp
-        <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
-            <!-- Navbar Brand - Hidden on Mobile -->
-            <a class="navbar-brand ps-3 d-none d-lg-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <!-- Sidebar Toggle - First on Mobile -->
-            <button class="btn btn-link btn-sm order-first order-lg-0 me-3 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
-            <!-- Welcome Message -->
-            <div class="navbar-text me-auto ms-2 ms-md-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <strong>AIC Moshi Kilimanjaro</strong>
-            </div>
+@endsection
 
-            <!-- Navbar-->
-            <ul class="navbar-nav ms-auto me-2 me-md-3 me-lg-4">
-                <!-- Date and Time Display - Hidden on Mobile -->
-                <li class="nav-item d-none d-md-flex align-items-center me-2 me-md-3" id="dateTimeDisplay">
-                    <div class="text-end" style="color: #ffffff !important;">
-                        <div id="currentDate" class="d-none d-md-block" style="font-size: 0.9rem; font-weight: 500; color: #ffffff !important;"></div>
-                        <div id="currentTime" class="d-none d-md-block" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important;"></div>
-                    </div>
-                </li>
-                <!-- Notification Icon -->
-                <li class="nav-item dropdown me-3" id="notificationDropdown">
-                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" style="color: #ffffff !important;">
-                        <!-- Inline SVG bell to avoid external icon dependency -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ffffff" viewBox="0 0 16 16" class="align-text-top" style="color: #ffffff !important;">
-                            <path d="M8 16a2 2 0 0 0 1.985-1.75H6.015A2 2 0 0 0 8 16m.104-14.983a1 1 0 1 0-.208 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 3.06-1.638 4.723-.2.29-.295.63-.295.977 0 .713.54 1.3 1.207 1.3h11.452c.667 0 1.207-.587 1.207-1.3 0-.347-.095-.687-.295-.977C13.5 9.06 13 7.098 13 6a5.002 5.002 0 0 0-4.896-4.983"/>
-                        </svg>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
-                            0
-                        </span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 400px; max-height: 70vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border: none;">
-                        <div class="dropdown-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0; padding: 1rem 1.5rem;">
-                            <h6 class="mb-0 fw-bold"><i class="fas fa-bell me-2"></i>Notifications</h6>
-                            <small class="opacity-75" id="lastUpdated">Just now</small>
-                        </div>
-                        
-                        <div class="notification-content" style="padding: 1rem 1.5rem; max-height: calc(70vh - 80px); overflow-y: auto;">
-                            <!-- Upcoming Events -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-primary">
-                                        <i class="fas fa-calendar-alt me-2"></i>Special Events
-                                    </h6>
-                                    <span class="notification-count-badge bg-primary" id="eventsCount">0</span>
-                                </div>
-                                <div id="eventsList" class="notification-list">
-                                    <!-- Events will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Upcoming Celebrations -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-warning">
-                                        <i class="fas fa-birthday-cake me-2"></i>Celebrations
-                                    </h6>
-                                    <span class="notification-count-badge bg-warning" id="celebrationsCount">0</span>
-                                </div>
-                                <div id="celebrationsList" class="notification-list">
-                                    <!-- Celebrations will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Upcoming Services -->
-                            <div class="notification-section mb-3">
-                                <div class="section-header d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-success">
-                                        <i class="fas fa-church me-2"></i>Services
-                                    </h6>
-                                    <span class="notification-count-badge bg-success" id="servicesCount">0</span>
-                                </div>
-                                <div id="servicesList" class="notification-list">
-                                    <!-- Services will be loaded here -->
-                                </div>
-                            </div>
-                            
-                            <div class="text-center py-2 pb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>Click on any item to view details
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff !important;"><i class="fas fa-user fa-fw" style="color: #ffffff !important;"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        @if(auth()->user()->isMember())
-                            <li><a class="dropdown-item" href="{{ route('member.settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                        @else
-                            <li><a class="dropdown-item" href="#!">Settings</a></li>
-                            <li><a class="dropdown-item" href="#!">Activity Log</a></li>
-                        @endif
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}" 
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <div id="layoutSidenav">
-            <!-- Sidebar -->
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu">
-                        <div class="nav">
-                            @if(auth()->user()->isAdmin())
-                            {{-- Admin Menu --}}
-                            <div class="sb-sidenav-menu-heading">Administration</div>
-                            <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-shield-alt"></i></div>
-                                Admin Dashboard
-                            </a>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseAdmin" aria-expanded="false" aria-controls="collapseAdmin">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>
-                                System Management
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseAdmin" aria-labelledby="headingAdmin" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('admin.activity-logs') }}">
-                                        <i class="fas fa-list me-2"></i>Activity Logs
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.sessions') }}">
-                                        <i class="fas fa-user-check me-2"></i>User Sessions
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.users') }}">
-                                        <i class="fas fa-users me-2"></i>Manage Users
-                                    </a>
-                                    <a class="nav-link" href="{{ route('admin.roles-permissions') }}">
-                                        <i class="fas fa-shield-alt me-2"></i>Roles & Permissions
-                                    </a>
-                                </nav>
-                            </div>
-                            @endif
-                            
-                            @if(auth()->user()->isMember())
-                            {{-- Member Menu --}}
-                            <div class="sb-sidenav-menu-heading">Member Portal</div>
-                            <a class="nav-link" href="{{ route('member.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            <a class="nav-link" href="{{ route('member.information') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-user-circle"></i></div>
-                                My Information
-                            </a>
-                            <a class="nav-link" href="{{ route('member.finance') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                                My Finance
-                            </a>
-                            <a class="nav-link" href="{{ route('member.announcements') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
-                                Announcements
-                                @php
-                                    $member = auth()->user()->member ?? null;
-                                    if ($member) {
-                                        $activeAnnouncements = \App\Models\Announcement::active()->pluck('id');
-                                        $viewedAnnouncementIds = \App\Models\AnnouncementView::where('member_id', $member->id)
-                                            ->whereIn('announcement_id', $activeAnnouncements)
-                                            ->pluck('announcement_id');
-                                        $unreadCount = $activeAnnouncements->diff($viewedAnnouncementIds)->count();
-                                    } else {
-                                        $unreadCount = 0;
-                                    }
-                                @endphp
-                                @if($unreadCount > 0)
-                                    <span class="badge bg-danger ms-2">{{ $unreadCount }}</span>
-                                @endif
-                            </a>
-                            <a class="nav-link" href="{{ route('member.change-password') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
-                                Change Password
-                            </a>
-                            @elseif(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @elseif(auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @endif
-                            
-                            @if(!auth()->user()->isTreasurer() || auth()->user()->isAdmin())
-                            @if(!auth()->user()->isMember())
-                            
-                            <div class="sb-sidenav-menu-heading">Management</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Members
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if(auth()->user()->hasPermission('members.create') || auth()->user()->isAdmin())
-                                    <a class="nav-link" href="{{ route('members.add') }}">
-                                        <i class="fas fa-user-plus me-2"></i>Add New Member
-                                    </a>
-                                    @endif
-                                    @if(auth()->user()->hasPermission('members.view') || auth()->user()->isAdmin())
-                                    <a class="nav-link" href="{{ route('members.view') }}">
-                                        <i class="fas fa-list me-2"></i>All Members
-                                    </a>
-                                    @endif
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLeadership" aria-expanded="false" aria-controls="collapseLeadership">
-                                <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
-                                Leadership
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseLeadership" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('leaders.index') }}">
-                                        <i class="fas fa-list me-2"></i>All Leaders
-                                    </a>
-                                    <a class="nav-link" href="{{ route('leaders.reports') }}">
-                                        <i class="fas fa-chart-bar me-2"></i>Reports
-                                    </a>
-                                    @if(auth()->user()->canManageLeadership())
-                                        <a class="nav-link" href="{{ route('leaders.create') }}">
-                                            <i class="fas fa-plus me-2"></i>Assign Position
-                                        </a>
-                                    @endif
-                                </nav>
-                            </div>
-                            
-                            <a class="nav-link" href="{{ route('announcements.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
-                                Announcements
-                            </a>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
-                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                                Events & Services
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('services.sunday.index') }}"><i class="fas fa-church me-2"></i>Services</a>
-                                    <a class="nav-link" href="{{ route('special.events.index') }}"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="{{ route('attendance.index') }}"><i class="fas fa-users me-2"></i>Record Attendance</a>
-                                    <a class="nav-link" href="{{ route('attendance.statistics') }}"><i class="fas fa-chart-bar me-2"></i>Attendance Statistics</a>
-                                    <a class="nav-link" href="{{ route('celebrations.index') }}"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                                </nav>
-                            </div>
-                            @endif
-                            @endif
-                            
-                            @if(auth()->user()->isTreasurer())
-                            {{-- For Treasurer: Show finance menu items directly without dropdown --}}
-                            <a class="nav-link" href="{{ route('finance.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            @if(auth()->user()->canApproveFinances())
-                            <a class="nav-link" href="{{ route('finance.approval.dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-check-circle"></i></div>
-                                Approval Dashboard
-                            </a>
-                            @endif
-                            <a class="nav-link" href="{{ route('finance.tithes') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-coins"></i></div>
-                                Tithes
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.offerings') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>
-                                Offerings
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.donations') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-heart"></i></div>
-                                Donations
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.pledges') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-handshake"></i></div>
-                                Pledges
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.budgets') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                                Budgets
-                            </a>
-                            <a class="nav-link" href="{{ route('finance.expenses') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
-                                Expenses
-                            </a>
-                            <a class="nav-link" href="{{ route('reports.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-pie"></i></div>
-                                Reports
-                            </a>
-                            @elseif(!auth()->user()->isMember())
-                            {{-- For other users (not treasurer, not member): Show finance menu as collapsed dropdown --}}
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Finance
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('finance.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
-                                    @if(auth()->user()->canApproveFinances())
-                                    <a class="nav-link" href="{{ route('finance.approval.dashboard') }}"><i class="fas fa-check-circle me-2"></i>Approval Dashboard</a>
-                                    @endif
-                                    <a class="nav-link" href="{{ route('finance.tithes') }}"><i class="fas fa-coins me-2"></i>Tithes</a>
-                                    <a class="nav-link" href="{{ route('finance.offerings') }}"><i class="fas fa-gift me-2"></i>Offerings</a>
-                                    <a class="nav-link" href="{{ route('finance.donations') }}"><i class="fas fa-heart me-2"></i>Donations</a>
-                                    <a class="nav-link" href="{{ route('finance.pledges') }}"><i class="fas fa-handshake me-2"></i>Pledges</a>
-                                    <a class="nav-link" href="{{ route('finance.budgets') }}"><i class="fas fa-wallet me-2"></i>Budgets</a>
-                                    <a class="nav-link" href="{{ route('finance.expenses') }}"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                    <a class="nav-link" href="{{ route('reports.index') }}"><i class="fas fa-chart-pie me-2"></i>Reports</a>
-                                </nav>
-                            </div>
-                            @endif
-                            
-                            @if((!auth()->user()->isTreasurer() || auth()->user()->isAdmin()) && !auth()->user()->isMember())
-                            <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="{{ route('analytics.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Analytics
-                            </a>
-                            <a class="nav-link" href="{{ route('reports.overview') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                All Reports
-                            </a>
-                            
-                            @if(auth()->user()->isAdmin())
-                            <div class="sb-sidenav-menu-heading">Settings</div>
-                            <a class="nav-link" href="{{ route('settings.index') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
-                                System Settings
-                            </a>
-                            @endif
-                            @endif
-                        </div>
-                    </div>
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Logged in as:</div>
-                        {{ Auth::user()->name ?? 'User' }}
-                    </div>
-                </nav>
-            </div>
-            <div id="layoutSidenav_content">
-                <!-- Main section improved design -->
-                <main class="container-fluid px-2 px-md-5 py-4 animated fadeIn">
-                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden main-form-card">
+@section('content')
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var userId = @json(session('user_id'));
+            var name = @json(session('name'));
+            var membershipType = @json(session('membership_type'));
+            var tab = (membershipType === 'temporary') ? 'temporary' : 'permanent';
+            // Show processing spinner first
+            Swal.fire({
+                title: 'Processing...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            setTimeout(function() {
+                Swal.close();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registration Successful',
+                    html: `<div style='font-size:1.1em;text-align:left'><b>User ID:</b> ${userId}<br><b>Name:</b> ${name}<br><b>Membership Type:</b> ${membershipType}</div>`,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(function(result) {
+                    if(result.isConfirmed) {
+                        window.location.href = "{{ route('members.view') }}?tab=" + tab;
+                    }
+                });
+            }, 1200); // 1.2 seconds spinner
+        });
+    </script>
+@endif
+<div class="container-fluid px-2 px-md-5 py-4 animated fadeIn">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden main-form-card">
                         <div class="card-header bg-gradient-primary d-flex flex-column flex-md-row justify-content-between align-items-center py-4 px-4 border-0">
                             <span class="fs-5 fw-bold text-white d-flex align-items-center">
                                 <i class="fas fa-user-plus me-2"></i> <span id="stepHeaderTitle">Add Member</span>
@@ -1311,8 +938,8 @@
                             </form>
                         </div>
                     </div>
-                </main>
-                <style>
+</div>
+<style>
                     .main-form-card { background: linear-gradient(135deg, #f8f9fa 60%, #e9e4f0 100%); }
                     /* Advanced Toggle Switch Styles */
                     .toggle-switch-wrapper {
@@ -2354,27 +1981,11 @@
                         }
                     });
                 </script>
-                <footer class="bg-dark text-light py-4 mt-auto">
-                  <div class="container px-4">
-                    <div class="row align-items-center">
-                      <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                        <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
-                      </div>
-                      <div class="col-md-6 text-center text-md-end">
-                        <small>
-                          <span style="color: #ffffff !important;">Powered by</span> 
-                          <a href="https://emca.tech/#" class="text-decoration-none fw-bold" style="color: #940000 !important;">
-                            EmCa Technologies
-                          </a>
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                </footer>
-            </div>
-        </div>
-        <!-- jQuery must be loaded before Select2 -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@section('scripts')
+<!-- jQuery must be loaded before Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             // Global function for image preview - works immediately
             function handleImagePreview(input) {
@@ -2502,9 +2113,7 @@
                 if (previewImg) previewImg.src = '';
             }
         </script>
-        <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}" crossorigin="anonymous"></script>
-        <script src="{{ asset('js/scripts.js') }}"></script>
-        <script>
+<script>
             document.getElementById('year').textContent = new Date().getFullYear();
         </script>
         
@@ -3086,5 +2695,4 @@
             window.showEventDetails = showEventDetails;
             window.loadNotifications = loadNotifications;
         </script>
-    </body>
-</html>
+@endsection

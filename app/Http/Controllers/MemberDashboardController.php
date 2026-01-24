@@ -35,8 +35,8 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Ensure user is a member
-        if (!$user->isMember() || !$user->member_id) {
+        // Ensure user has a member_id (allows both members and leaders who are members)
+        if (!$user->member_id) {
             Auth::logout();
             return redirect()->route('login')->withErrors(['role' => 'Unauthorized access.']);
         }
@@ -221,7 +221,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -237,7 +237,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -268,7 +268,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -358,8 +358,8 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Ensure user is a member
-        if (!$user->isMember() || !$user->member_id) {
+        // Ensure user has member_id
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -376,6 +376,11 @@ class MemberDashboardController extends Controller
             ->orderBy('appointment_date', 'desc')
             ->get();
 
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function($leader) {
+            return $leader->member !== null;
+        });
+
         // Get current member's leadership positions
         $memberPositions = $member->activeLeadershipPositions()
             ->where(function($query) {
@@ -384,7 +389,7 @@ class MemberDashboardController extends Controller
             })
             ->get();
 
-        // Group leaders by position
+        // Group leaders by position (only for leaders with members)
         $leadersByPosition = $leaders->groupBy('position');
 
         return view('members.leaders', compact('leaders', 'memberPositions', 'leadersByPosition', 'member'));
@@ -397,7 +402,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -419,7 +424,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -433,7 +438,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -476,7 +481,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
@@ -492,7 +497,7 @@ class MemberDashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 

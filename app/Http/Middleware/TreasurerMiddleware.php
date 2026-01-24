@@ -44,6 +44,11 @@ class TreasurerMiddleware
             }
         }
         
+        // Allow admins to access all routes
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+        
         // If user is treasurer, only allow finance routes
         if ($user->isTreasurer()) {
             // Check if the current route is a finance route

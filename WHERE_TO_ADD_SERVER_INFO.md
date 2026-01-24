@@ -201,3 +201,11 @@ If you get an error:
 
 **That's it!** Once you add all 5 secrets, GitHub Actions will be able to connect to your server automatically! 🚀
 
+
+
+
+
+
+
+
+

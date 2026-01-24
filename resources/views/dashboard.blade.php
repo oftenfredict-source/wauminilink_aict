@@ -59,6 +59,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Secretary Functions Section -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Secretary Functions</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Secretary dashboard content continues here -->
+                    <p class="text-muted">Secretary management functions and tools are available in the sidebar menu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <style>
         /* Reduce gap between topbar and content */

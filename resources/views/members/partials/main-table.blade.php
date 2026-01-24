@@ -167,9 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Email</th>
                             <th>Gender</th>
                         @endif
-                        <th class="text-end">
-                            <span>Actions</span>
-                        </th>
+                        <th class="text-end" style="width: 80px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -205,16 +203,26 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td>{{ ucfirst($member->gender ?? '-') }}</td>
                             @endif
                             <td class="text-end">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-info" onclick="viewDetails({{ !empty($isArchived) ? $member->member_id : $member->id }})"><i class="fas fa-eye"></i></button>
+                                <div class="d-flex flex-row gap-1 justify-content-end align-items-center" style="flex-wrap: nowrap;">
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ !empty($isArchived) ? $member->member_id : $member->id }}); } else { alert('View details function is not available. Please refresh the page.'); }" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                     @if(!empty($isArchived))
-                                        <button class="btn btn-outline-success" onclick="restoreMember({{ $member->member_id }})" title="Restore Member"><i class="fas fa-undo"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="if(typeof window.restoreMember === 'function') { window.restoreMember({{ $member->member_id }}); } else { alert('Restore function is not available. Please refresh the page.'); }" title="Restore Member">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
                                     @else
-                                        <button class="btn btn-outline-primary" onclick="openEdit({{ $member->id }})"><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="if(typeof window.openEdit === 'function') { window.openEdit({{ $member->id }}); } else { alert('Edit function is not available. Please refresh the page.'); }" title="Edit Member">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
                                         @if(auth()->user()->isAdmin())
-                                            <button class="btn btn-outline-success" onclick="resetPassword({{ $member->id }})" title="Reset Password"><i class="fas fa-key"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="if(typeof window.resetPassword === 'function') { window.resetPassword({{ $member->id }}); } else { alert('Reset password function is not available. Please refresh the page.'); }" title="Reset Password">
+                                                <i class="fas fa-key"></i>
+                                            </button>
                                         @endif
-                                        <button class="btn btn-outline-warning" onclick="confirmDelete({{ $member->id }})" title="Archive Member"><i class="fas fa-archive"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="if(typeof window.confirmDelete === 'function') { window.confirmDelete({{ $member->id }}); } else { alert('Archive function is not available. Please refresh the page.'); }" title="Archive Member">
+                                            <i class="fas fa-archive"></i>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -412,6 +420,269 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => Swal.fire({ icon: 'error', title: 'Archive failed', text: error.message || 'Network error' }));
         });
         form._archiveHandlerAttached = true;
+    }
+})();
+
+// Member action buttons - robust event delegation
+// This handles all action buttons using event delegation for maximum reliability
+(function() {
+    // Use event delegation on the document to catch all clicks
+    // This works even if buttons are added dynamically (e.g., via AJAX)
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('.btn-view-member, .btn-edit-member, .btn-reset-password, .btn-archive-member, .btn-restore-member');
+        if (!target) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const memberId = target.getAttribute('data-member-id');
+        if (!memberId) {
+            console.error('No member ID found on button');
+            return;
+        }
+        
+        const id = parseInt(memberId);
+        
+        // Handle view member
+        if (target.classList.contains('btn-view-member')) {
+            console.log('View member clicked, ID:', id);
+            console.log('Checking if viewDetails function exists...');
+            console.log('typeof window.viewDetails:', typeof window.viewDetails);
+            
+            // Retry mechanism - wait for function to be available
+            function tryViewDetails(attempts = 0) {
+                console.log(`Attempt ${attempts + 1}: Checking for viewDetails function...`);
+                
+                if (typeof window.viewDetails === 'function') {
+                    const funcStr = window.viewDetails.toString();
+                    console.log('viewDetails function found! Length:', funcStr.length);
+                    console.log('Contains fetch:', funcStr.includes('fetch'));
+                    
+                    if (funcStr.includes('fetch') || funcStr.length > 200) {
+                        console.log('✓ Full viewDetails function found, calling with ID:', id);
+                        try {
+                            window.viewDetails(id);
+                            return; // Success, exit
+                        } catch (error) {
+                            console.error('Error calling viewDetails:', error);
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to view member: ' + (error.message || 'Unknown error'),
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                            return; // Exit on error
+                        }
+                    } else {
+                        console.warn('viewDetails exists but appears to be placeholder, length:', funcStr.length);
+                    }
+                } else {
+                    console.warn('viewDetails function NOT FOUND (typeof:', typeof window.viewDetails, ')');
+                }
+                
+                if (attempts < 10) {
+                    // Retry after a short delay (function might still be loading)
+                    console.log('Retrying in 100ms... (attempt ' + (attempts + 1) + '/10)');
+                    setTimeout(() => tryViewDetails(attempts + 1), 100);
+                } else {
+                    // After 10 attempts, give up and show "not found" message
+                    console.error('❌ viewDetails function NOT FOUND after 10 attempts');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Function Not Found',
+                            html: `
+                                <p><strong>The view function is not available.</strong></p>
+                                <p>This may be due to:</p>
+                                <ul style="text-align: left; display: inline-block;">
+                                    <li>JavaScript not fully loaded</li>
+                                    <li>Script error preventing function definition</li>
+                                    <li>Browser compatibility issue</li>
+                                </ul>
+                                <p class="mt-3">Please try refreshing the page.</p>
+                            `,
+                            confirmButtonText: 'Refresh Page',
+                            allowOutsideClick: false,
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        alert('View function is not found. Please refresh the page.');
+                        if (confirm('Would you like to refresh the page now?')) {
+                            window.location.reload();
+                        }
+                    }
+                }
+            }
+            
+            tryViewDetails();
+        }
+        // Handle edit member
+        else if (target.classList.contains('btn-edit-member')) {
+            console.log('Edit member clicked, ID:', id);
+            
+            // Retry mechanism - wait for function to be available
+            function tryOpenEdit(attempts = 0) {
+                if (typeof window.openEdit === 'function') {
+                    console.log('openEdit function found, calling with ID:', id);
+                    try {
+                        window.openEdit(id);
+                    } catch (error) {
+                        console.error('Error calling openEdit:', error);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to open edit form: ' + (error.message || 'Unknown error'),
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                } else if (attempts < 5) {
+                    // Retry after a short delay (function might still be loading)
+                    console.log('openEdit not available yet, retrying... (attempt ' + (attempts + 1) + ')');
+                    setTimeout(() => tryOpenEdit(attempts + 1), 100);
+                } else {
+                    // After 5 attempts, give up and show error
+                    console.error('openEdit function still not available after 5 attempts');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Function Not Available',
+                            text: 'The edit function failed to load. Please refresh the page.',
+                            confirmButtonText: 'Refresh Page',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert('Edit function is not available. Please refresh the page.');
+                        window.location.reload();
+                    }
+                }
+            }
+            
+            tryOpenEdit();
+        }
+        // Handle reset password
+        else if (target.classList.contains('btn-reset-password')) {
+            console.log('Reset password clicked, ID:', id);
+            if (typeof window.resetPassword === 'function') {
+                window.resetPassword(id);
+            } else {
+                console.error('resetPassword function not available');
+            }
+        }
+        // Handle archive member
+        else if (target.classList.contains('btn-archive-member')) {
+            console.log('Archive member clicked, ID:', id);
+            if (typeof window.confirmDelete === 'function') {
+                window.confirmDelete(id);
+            } else {
+                console.error('confirmDelete function not available');
+            }
+        }
+        // Handle restore member
+        else if (target.classList.contains('btn-restore-member')) {
+            console.log('Restore member clicked, ID:', id);
+            if (typeof window.restoreMember === 'function') {
+                window.restoreMember(id);
+            } else {
+                console.error('restoreMember function not available');
+            }
+        }
+    });
+    
+    console.log('Member action buttons event listeners attached (event delegation)');
+    
+    // Verification function - can be called from console to check function status
+    window.verifyViewDetails = function() {
+        console.log('=== VERIFYING viewDetails FUNCTION ===');
+        console.log('typeof window.viewDetails:', typeof window.viewDetails);
+        if (typeof window.viewDetails === 'function') {
+            const funcStr = window.viewDetails.toString();
+            console.log('✓ Function exists');
+            console.log('Function length:', funcStr.length, 'characters');
+            console.log('Contains "fetch":', funcStr.includes('fetch'));
+            console.log('Contains "viewDetails":', funcStr.includes('viewDetails'));
+            console.log('First 200 chars:', funcStr.substring(0, 200));
+            return true;
+        } else {
+            console.error('❌ Function NOT FOUND');
+            console.log('Available window properties:', Object.keys(window).filter(k => k.includes('view') || k.includes('View')));
+            return false;
+        }
+    };
+    console.log('✓ Verification function available: call window.verifyViewDetails() in console');
+    
+    // Fallback: Ensure viewDetails is available (in case main script hasn't loaded)
+    // Only define fallback if function doesn't exist OR if it's just the placeholder
+    if (typeof window.viewDetails !== 'function') {
+        console.warn('viewDetails not found in main script, defining fallback...');
+        window.viewDetails = function(id) {
+            console.log('Fallback viewDetails called with ID:', id);
+            if (!id) {
+                console.error('viewDetails: No ID provided');
+                return;
+            }
+            // Try to fetch member details
+            fetch(`{{ url('/members') }}/${id}`, { 
+                headers: { 'Accept': 'application/json' } 
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(m => {
+                console.log('Member details loaded via fallback:', m);
+                // Check if the main viewDetails function is now available (might have loaded after page load)
+                const mainFunc = window.viewDetails;
+                if (typeof mainFunc === 'function') {
+                    const funcStr = mainFunc.toString();
+                    // If it's the full implementation (not our fallback), use it
+                    if (funcStr.length > 1000 && funcStr.includes('memberDetailsModal') && funcStr.includes('Swal.fire')) {
+                        console.log('Main viewDetails function found, using it instead of fallback');
+                        // Temporarily replace fallback with main function and call it
+                        window.viewDetails = mainFunc;
+                        mainFunc(id);
+                        return;
+                    }
+                }
+                // Show basic member info using fallback
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: m.full_name || 'Member Details',
+                        html: `
+                            <p><strong>Member ID:</strong> ${m.member_id || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${m.email || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${m.phone_number || 'N/A'}</p>
+                            <p><strong>Gender:</strong> ${m.gender || 'N/A'}</p>
+                            <p class="text-muted small mt-2">Note: Using fallback view. Full details may not be available.</p>
+                        `,
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error loading member:', err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load member details: ' + (err.message || 'Unknown error'),
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        };
+        console.log('✓ Fallback viewDetails function defined');
     }
 })();
 </script>

@@ -28,14 +28,18 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->isPastor()) {
-                return redirect()->route('dashboard.pastor');
-            } elseif ($user->isTreasurer()) {
-                return redirect()->route('finance.dashboard');
-            } elseif ($user->isMember()) {
+            } elseif ($user->member_id) {
+                // All members and leaders (who are members) go to member dashboard
                 return redirect()->route('member.dashboard');
             } else {
-                return redirect()->route('dashboard.secretary');
+                // Non-member users (legacy accounts)
+                if ($user->isPastor()) {
+                    return redirect()->route('dashboard.pastor');
+                } elseif ($user->isTreasurer()) {
+                    return redirect()->route('finance.dashboard');
+                } else {
+                    return redirect()->route('dashboard.secretary');
+                }
             }
         }
         
@@ -206,25 +210,30 @@ class AuthController extends Controller
                         // Silently continue if table doesn't exist
                     }
                     
-                    // Redirect based on role
-                    if ($user->role === 'secretary') {
-                        return redirect()->route('dashboard.secretary')
-                            ->with('success', 'Login successful! Welcome back.');
-                    } elseif ($user->role === 'pastor') {
-                        return redirect()->route('dashboard.pastor')
-                            ->with('success', 'Login successful! Welcome Pastor.');
-                    } elseif ($user->role === 'admin') {
+                    // Redirect based on role - but members and leaders go to member dashboard first
+                    if ($user->role === 'admin') {
                         return redirect()->route('admin.dashboard')
                             ->with('success', 'Login successful! Welcome Admin.');
-                    } elseif ($user->role === 'treasurer') {
-                        return redirect()->route('finance.dashboard')
-                            ->with('success', 'Login successful! Welcome Treasurer.');
-                    } elseif ($user->role === 'member') {
+                    } elseif ($user->member_id) {
+                        // All members and leaders (who are members) go to member dashboard
+                        // They can access leader functions from the sidebar if they have active positions
                         return redirect()->route('member.dashboard')
                             ->with('success', 'Login successful! Welcome.');
                     } else {
-                        Auth::logout();
-                        return back()->withErrors(['role' => 'Unauthorized role.']);
+                        // Non-member users (legacy accounts without member_id)
+                        if ($user->role === 'secretary') {
+                            return redirect()->route('dashboard.secretary')
+                                ->with('success', 'Login successful! Welcome back.');
+                        } elseif ($user->role === 'pastor') {
+                            return redirect()->route('dashboard.pastor')
+                                ->with('success', 'Login successful! Welcome Pastor.');
+                        } elseif ($user->role === 'treasurer') {
+                            return redirect()->route('finance.dashboard')
+                                ->with('success', 'Login successful! Welcome Treasurer.');
+                        } else {
+                            Auth::logout();
+                            return back()->withErrors(['role' => 'Unauthorized role.']);
+                        }
                     }
                 }
             }
@@ -554,25 +563,30 @@ class AuthController extends Controller
             // Silently continue if table doesn't exist
         }
         
-        // Redirect based on role
-        if ($user->role === 'secretary') {
-            return redirect()->route('dashboard.secretary')
-                ->with('success', 'Login successful! Welcome back.');
-        } elseif ($user->role === 'pastor') {
-            return redirect()->route('dashboard.pastor')
-                ->with('success', 'Login successful! Welcome Pastor.');
-        } elseif ($user->role === 'admin') {
+        // Redirect based on role - but members and leaders go to member dashboard first
+        if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Login successful! Welcome Admin.');
-        } elseif ($user->role === 'treasurer') {
-            return redirect()->route('finance.dashboard')
-                ->with('success', 'Login successful! Welcome Treasurer.');
-        } elseif ($user->role === 'member') {
+        } elseif ($user->member_id) {
+            // All members and leaders (who are members) go to member dashboard
+            // They can access leader functions from the sidebar if they have active positions
             return redirect()->route('member.dashboard')
                 ->with('success', 'Login successful! Welcome.');
         } else {
-            Auth::logout();
-            return back()->withErrors(['role' => 'Unauthorized role.']);
+            // Non-member users (legacy accounts without member_id)
+            if ($user->role === 'secretary') {
+                return redirect()->route('dashboard.secretary')
+                    ->with('success', 'Login successful! Welcome back.');
+            } elseif ($user->role === 'pastor') {
+                return redirect()->route('dashboard.pastor')
+                    ->with('success', 'Login successful! Welcome Pastor.');
+            } elseif ($user->role === 'treasurer') {
+                return redirect()->route('finance.dashboard')
+                    ->with('success', 'Login successful! Welcome Treasurer.');
+            } else {
+                Auth::logout();
+                return back()->withErrors(['role' => 'Unauthorized role.']);
+            }
         }
     }
 
@@ -657,14 +671,18 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->isPastor()) {
-                return redirect()->route('dashboard.pastor');
-            } elseif ($user->isTreasurer()) {
-                return redirect()->route('finance.dashboard');
-            } elseif ($user->isMember()) {
+            } elseif ($user->member_id) {
+                // All members and leaders (who are members) go to member dashboard
                 return redirect()->route('member.dashboard');
             } else {
-                return redirect()->route('dashboard.secretary');
+                // Non-member users (legacy accounts)
+                if ($user->isPastor()) {
+                    return redirect()->route('dashboard.pastor');
+                } elseif ($user->isTreasurer()) {
+                    return redirect()->route('finance.dashboard');
+                } else {
+                    return redirect()->route('dashboard.secretary');
+                }
             }
         }
         
@@ -827,14 +845,18 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->isPastor()) {
-                return redirect()->route('dashboard.pastor');
-            } elseif ($user->isTreasurer()) {
-                return redirect()->route('finance.dashboard');
-            } elseif ($user->isMember()) {
+            } elseif ($user->member_id) {
+                // All members and leaders (who are members) go to member dashboard
                 return redirect()->route('member.dashboard');
             } else {
-                return redirect()->route('dashboard.secretary');
+                // Non-member users (legacy accounts)
+                if ($user->isPastor()) {
+                    return redirect()->route('dashboard.pastor');
+                } elseif ($user->isTreasurer()) {
+                    return redirect()->route('finance.dashboard');
+                } else {
+                    return redirect()->route('dashboard.secretary');
+                }
             }
         }
         
