@@ -19,6 +19,10 @@
         <meta name="author" content="" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>Waumini Link - Dashboard</title>
+        <!-- Google Fonts - Montserrat as fallback (similar to Century Gothic) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
         <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
         <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
@@ -28,13 +32,68 @@
         <!-- SweetAlert Helpers -->
         <script src="{{ asset('js/sweetalert-helpers.js') }}"></script>
         <style>
-            /* Global Font: Century Gothic */
-            * {
-                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif !important;
+            /* Global Font: Century Gothic with web font fallback for mobile */
+            *,
+            *::before,
+            *::after {
+                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
             }
             
-            body, html {
-                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif !important;
+            html,
+            body,
+            input,
+            textarea,
+            select,
+            button,
+            a,
+            span,
+            div,
+            p,
+            h1, h2, h3, h4, h5, h6,
+            label,
+            table,
+            th,
+            td,
+            .form-control,
+            .btn,
+            .card,
+            .navbar,
+            .sidebar,
+            .sb-topnav,
+            .sb-sidenav {
+                font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
+            }
+            
+            /* Mobile-specific font enforcement - stronger rules */
+            @media (max-width: 768px) {
+                *,
+                *::before,
+                *::after {
+                    font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
+                }
+                
+                html,
+                body {
+                    font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                    text-rendering: optimizeLegibility;
+                }
+                
+                /* Force font on all common elements */
+                input, textarea, select, button, a, span, div, p, 
+                h1, h2, h3, h4, h5, h6, label, table, th, td,
+                .form-control, .btn, .card, .navbar, .sidebar,
+                .sb-topnav, .sb-sidenav, .card-body, .card-header {
+                    font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
+                }
+            }
+            
+            /* Extra small devices (phones) */
+            @media (max-width: 576px) {
+                * {
+                    font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Montserrat', sans-serif !important;
+                }
             }
             
             /* Prevent horizontal scrolling - minimal approach */
