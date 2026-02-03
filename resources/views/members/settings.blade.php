@@ -4,16 +4,16 @@
 <div class="container-fluid px-4">
     <div class="row mb-3">
         <div class="col-12">
-            <div class="card border-0 shadow-sm dashboard-header" style="background:white;">
+            <div class="card border-0 shadow-sm dashboard-header" style="background: #940000 !important;">
                 <div class="card-body py-2 px-3">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center border border-primary border-2" style="width:48px; height:48px; background:rgba(0,123,255,.1);">
-                                <i class="fas fa-cog text-primary"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px; height:48px; background:rgba(255,255,255,0.2) !important;">
+                                <i class="fas fa-cog text-white"></i>
                             </div>
                             <div class="lh-sm">
-                                <h5 class="mb-0 fw-semibold text-dark">Account Settings</h5>
-                                <small class="text-muted">Manage your profile and account preferences</small>
+                                <h5 class="mb-0 fw-semibold text-white">Account Settings</h5>
+                                <small class="text-white" style="opacity: 0.9;">Manage your profile and account preferences</small>
                             </div>
                         </div>
                     </div>
@@ -168,8 +168,8 @@
         <!-- Sidebar Info -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0">
+                <div class="card-header" style="background: #940000 !important; color: white !important;">
+                    <h6 class="mb-0 text-white">
                         <i class="fas fa-info-circle me-2"></i>Account Information
                     </h6>
                 </div>

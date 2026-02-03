@@ -143,7 +143,7 @@
                 ];
                 $selectedColor = $themeColors[$themeColor] ?? $themeColors['waumini'];
                 // Use a different color for cards/buttons, but keep sidebar as #17082d
-                $cardColor = '#4a5568'; // Nice gray-blue color for cards
+                $cardColor = '#940000'; // Brand red color for cards and buttons
             @endphp
             
             /* Apply card color to primary elements (cards, buttons) */
@@ -173,9 +173,10 @@
                 border-color: {{ $cardColor }} !important;
             }
             
-            /* Sidebar theme color - keep original #17082d */
+            /* Sidebar theme color - updated to match image (light pink backdrop) */
             .sb-sidenav {
-                background: linear-gradient(180deg, #17082d 0%, #17082ddd 100%) !important;
+                background-color: #fff0f0 !important;
+                background: #fff0f0 !important;
             }
             
             /* Top navigation bar style based on sidebar_style setting */
@@ -266,24 +267,14 @@
                 padding: 0.75rem 1.25rem !important;
             }
             
-            /* Ensure colored card headers keep their background colors */
-            .card-header.bg-primary {
-                background-color: #0d6efd !important;
-            }
-            .card-header.bg-success {
-                background-color: #198754 !important;
-            }
-            .card-header.bg-info {
-                background-color: #0dcaf0 !important;
-            }
-            .card-header.bg-warning {
-                background-color: #ffc107 !important;
-            }
-            .card-header.bg-danger {
-                background-color: #dc3545 !important;
-            }
+            /* Ensure all card headers use the brand theme color */
+            .card-header.bg-primary,
+            .card-header.bg-success,
+            .card-header.bg-info,
+            .card-header.bg-warning,
+            .card-header.bg-danger,
             .card-header.bg-secondary {
-                background-color: #6c757d !important;
+                background-color: #940000 !important;
             }
             
             .card-header.bg-primary h5,
@@ -672,17 +663,24 @@
             
             /* Custom sidebar styling */
             .sb-sidenav {
-                background-color: #17082d !important;
+                background-color: #fff0f0 !important;
             }
             
             .sb-sidenav .nav-link {
-                color: white !important;
-                transition: all 0.3s ease;
+                color: #000000 !important;
+                font-weight: 800 !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                border-left: 4px solid transparent !important;
+                padding-left: 0.75rem !important;
             }
             
-            .sb-sidenav .nav-link:hover {
-                background-color: #293846 !important;
-                color: white !important;
+            .sb-sidenav .nav-link:hover,
+            .sb-sidenav .nav-link.active {
+                background-color: rgba(148, 0, 0, 0.08) !important;
+                color: #940000 !important;
+                border-left: 4px solid #940000 !important;
+                padding-left: 1.25rem !important;
+                transform: translateX(4px) !important;
             }
             
             .sb-sidenav .sb-sidenav-menu-heading {
@@ -690,19 +688,31 @@
                 font-weight: 700 !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.8px !important;
-                font-size: 0.75rem !important;
-                padding: 0.75rem 1rem 0.25rem 1rem !important;
-                background-color: rgba(255, 255, 255, 0.1) !important;
-                border-radius: 4px !important;
-                margin: 0.5rem 0.5rem 0.25rem 0.5rem !important;
+                font-size: 0.85rem !important;
+                padding: 0.8rem 1rem !important;
+                background-color: #940000 !important;
+                border-radius: 6px !important;
+                margin: 0.5rem 0.8rem !important;
+                display: flex !important;
+                align-items: center !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }
             
-            .sb-sidenav .sb-nav-link-icon {
-                color: white !important;
-            }
-            
+            .sb-sidenav .sb-nav-link-icon,
             .sb-sidenav .sb-sidenav-collapse-arrow {
-                color: white !important;
+                color: #000000 !important;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease !important;
+            }
+            
+            .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+            .sb-sidenav .nav-link.active .sb-nav-link-icon {
+                color: #940000 !important;
+                transform: scale(1.15) !important;
+            }
+            
+            .sb-sidenav .nav-link:hover .sb-sidenav-collapse-arrow,
+            .sb-sidenav .nav-link.active .sb-sidenav-collapse-arrow {
+                color: #940000 !important;
             }
             
             /* Ensure all sidebar text is visible */
@@ -752,25 +762,62 @@
             color: #007bff !important;
         }
             
-            .sb-sidenav .nav-link {
-                color: #ffffff !important;
-                font-weight: 500 !important;
-            }
-            
-            .sb-sidenav .nav-link:hover {
-                color: #ffffff !important;
-                background-color: rgba(255, 255, 255, 0.1) !important;
-            }
-            
+
             .sb-sidenav .sb-sidenav-footer {
-                background-color: rgba(255, 255, 255, 0.1) !important;
+                background-color: #fff0f0 !important;
+                color: #000000 !important;
+                font-weight: 700 !important;
+                border-top: 1px solid rgba(0,0,0,0.05) !important;
+            }
+            
+            /* Global Dashboard Header styling - forces red theme */
+            .dashboard-header {
+                background-color: #940000 !important;
+                background: #940000 !important;
                 color: white !important;
+                border-radius: 12px !important;
+            }
+            
+            .dashboard-header h1, 
+            .dashboard-header h2, 
+            .dashboard-header h3, 
+            .dashboard-header h4, 
+            .dashboard-header h5, 
+            .dashboard-header h6,
+            .dashboard-header .text-dark,
+            .dashboard-header .text-muted,
+            .dashboard-header .card-title {
+                color: white !important;
+            }
+            
+            .dashboard-header .rounded-circle {
+                background: rgba(255, 255, 255, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            }
+            
+            .dashboard-header .rounded-circle i,
+            .dashboard-header i.text-primary {
+                color: white !important;
+            }
+            
+            .dashboard-header .btn-primary {
+                background-color: white !important;
+                color: #940000 !important;
+                border: none !important;
+                font-weight: 600 !important;
+            }
+            
+            .dashboard-header .btn-primary:hover {
+                background-color: #f8f9fa !important;
+                transform: translateY(-2px);
             }
             
             /* Card header titles styling */
             .card-header {
+                background-color: #940000 !important;
                 color: white !important;
                 font-weight: 600;
+                border-bottom: 1px solid rgba(0,0,0,0.1) !important;
             }
             
             /* Statistics card labels styling */
@@ -1930,7 +1977,7 @@
         </nav>
         <div id="layoutSidenav">
             <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             @if(auth()->user()->isAdmin())

@@ -10,10 +10,13 @@
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+<!-- Google Fonts - Montserrat -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
     :root {
-        --primary-color: #0084d6;
-        --secondary-color: #25D71B;
+        --primary-color: #940000;
+        --secondary-color: #b30000;
         --accent-color: #f8f9fa;
         --text-color: #333;
         --dark-overlay: rgba(0,0,0,0.5);
@@ -71,11 +74,11 @@
         position: absolute;
         top:0; left:0;
         width:100%; height:100%;
-        background: linear-gradient(135deg, rgba(0, 132, 214, 0.3), rgba(0,0,0,0.7));
+        background: linear-gradient(135deg, rgba(148, 0, 0, 0.3), rgba(0,0,0,0.7));
         transition: background-color 0.5s ease;
     }
     .login-left:hover::after {
-        background: linear-gradient(135deg, rgba(0, 132, 214, 0.4), rgba(0,0,0,0.6));
+        background: linear-gradient(135deg, rgba(148, 0, 0, 0.4), rgba(0,0,0,0.6));
     }
     .login-left-content {
         position: relative;
@@ -156,7 +159,7 @@
         transform: translateX(-50%);
         width: 50px;
         height: 3px;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(90deg, var(--primary-color), #700000);
         border-radius: 2px;
     }
 
@@ -192,7 +195,7 @@
     }
     .form-control:focus {
         border-color: var(--secondary-color);
-        box-shadow: 0 0 0 3px rgba(37, 215, 27, 0.1);
+        box-shadow: 0 0 0 3px rgba(148, 0, 0, 0.1);
         background-color: #ffffff;
         outline: none;
     }
@@ -230,7 +233,7 @@
     }
     .password-toggle:hover {
         color: var(--primary-color);
-        background-color: rgba(0, 132, 214, 0.1);
+        background-color: rgba(148, 0, 0, 0.1);
         transform: translateY(-50%) scale(1.1);
     }
     .password-toggle:active {
@@ -240,7 +243,7 @@
     .btn-login {
         width: 100%;
         padding: 14px;
-        background: linear-gradient(135deg, var(--primary-color), #006aad);
+        background: linear-gradient(135deg, var(--primary-color), #700000);
         color: #fff;
         font-weight: 600;
         font-size: 16px;
@@ -249,7 +252,7 @@
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 132, 214, 0.2);
+        box-shadow: 0 4px 15px rgba(148, 0, 0, 0.2);
         letter-spacing: 0.5px;
     }
     .btn-login::before {
@@ -263,9 +266,9 @@
         transition: all 0.5s ease;
     }
     .btn-login:hover {
-        background: linear-gradient(135deg, var(--secondary-color), #1fb115);
+        background: linear-gradient(135deg, #b30000, #940000);
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(37, 215, 27, 0.4);
+        box-shadow: 0 8px 25px rgba(148, 0, 0, 0.4);
     }
     .btn-login:hover::before {
         left: 100%;
@@ -444,7 +447,7 @@
     }
     .footer-bar {
         height: 5px;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(90deg, var(--primary-color), #700000);
         width: 100%;
         margin-bottom: 15px;
     }
@@ -511,7 +514,7 @@
         right: 0;
         bottom: 0;
         opacity: 0.03;
-        background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230084d6' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23940000' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
         pointer-events: none;
     }
 
@@ -528,7 +531,7 @@
     }
     .alert-info {
         border-left-color: var(--primary-color);
-        background-color: rgba(0, 132, 214, 0.1);
+        background-color: rgba(148, 0, 0, 0.1);
     }
     .alert-danger {
         border-left-color: var(--error-color);
@@ -568,6 +571,13 @@
     }
 
     @media (max-width: 768px) {
+        *, body, html, h1, h2, h3, h4, h5, h6, p, span, a, input, button, select, textarea {
+            font-family: 'Montserrat', sans-serif !important;
+        }
+        i, [class^="fa-"], [class*=" fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+        }
+
         .login-form .logo {
             display: none; /* Hide logo in form on mobile */
         }
@@ -643,7 +653,6 @@
         <div class="background-pattern"></div>
         <form class="login-form" id="loginForm" method="POST" action="{{ route('login.post') }}">
             @csrf
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo">
             <h2>Login</h2>
 
             <!-- Display success message -->

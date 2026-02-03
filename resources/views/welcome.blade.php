@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +10,15 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Google Fonts - Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
             font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
@@ -20,12 +26,13 @@
 
         /* Navbar */
         .navbar-custom {
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.4);
             position: fixed;
             width: 100%;
             z-index: 10;
             padding: 15px 30px;
         }
+
         .navbar-custom .navbar-brand img {
             height: 50px;
         }
@@ -41,6 +48,7 @@
             color: white;
             overflow: hidden;
         }
+
         .hero video {
             position: absolute;
             top: 50%;
@@ -51,14 +59,18 @@
             object-fit: cover;
             z-index: 0;
         }
+
         .hero::before {
             content: "";
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1;
         }
+
         .hero-content {
             position: relative;
             z-index: 2;
@@ -66,28 +78,34 @@
             padding: 0 20px;
             animation: fadeIn 1.5s ease-in-out;
         }
+
         .hero-content h1 {
             font-size: 3rem;
             font-weight: bold;
             margin-bottom: 20px;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
         }
+
         .hero-content p {
             font-size: 1.3rem;
             margin-bottom: 30px;
-            text-shadow: 1px 1px 6px rgba(0,0,0,0.7);
+            text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7);
         }
+
         .btn-welcome {
             background-color: #ffffff;
-            color: #0084d6;
+            color: #940000;
             font-weight: bold;
             padding: 12px 40px;
             border-radius: 8px;
             transition: all 0.3s ease;
         }
+
         .btn-welcome:hover {
-            background-color: #25D71B;
+            background: linear-gradient(135deg, #b30000, #940000);
             color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(148, 0, 0, 0.3);
         }
 
         /* Features Section */
@@ -95,36 +113,41 @@
             background-color: #f8f9fa;
             padding: 60px 0;
         }
+
         .features h2 {
             font-weight: bold;
             position: relative;
             display: inline-block;
             margin-bottom: 20px;
         }
+
         .features h2::after {
             content: '';
             display: block;
             width: 60px;
             height: 4px;
-            background-color: #25D71B;
+            background-color: #940000;
             margin: 10px auto 0;
             border-radius: 2px;
         }
+
         .feature-card {
-            border: 2px solid #0084d6;
+            border: 2px solid #940000;
             border-radius: 12px;
             transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
             padding: 40px 20px;
             background-color: #fff;
         }
+
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-color: #006aad;
+            box-shadow: 0 10px 30px rgba(148, 0, 0, 0.15);
+            border-color: #700000;
         }
+
         .feature-card i {
             font-size: 3rem;
-            color: #0084d6;
+            color: #940000;
             margin-bottom: 20px;
         }
 
@@ -136,39 +159,46 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         /* Footer Top Bar */
         .footer-top-bar {
             height: 5px;
-            background: linear-gradient(90deg, #0084d6 0%, #006aad 50%, #0084d6 100%);
+            background: linear-gradient(90deg, #940000 0%, #700000 50%, #940000 100%);
             background-size: 200% 100%;
             animation: gradientShift 3s ease infinite;
             margin-bottom: 40px;
-            box-shadow: 0 2px 10px rgba(0, 132, 214, 0.3);
+            box-shadow: 0 2px 10px rgba(148, 0, 0, 0.3);
         }
-        
+
         @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
-        
+
         .footer-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        
+
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 40px;
             margin-bottom: 40px;
         }
-        
+
         .footer-section {
             position: relative;
         }
-        
+
         .footer-section h5 {
             font-weight: 700;
             margin-bottom: 20px;
@@ -177,7 +207,7 @@
             position: relative;
             padding-bottom: 10px;
         }
-        
+
         .footer-section h5::after {
             content: '';
             position: absolute;
@@ -185,41 +215,41 @@
             left: 0;
             width: 50px;
             height: 3px;
-            background: linear-gradient(90deg, #0084d6 0%, #006aad 100%);
+            background: linear-gradient(90deg, #940000 0%, #700000 100%);
             border-radius: 2px;
-            box-shadow: 0 2px 5px rgba(0, 132, 214, 0.4);
+            box-shadow: 0 2px 5px rgba(148, 0, 0, 0.4);
         }
-        
+
         .footer-section p {
             color: #b0b0b0;
             line-height: 1.8;
             margin-bottom: 15px;
             font-size: 0.95rem;
         }
-        
+
         .footer-logo {
             margin-bottom: 20px;
         }
-        
+
         .footer-logo img {
             height: 50px;
             transition: transform 0.3s ease;
         }
-        
+
         .footer-logo:hover img {
             transform: scale(1.05);
         }
-        
+
         .footer-links {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        
+
         .footer-links li {
             margin-bottom: 12px;
         }
-        
+
         .footer-links a {
             color: #b0b0b0;
             text-decoration: none;
@@ -228,92 +258,92 @@
             transition: all 0.3s ease;
             font-size: 0.95rem;
         }
-        
+
         .footer-links a i {
             margin-right: 10px;
             width: 20px;
-            color: #0084d6;
+            color: #940000;
             transition: transform 0.3s ease, color 0.3s ease;
         }
-        
+
         .footer-links a:hover {
-            color: #0084d6;
+            color: #940000;
             transform: translateX(5px);
         }
-        
+
         .footer-links a:hover i {
             transform: scale(1.2);
-            color: #25D71B;
+            color: #b30000;
         }
-        
+
         .footer-contact-item {
             display: flex;
             align-items: flex-start;
             margin-bottom: 15px;
             color: #b0b0b0;
         }
-        
+
         .footer-contact-item i {
             margin-right: 12px;
             margin-top: 5px;
-            color: #0084d6;
+            color: #940000;
             font-size: 1.1rem;
             width: 20px;
             flex-shrink: 0;
             transition: color 0.3s ease, transform 0.3s ease;
         }
-        
+
         .footer-contact-item:hover i {
-            color: #25D71B;
+            color: #b30000;
             transform: scale(1.1);
         }
-        
+
         .footer-contact-item span {
             line-height: 1.6;
         }
-        
+
         .footer-contact-item span a {
             color: inherit;
             text-decoration: none;
             transition: color 0.3s ease;
         }
-        
+
         .footer-contact-item span a:hover {
             color: #0084d6;
         }
-        
+
         .footer-social {
             display: flex;
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .footer-social a {
             width: 45px;
             height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 132, 214, 0.15);
+            background: rgba(148, 0, 0, 0.15);
             border-radius: 50%;
-            color: #0084d6;
+            color: #940000;
             text-decoration: none;
             transition: all 0.3s ease;
-            border: 2px solid rgba(0, 132, 214, 0.3);
+            border: 2px solid rgba(148, 0, 0, 0.3);
         }
-        
+
         .footer-social a:hover {
-            background: linear-gradient(135deg, #0084d6 0%, #006aad 100%);
+            background: linear-gradient(135deg, #940000 0%, #700000 100%);
             color: #fff;
             transform: translateY(-5px) scale(1.1);
-            border-color: #0084d6;
-            box-shadow: 0 5px 20px rgba(0, 132, 214, 0.5);
+            border-color: #940000;
+            box-shadow: 0 5px 20px rgba(148, 0, 0, 0.5);
         }
-        
+
         .footer-social a i {
             font-size: 1.2rem;
         }
-        
+
         .footer-bottom {
             background: rgba(0, 0, 0, 0.3);
             padding: 25px 0;
@@ -321,7 +351,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             margin-top: 40px;
         }
-        
+
         .footer-bottom-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -332,13 +362,13 @@
             flex-wrap: wrap;
             gap: 20px;
         }
-        
+
         .footer-bottom p {
             color: #b0b0b0;
             margin: 0;
             font-size: 0.9rem;
         }
-        
+
         .footer-bottom .powered-by {
             display: flex;
             align-items: center;
@@ -346,21 +376,21 @@
             color: #b0b0b0;
             font-size: 0.9rem;
         }
-        
+
         .footer-bottom .powered-by img {
             height: 25px;
             opacity: 0.8;
             transition: opacity 0.3s ease;
         }
-        
+
         .footer-bottom .powered-by:hover img {
             opacity: 1;
         }
-        
+
         .footer-bottom .powered-by:hover {
-            color: #0084d6;
+            color: #940000;
         }
-        
+
         /* Decorative Elements */
         .footer-decoration {
             position: absolute;
@@ -368,127 +398,173 @@
             right: 0;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(0, 132, 214, 0.15) 0%, rgba(0, 132, 214, 0.05) 50%, transparent 70%);
+            background: radial-gradient(circle, rgba(148, 0, 0, 0.15) 0%, rgba(148, 0, 0, 0.05) 50%, transparent 70%);
             border-radius: 50%;
             transform: translate(30%, 30%);
             pointer-events: none;
         }
-        
+
         /* Primary Color Accents */
         .footer-section h5 {
-            text-shadow: 0 0 10px rgba(0, 132, 214, 0.2);
+            text-shadow: 0 0 10px rgba(148, 0, 0, 0.2);
         }
-        
+
         .footer-logo img {
             opacity: 0.9;
         }
-        
+
         .footer-logo:hover img {
             opacity: 1;
-            filter: drop-shadow(0 0 8px rgba(0, 132, 214, 0.6));
+            filter: drop-shadow(0 0 8px rgba(148, 0, 0, 0.6));
         }
-        
+
         @media (max-width: 768px) {
+
+            *,
+            body,
+            html,
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            p,
+            span,
+            a,
+            input,
+            button,
+            select,
+            textarea {
+                font-family: 'Montserrat', sans-serif !important;
+            }
+
+            i,
+            [class^="fa-"],
+            [class*=" fa-"] {
+                font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+            }
+
             .footer-content {
                 grid-template-columns: 1fr;
                 gap: 30px;
                 text-align: center;
             }
-            
+
             .footer-section {
                 text-align: center;
             }
-            
+
             .footer-section h5::after {
                 left: 50%;
                 transform: translateX(-50%);
             }
-            
+
             .footer-logo {
                 display: flex;
                 justify-content: center;
             }
-            
+
             .footer-links {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .footer-links li {
                 text-align: center;
             }
-            
+
             .footer-links a {
                 justify-content: center;
             }
-            
+
             .footer-contact-item {
                 justify-content: center;
             }
-            
+
             .footer-bottom-content {
                 flex-direction: column;
                 text-align: center;
             }
-            
+
             .footer-social {
                 justify-content: center;
             }
         }
 
         @keyframes fadeIn {
-            0% {opacity: 0; transform: translateY(-20px);}
-            100% {opacity: 1; transform: translateY(0);}
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
             .hero-content h1 {
                 font-size: 2.2rem;
             }
+
             .hero-content p {
                 font-size: 1.1rem;
             }
+
             .navbar-custom .navbar-brand img {
                 height: 40px;
             }
+
             .footer-content {
                 grid-template-columns: 1fr;
                 gap: 30px;
                 text-align: center;
             }
+
             .footer-section {
                 text-align: center;
             }
+
             .footer-section h5::after {
                 left: 50%;
                 transform: translateX(-50%);
             }
+
             .footer-logo {
                 display: flex;
                 justify-content: center;
             }
+
             .footer-links {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
             }
+
             .footer-links li {
                 text-align: center;
             }
+
             .footer-links a {
                 justify-content: center;
             }
+
             .footer-contact-item {
                 justify-content: center;
             }
+
             .footer-bottom-content {
                 flex-direction: column;
                 text-align: center;
             }
+
             .footer-social {
                 justify-content: center;
             }
+
             .footer-decoration {
                 width: 200px;
                 height: 200px;
@@ -496,6 +572,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Navbar -->
@@ -507,7 +584,8 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="{{ asset('assets/images/church.jpg') }}">
+        <video id="heroVideo" autoplay muted loop playsinline preload="auto"
+            poster="{{ asset('assets/images/church.jpg') }}">
             <source src="{{ asset('assets/videos/waumini_link_video.mp4') }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -556,16 +634,14 @@
     <footer>
         <div class="footer-top-bar"></div>
         <div class="footer-decoration"></div>
-        
+
         <div class="footer-container">
             <div class="footer-content">
                 <!-- About Section -->
                 <div class="footer-section">
-                    <div class="footer-logo">
-                        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
-                    </div>
                     <h5>About Waumini Link</h5>
-                    <p>Your comprehensive church management system designed to streamline member administration, financial tracking, and community engagement.</p>
+                    <p>Your comprehensive church management system designed to streamline member administration,
+                        financial tracking, and community engagement.</p>
                     <div class="footer-social">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
@@ -573,7 +649,7 @@
                         <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
-                
+
                 <!-- Quick Links Section -->
                 <div class="footer-section">
                     <h5>Quick Links</h5>
@@ -586,17 +662,19 @@
                         <li><a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
                     </ul>
                 </div>
-                
+
                 <!-- Contact Section -->
                 <div class="footer-section">
                     <h5>Contact Us</h5>
                     <div class="footer-contact-item">
                         <i class="fas fa-envelope"></i>
-                        <span><a href="mailto:emca@emca.tech" style="color: inherit; text-decoration: none;">emca@emca.tech</a></span>
+                        <span><a href="mailto:emca@emca.tech"
+                                style="color: inherit; text-decoration: none;">emca@emca.tech</a></span>
                     </div>
                     <div class="footer-contact-item">
                         <i class="fas fa-phone"></i>
-                        <span><a href="tel:+255749719998" style="color: inherit; text-decoration: none;">+255 749 719 998</a></span>
+                        <span><a href="tel:+255749719998" style="color: inherit; text-decoration: none;">+255 749 719
+                                998</a></span>
                     </div>
                     <div class="footer-contact-item">
                         <i class="fas fa-map-marker-alt"></i>
@@ -607,7 +685,7 @@
                         <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
                     </div>
                 </div>
-                
+
                 <!-- Services Section -->
                 <div class="footer-section">
                     <h5>Our Services</h5>
@@ -622,7 +700,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="footer-bottom">
             <div class="footer-bottom-content">
                 <p>&copy; {{ date('Y') }} Waumini Link. All rights reserved.</p>
@@ -646,4 +724,5 @@
         });
     </script>
 </body>
+
 </html>

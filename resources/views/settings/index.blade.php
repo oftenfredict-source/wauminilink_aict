@@ -95,8 +95,8 @@
                                 role="tab" 
                                 aria-controls="{{ $categoryKey }}" 
                                 aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                            <i class="{{ $category['icon'] }} me-2 text-{{ $category['color'] }}"></i>
-                            {{ $category['name'] }}
+                            <i class="{{ $category['icon'] }} me-2" style="color: #940000 !important;"></i>
+                            <span style="color: #940000 !important;">{{ $category['name'] }}</span>
                         </button>
                     </li>
                 @endforeach
@@ -112,7 +112,7 @@
                         
                         <div class="row">
                             <div class="col-12">
-                                <h5 class="text-{{ $categories[$categoryKey]['color'] }} mb-3">
+                                <h5 class="mb-3" style="color: #940000 !important;">
                                     <i class="{{ $categories[$categoryKey]['icon'] }} me-2"></i>
                                     {{ $categories[$categoryKey]['name'] }}
                                 </h5>
@@ -226,7 +226,7 @@
                                                 
                                                 @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
                                                 <div class="d-flex justify-content-end mt-3">
-                                                    <button type="submit" class="btn btn-{{ $categories[$categoryKey]['color'] }}">
+                                                    <button type="submit" class="btn text-white" style="background-color: #940000 !important; border-color: #940000 !important;">
                                                         <i class="fas fa-save me-2"></i>Save {{ $categories[$categoryKey]['name'] }}
                                                     </button>
                                                 </div>
