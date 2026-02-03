@@ -1818,6 +1818,7 @@
                 color: #ffffff !important;
             }
         </style>
+        @yield('styles')
     </head>
     <body class="sb-nav-fixed">
         @php

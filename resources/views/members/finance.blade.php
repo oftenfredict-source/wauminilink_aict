@@ -1,5 +1,39 @@
 @extends('layouts.index')
 
+@section('styles')
+<style>
+    .bg-primary {
+        background-color: #940000 !important;
+    }
+    .text-primary {
+        color: #940000 !important;
+    }
+    .border-primary {
+        border-color: #940000 !important;
+    }
+    .btn-outline-primary {
+        color: #940000 !important;
+        border-color: #940000 !important;
+    }
+    .btn-outline-primary:hover {
+        background-color: #940000 !important;
+        color: white !important;
+    }
+    .dashboard-header .border-primary {
+        border-color: #940000 !important;
+    }
+    .dashboard-header .text-primary {
+        color: #940000 !important;
+    }
+    .dashboard-header div.rounded-circle {
+        background: rgba(148, 0, 0, 0.1) !important;
+    }
+    .badge.bg-primary {
+        background-color: #940000 !important;
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid px-4">
     <div class="row mb-3">
