@@ -249,70 +249,68 @@
         </form>
 
         @if($budget)
-            <div class="row mb-4 g-3 kpi-row-theme">
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Total Budget</div>
-                                    <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->total_budget, 0) }}</div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-wallet fa-2x text-primary opacity-25"></i>
+                <div class="row mb-4 g-3 kpi-row-theme">
+                    <div class="col-xl-3 col-md-6 col-12">
+                        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="text-xs text-uppercase fw-bold text-primary mb-1">Total Budget</div>
+                                        <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->total_budget, 0) }}</div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-wallet fa-2x text-primary opacity-25"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Amount Spent</div>
-                                    <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->spent_amount, 0) }}</div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-receipt fa-2x text-primary opacity-25"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Committed Amount</div>
+                    <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->total_committed, 0) }}</div>
+                    <small class="text-muted">Paid: TZS {{ number_format($budget->spent_amount, 0) }}</small>
                 </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-receipt fa-2x text-primary opacity-25"></i>
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Remaining</div>
-                                    <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->remaining_amount, 0) }}</div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-piggy-bank fa-2x text-primary opacity-25"></i>
-                                </div>
+            <div class="col-xl-3 col-md-6 col-12">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="text-xs text-uppercase fw-bold text-primary mb-1">Available</div>
+                                <div class="h4 mb-0 fw-bold">TZS {{ number_format($budget->remaining_with_pending, 0) }}</div>
+                                <small class="text-muted">Incl. Pending</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-piggy-bank fa-2x text-primary opacity-25"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Utilization</div>
-                                    <div class="h4 mb-0 fw-bold">{{ $budget->utilization_percentage }}%</div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-chart-pie fa-2x text-primary opacity-25"></i>
-                                </div>
+            <div class="col-xl-3 col-md-6 col-12">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="text-xs text-uppercase fw-bold text-primary mb-1">Utilization</div>
+                                <div class="h4 mb-0 fw-bold">{{ $budget->utilization_committed_percentage }}%</div>
+                                <small class="text-muted">Committed</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chart-pie fa-2x text-primary opacity-25"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
 
             <!-- Budget Information -->
@@ -333,15 +331,15 @@
                         <div class="col-md-6">
                             <h6>Budget Status</h6>
                             <div class="progress mb-2" style="height: 25px;">
-                                <div class="progress-bar {{ $budget->is_over_budget ? 'bg-danger' : ($budget->is_near_limit ? 'bg-warning' : 'bg-success') }}"
-                                    style="width: {{ min($budget->utilization_percentage, 100) }}%">
-                                    {{ $budget->utilization_percentage }}%
+                                <div class="progress-bar {{ $budget->total_committed > $budget->total_budget ? 'bg-danger' : ($budget->utilization_committed_percentage >= 90 ? 'bg-warning' : 'bg-success') }}"
+                                    style="width: {{ min($budget->utilization_committed_percentage, 100) }}%">
+                                    {{ $budget->utilization_committed_percentage }}%
                                 </div>
                             </div>
                             <p class="text-muted">
-                                @if($budget->is_over_budget)
+                                @if($budget->total_committed > $budget->total_budget)
                                     <i class="fas fa-exclamation-triangle text-danger me-1"></i>Over Budget
-                                @elseif($budget->is_near_limit)
+                                @elseif($budget->utilization_committed_percentage >= 90)
                                     <i class="fas fa-exclamation-circle text-warning me-1"></i>Near Limit
                                 @else
                                     <i class="fas fa-check-circle text-success me-1"></i>On Track
@@ -431,8 +429,7 @@
                                             <div class="fw-bold">{{ $expense->expense_name }}</div>
                                             <div class="d-md-none">
                                                 <small class="text-muted d-block">
-                                                    <i
-                                                        class="fas fa-calendar me-1"></i>{{ $expense->expense_date->format('M d, Y') }}
+                                                    <i class="fas fa-calendar me-1"></i>{{ $expense->expense_date->format('M d, Y') }}
                                                 </small>
                                                 @if($expense->vendor)
                                                     <small class="text-muted d-block">
@@ -471,41 +468,52 @@
                 </div>
             </div>
         @else
-            <!-- Budget Selection -->
-            <div class="card mb-4">
-                <div class="card-header report-header-primary py-2">
-                    <h6 class="mb-0 text-white"><i class="fas fa-wallet me-1"></i>Select a Budget to View Performance</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        @foreach($budgets as $b)
-                            <div class="col-md-4 col-12">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ $b->budget_name }}</h5>
-                                        <p class="card-text text-muted">{{ $b->budget_type }} - {{ $b->fiscal_year }}</p>
-                                        <div class="progress mb-2" style="height: 20px;">
-                                            <div class="progress-bar {{ $b->is_over_budget ? 'bg-danger' : ($b->is_near_limit ? 'bg-warning' : 'bg-success') }}"
-                                                style="width: {{ min($b->utilization_percentage, 100) }}%">
-                                                {{ $b->utilization_percentage }}%
-                                            </div>
+        <!-- Budget Selection -->
+        <div class="card mb-4">
+            <div class="card-header report-header-primary py-2">
+                <h6 class="mb-0 text-white"><i class="fas fa-wallet me-1"></i>Select a Budget to View Performance</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach($budgets as $b)
+                        @php
+                            $b_pending = (float) \App\Models\Expense::where('budget_id', $b->id)
+                                ->where('status', '!=', 'paid')
+                                ->where(function ($q) {
+                                    $q->whereIn('approval_status', ['pending', 'approved'])
+                                        ->orWhereNull('approval_status');
+                                })
+                                ->sum('amount');
+                            $b_committed = (float) $b->spent_amount + $b_pending;
+                            $b_utilization = $b->total_budget > 0 ? round(($b_committed / (float) $b->total_budget) * 100, 2) : 0;
+                        @endphp
+                        <div class="col-md-4 col-12">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ $b->budget_name }}</h5>
+                                    <p class="card-text text-muted">{{ $b->budget_type }} - {{ $b->fiscal_year }}</p>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar {{ $b_committed > $b->total_budget ? 'bg-danger' : ($b_utilization >= 90 ? 'bg-warning' : 'bg-success') }}"
+                                            style="width: {{ min($b_utilization, 100) }}%">
+                                            {{ $b_utilization }}%
                                         </div>
-                                        <p class="card-text">
-                                            <small class="text-muted">
-                                                TZS {{ number_format($b->spent_amount, 0) }} /
-                                                {{ number_format($b->total_budget, 0) }}
-                                            </small>
-                                        </p>
-                                        <a href="{{ route('reports.budget-performance', ['budget_id' => $b->id]) }}"
-                                            class="btn btn-primary">View Performance</a>
                                     </div>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Committed: TZS {{ number_format($b_committed, 0) }} /
+                                            {{ number_format((float) $b->total_budget, 0) }}
+                                        </small>
+                                    </p>
+                                    <a href="{{ route('reports.budget-performance', ['budget_id' => $b->id]) }}"
+                                        class="btn btn-primary">View Performance</a>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        @endif
+        </div>
+    @endif
     </div>
 
     @if($budget && isset($monthlyData))
@@ -521,17 +529,25 @@
                     data: {
                         labels: monthlyData.map(item => item.month),
                         datasets: [{
-                            label: 'Amount Spent',
+                            label: 'Paid (Spent)',
                             data: monthlyData.map(item => item.spent),
                             backgroundColor: '#940000cc',
                             borderColor: '#940000',
                             borderWidth: 1
                         }, {
-                            label: 'Budget Limit',
-                            data: monthlyData.map(item => item.budget),
-                            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                            borderColor: 'rgba(0, 0, 0, 0.2)',
+                            label: 'Pending Approval',
+                            data: monthlyData.map(item => item.pending),
+                            backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                            borderColor: '#ffc107',
                             borderWidth: 1
+                        }, {
+                            label: 'Total Budget Limit',
+                            data: monthlyData.map(item => item.budget),
+                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                            borderColor: 'rgba(0, 0, 0, 0.1)',
+                            borderDash: [5, 5],
+                            type: 'line',
+                            fill: false
                         }]
                     },
                     options: {
@@ -684,7 +700,7 @@
                     if (filterHeader) filterHeader.classList.add('active');
                 }
             @endif
-        });
+            });
 
         function exportReport(format) {
             const budgetId = '{{ $budget->id ?? "" }}';

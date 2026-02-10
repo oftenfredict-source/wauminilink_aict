@@ -10,7 +10,7 @@
     @if($permanentMembers->count() > 0)
         <div class="col-12">
             <h5 class="text-primary mb-3">
-                <i class="fas fa-users me-2"></i>Permanent Members ({{ $permanentMembers->count() }})
+                <i class="fas fa-users me-2"></i>Permanent Members ({{ $totalPermanent ?? $permanentMembers->count() }})
             </h5>
         </div>
         @foreach($permanentMembers as $member)
@@ -142,7 +142,7 @@
     @if($temporaryMembers->count() > 0)
         <div class="col-12 mt-4">
             <h5 class="text-warning mb-3">
-                <i class="fas fa-user-clock me-2"></i>Temporary Members ({{ $temporaryMembers->count() }})
+                <i class="fas fa-user-clock me-2"></i>Temporary Members ({{ $totalTemporary ?? $temporaryMembers->count() }})
             </h5>
         </div>
         @foreach($temporaryMembers as $member)

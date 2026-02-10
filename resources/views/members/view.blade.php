@@ -1103,8 +1103,8 @@
         <div id="listView">
             <!-- Tabs and main table section -->
             @php
-                $permanentCount = $members->where('membership_type', 'permanent')->count();
-                $temporaryCount = $members->where('membership_type', 'temporary')->count();
+                $permanentCount = $totalPermanent ?? $members->where('membership_type', 'permanent')->count();
+                $temporaryCount = $totalTemporary ?? $members->where('membership_type', 'temporary')->count();
                 $childrenCount = ($children ?? collect())->count();
                 $archivedCount = ($archivedMembers ?? collect())->count();
             @endphp
@@ -1623,137 +1623,137 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header text-white border-0"
-                        style="background: linear-gradient(135deg, #940000 0%, #ff4d4d 100%); padding: 1.5rem;">
-                        <h5 class="modal-title" id="addChildModalLabel"><i class="fas fa-child me-2"></i>Add Child</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" style="background: #fffafa;">
-                            <form id="addChildForm">
-                                <div class="row g-3">
-                                    <div class="col-md-12">
-                                        <label class="form-label">Child's Full Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="child_full_name" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Gender <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="child_gender" required>
-                                            <option value="">Select</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="child_date_of_birth" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Age</label>
-                                        <input type="text" class="form-control" id="child_age" readonly>
-                                    </div>
+                    style="background: linear-gradient(135deg, #940000 0%, #ff4d4d 100%); padding: 1.5rem;">
+                    <h5 class="modal-title" id="addChildModalLabel"><i class="fas fa-child me-2"></i>Add Child</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="background: #fffafa;">
+                    <form id="addChildForm">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Child's Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="child_full_name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                                <select class="form-select" id="child_gender" required>
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="child_date_of_birth" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Age</label>
+                                <input type="text" class="form-control" id="child_age" readonly>
+                            </div>
 
-                                    <div class="col-12">
-                                        <hr>
-                                        <h6 class="mb-3"><i class="fas fa-user-friends me-2"></i>Parent/Guardian Information</h6>
-                                    </div>
+                            <div class="col-12">
+                                <hr>
+                                <h6 class="mb-3"><i class="fas fa-user-friends me-2"></i>Parent/Guardian Information</h6>
+                            </div>
 
-                                    <div class="col-md-12">
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="radio" name="parent_type" id="parent_member"
-                                                value="member" checked>
-                                            <label class="form-check-label" for="parent_member">
-                                                Parent is a Church Member
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="radio" name="parent_type" id="parent_non_member"
-                                                value="non_member">
-                                            <label class="form-check-label" for="parent_non_member">
-                                                Parent is NOT a Church Member
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Member Parent Fields -->
-                                    <div id="memberParentFields">
-                                        <div class="col-md-12">
-                                            <label class="form-label">Select Parent Member <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select" id="child_member_id">
-                                                <option value="">Select Member</option>
-                                                @foreach($members->flatten() as $member)
-                                                    <option value="{{ $member->id }}">{{ $member->full_name }}
-                                                        ({{ $member->member_id }})</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Non-Member Parent Fields -->
-                                    <div id="nonMemberParentFields" style="display: none;">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Parent/Guardian Name <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="child_parent_name">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Parent/Guardian Phone</label>
-                                            <input type="text" class="form-control" id="child_parent_phone">
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label">Relationship to Child</label>
-                                            <select class="form-select" id="child_parent_relationship">
-                                                <option value="">Select Relationship</option>
-                                                <option value="Father">Father</option>
-                                                <option value="Mother">Mother</option>
-                                                <option value="Guardian">Guardian</option>
-                                                <option value="Grandfather">Grandfather</option>
-                                                <option value="Grandmother">Grandmother</option>
-                                                <option value="Uncle">Uncle</option>
-                                                <option value="Aunt">Aunt</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                            <div class="col-md-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="parent_type" id="parent_member"
+                                        value="member" checked>
+                                    <label class="form-check-label" for="parent_member">
+                                        Parent is a Church Member
+                                    </label>
                                 </div>
-                            </form>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="parent_type" id="parent_non_member"
+                                        value="non_member">
+                                    <label class="form-check-label" for="parent_non_member">
+                                        Parent is NOT a Church Member
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Member Parent Fields -->
+                            <div id="memberParentFields">
+                                <div class="col-md-12">
+                                    <label class="form-label">Select Parent Member <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select" id="child_member_id">
+                                        <option value="">Select Member</option>
+                                        @foreach($members->flatten() as $member)
+                                            <option value="{{ $member->id }}">{{ $member->full_name }}
+                                                ({{ $member->member_id }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Non-Member Parent Fields -->
+                            <div id="nonMemberParentFields" style="display: none;">
+                                <div class="col-md-6">
+                                    <label class="form-label">Parent/Guardian Name <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="child_parent_name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Parent/Guardian Phone</label>
+                                    <input type="text" class="form-control" id="child_parent_phone">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Relationship to Child</label>
+                                    <select class="form-select" id="child_parent_relationship">
+                                        <option value="">Select Relationship</option>
+                                        <option value="Father">Father</option>
+                                        <option value="Mother">Mother</option>
+                                        <option value="Guardian">Guardian</option>
+                                        <option value="Grandfather">Grandfather</option>
+                                        <option value="Grandmother">Grandmother</option>
+                                        <option value="Uncle">Uncle</option>
+                                        <option value="Aunt">Aunt</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary px-4" onclick="saveChild()">
-                                <i class="fas fa-save me-2"></i>Save Child
-                            </button>
-                        </div>
-                    </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" onclick="saveChild()">
+                        <i class="fas fa-save me-2"></i>Save Child
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Archive Modal (should be included once per page, not per row) -->
-            <div class="modal fade" id="archiveMemberModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-archive me-2"></i>Archive Member</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Archive Modal (should be included once per page, not per row) -->
+    <div class="modal fade" id="archiveMemberModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-archive me-2"></i>Archive Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="archiveMemberForm">
+                        <input type="hidden" id="archive_member_id">
+                        <div class="mb-3">
+                            <label for="archive_reason" class="form-label">Reason for archiving</label>
+                            <textarea class="form-control" id="archive_reason" name="reason" rows="3" required></textarea>
                         </div>
-                        <div class="modal-body">
-                            <form id="archiveMemberForm">
-                                <input type="hidden" id="archive_member_id">
-                                <div class="mb-3">
-                                    <label for="archive_reason" class="form-label">Reason for archiving</label>
-                                    <textarea class="form-control" id="archive_reason" name="reason" rows="3" required></textarea>
-                                </div>
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-warning">Archive</button>
-                                </div>
-                            </form>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Archive</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-            </div>
-            </div>
+        </div>
+    </div>
+    </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -1945,15 +1945,15 @@
                 Swal.fire({
                     title: 'Archive Member',
                     html: `
-                                        <div class="mb-3">
-                                            <label for="archive-reason" class="form-label">Reason for archiving:</label>
-                                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
-                                        </div>
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
-                                        </div>
-                                    `,
+                                            <div class="mb-3">
+                                                <label for="archive-reason" class="form-label">Reason for archiving:</label>
+                                                <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                                            </div>
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                                            </div>
+                                        `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Archive Member',
@@ -2737,10 +2737,10 @@
                     };
                     const mapsBtn = (q) => q ? `<a href="#" onclick="return handleAction(()=>window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}','_blank'))" class="btn btn-sm btn-outline-success" title="Open in Maps" aria-label="Open in Maps"><i class="fas fa-map-marked-alt"></i></a>` : '';
                     const row = (icon, label, value, actions = '') => `
-                                        <tr>
-                                            <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
-                                            <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
-                                        </tr>`;
+                                            <tr>
+                                                <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
+                                                <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
+                                            </tr>`;
 
                     // Format date helper (use global if available, otherwise simple format)
                     const formatDateDisplay = (dateStr) => {
@@ -2801,43 +2801,43 @@
                     }
 
                     let html = `<div id="memberDetailsPrint" class="p-2">
-                                        <div class="d-flex justify-content-center gap-4 mb-3">
-                                            ${profilePictureUrl ? `
-                                            <div class="text-center">
-                                                <img src="${profilePictureUrl}" alt="Passport Photo" class="img-thumbnail" style="width: 150px; height: 180px; object-fit: cover; border: 2px solid #7a0000; border-radius: 8px;"/>
-                                                <div class="text-muted small mt-1">Passport Photo</div>
+                                            <div class="d-flex justify-content-center gap-4 mb-3">
+                                                ${profilePictureUrl ? `
+                                                <div class="text-center">
+                                                    <img src="${profilePictureUrl}" alt="Passport Photo" class="img-thumbnail" style="width: 150px; height: 180px; object-fit: cover; border: 2px solid #7a0000; border-radius: 8px;"/>
+                                                    <div class="text-muted small mt-1">Passport Photo</div>
+                                                </div>
+                                                ` : ''}
+                                                <div class="text-center">
+                                                    <img id="inlineQrImg" alt="Member details QR" width="120" height="120"/>
+                                                    <div class="text-muted small mt-1">Scan for details</div>
+                                                </div>
                                             </div>
-                                            ` : ''}
-                                            <div class="text-center">
-                                                <img id="inlineQrImg" alt="Member details QR" width="120" height="120"/>
-                                                <div class="text-muted small mt-1">Scan for details</div>
-                                            </div>
-                                        </div>
-                                        <div class="small text-uppercase text-muted mt-2 mb-1">Personal</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${row('fas fa-user', 'Full Name', data.full_name)}
-                                            ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
-                                            ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
-                                            ${row('fas fa-user-tag', 'Member Type', data.member_type)}
-                                            ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
-                                            ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
-                                            ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase() + data.gender.slice(1), (data.gender || '').toLowerCase() === 'male' ? 'primary' : 'danger') : '—')}
-                                            ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
-                                            ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
-                                            ${row('fas fa-briefcase', 'Profession', data.profession)}
-                                            ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
-                                        </tbody></table>
-                                        <div class="small text-uppercase text-muted mt-3 mb-1">Location</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                            ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                            ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                            ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                            ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address, data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                        </tbody></table>
-                                        <div class="small text-uppercase text-muted mt-3 mb-1">Family</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${(() => {
+                                            <div class="small text-uppercase text-muted mt-2 mb-1">Personal</div>
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${row('fas fa-user', 'Full Name', data.full_name)}
+                                                ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
+                                                ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
+                                                ${row('fas fa-user-tag', 'Member Type', data.member_type)}
+                                                ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
+                                                ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
+                                                ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase() + data.gender.slice(1), (data.gender || '').toLowerCase() === 'male' ? 'primary' : 'danger') : '—')}
+                                                ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
+                                                ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
+                                                ${row('fas fa-briefcase', 'Profession', data.profession)}
+                                                ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
+                                            </tbody></table>
+                                            <div class="small text-uppercase text-muted mt-3 mb-1">Location</div>
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address, data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                            </tbody></table>
+                                            <div class="small text-uppercase text-muted mt-3 mb-1">Family</div>
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${(() => {
                             const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_phone_number || data.spouse_email;
                             const hasChildren = Array.isArray(data.children) && data.children.length > 0;
                             const inferred = (hasSpouseDetails || hasChildren) ? 'yes' : 'no';
@@ -2846,9 +2846,9 @@
                             const pretty = value === 'yes' ? 'Yes' : (value === 'no' ? 'No' : '—');
                             return row('fas fa-users', 'Living with family', pretty);
                         })()}
-                                            ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
-                                            ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
-                                        </tbody></table>`;
+                                                ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
+                                                ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
+                                            </tbody></table>`;
 
                     // Add spouse section if available
                     const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_email || data.spouse_phone_number;
@@ -2871,36 +2871,36 @@
                             spouseId = data.spouse_member_id;
                         }
                         html += `
-                                        <div class="small text-uppercase text-muted mt-3 mb-1">${spouseTitle}</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
-                                            ${row('fas fa-user', spouseTitle + ' Name', spouseData.full_name || data.spouse_full_name)}
-                                            ${row('fas fa-church', spouseTitle + ' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
-                                            ${row('fas fa-id-badge', spouseTitle + ' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
-                                            ${row('fas fa-birthday-cake', spouseTitle + ' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
-                                            ${row('fas fa-graduation-cap', spouseTitle + ' Education', spouseData.education_level || data.spouse_education_level)}
-                                            ${row('fas fa-briefcase', spouseTitle + ' Profession', spouseData.profession || data.spouse_profession)}
-                                            ${row('fas fa-id-card', spouseTitle + ' NIDA', spouseData.nida_number || data.spouse_nida_number)}
-                                            ${row('fas fa-envelope', spouseTitle + ' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
-                                            ${row('fas fa-phone', spouseTitle + ' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
-                                            ${row('fas fa-flag', spouseTitle + ' Tribe', spouseTribe)}
-                                        </tbody></table>`;
+                                            <div class="small text-uppercase text-muted mt-3 mb-1">${spouseTitle}</div>
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
+                                                ${row('fas fa-user', spouseTitle + ' Name', spouseData.full_name || data.spouse_full_name)}
+                                                ${row('fas fa-church', spouseTitle + ' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
+                                                ${row('fas fa-id-badge', spouseTitle + ' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
+                                                ${row('fas fa-birthday-cake', spouseTitle + ' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
+                                                ${row('fas fa-graduation-cap', spouseTitle + ' Education', spouseData.education_level || data.spouse_education_level)}
+                                                ${row('fas fa-briefcase', spouseTitle + ' Profession', spouseData.profession || data.spouse_profession)}
+                                                ${row('fas fa-id-card', spouseTitle + ' NIDA', spouseData.nida_number || data.spouse_nida_number)}
+                                                ${row('fas fa-envelope', spouseTitle + ' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
+                                                ${row('fas fa-phone', spouseTitle + ' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
+                                                ${row('fas fa-flag', spouseTitle + ' Tribe', spouseTribe)}
+                                            </tbody></table>`;
                     }
 
                     // Guardian section
                     if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Guardian</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
-                                            ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
-                                            ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
-                                        </tbody></table>`;
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
+                                                ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
+                                                ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
+                                            </tbody></table>`;
                     }
 
                     // Children section
                     if (data.membership_type === 'permanent' && (data.member_type === 'father' || data.member_type === 'mother') && Array.isArray(data.children) && data.children.length > 0) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Children</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
                         data.children.forEach(child => {
                             html += `<tr><td>${child.full_name || '-'}</td><td>${child.gender || '-'}</td><td>${formatDateDisplay(child.date_of_birth)}</td></tr>`;
                         });
@@ -2910,10 +2910,10 @@
                     // Archive info
                     if (isArchived) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Archive Info</div>
-                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                            ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
-                                            ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
-                                        </tbody></table>`;
+                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
+                                                ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
+                                            </tbody></table>`;
                     }
                     html += `</div>`;
 
@@ -3001,10 +3001,10 @@
                     const memberDetailsBody = document.getElementById('memberDetailsBody');
                     if (memberDetailsBody) {
                         memberDetailsBody.innerHTML = `
-                                            <div class="text-danger">Failed to load member details. ${err && err.message ? '(' + err.message + ')' : ''}</div>
-                                            <div class="mt-2">
-                                                <button class="btn btn-sm btn-outline-primary" onclick="window.viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
-                                            </div>`;
+                                                <div class="text-danger">Failed to load member details. ${err && err.message ? '(' + err.message + ')' : ''}</div>
+                                                <div class="mt-2">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="window.viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
+                                                </div>`;
                     }
                     const detailsModalEl = document.getElementById('memberDetailsModal');
                     if (detailsModalEl) {
@@ -3764,14 +3764,14 @@
                         icon: 'info',
                         title: 'Report Opened',
                         html: `
-                                                <p>The report has been opened in a new window.</p>
-                                                <p><strong>To save the file:</strong></p>
-                                                <ol class="text-start">
-                                                    <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
-                                                    <li>Choose a location to save the file</li>
-                                                    <li>The file will be saved as an HTML file</li>
-                                                </ol>
-                                            `,
+                                                    <p>The report has been opened in a new window.</p>
+                                                    <p><strong>To save the file:</strong></p>
+                                                    <ol class="text-start">
+                                                        <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
+                                                        <li>Choose a location to save the file</li>
+                                                        <li>The file will be saved as an HTML file</li>
+                                                    </ol>
+                                                `,
                         showConfirmButton: true,
                         confirmButtonText: 'Got it!'
                     });
@@ -3785,14 +3785,14 @@
                     icon: 'error',
                     title: 'Download Failed',
                     html: `
-                                            <p>There was an error downloading the report.</p>
-                                            <p><strong>Alternative options:</strong></p>
-                                            <ul class="text-start">
-                                                <li>Use the "Print Report" option and save as PDF</li>
-                                                <li>Copy the report content manually</li>
-                                                <li>Try using a different browser</li>
-                                            </ul>
-                                        `,
+                                                <p>There was an error downloading the report.</p>
+                                                <p><strong>Alternative options:</strong></p>
+                                                <ul class="text-start">
+                                                    <li>Use the "Print Report" option and save as PDF</li>
+                                                    <li>Copy the report content manually</li>
+                                                    <li>Try using a different browser</li>
+                                                </ul>
+                                            `,
                     showConfirmButton: true
                 });
             }
@@ -3800,246 +3800,246 @@
 
         function generateArchiveReportHTML(member, reason) {
             return `
-                                    <!DOCTYPE html>
-                                    <html lang="en">
-                                    <head>
-                                        <meta charset="UTF-8">
-                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                        <title>Member Archive Report - ${member.full_name}</title>
-                                        <style>
-                                            * {
-                                                margin: 0;
-                                                padding: 0;
-                                                box-sizing: border-box;
-                                            }
-
-                                            body {
-                                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                                                background: #f8f9fa;
-                                                padding: 20px;
-                                                line-height: 1.6;
-                                            }
-
-                                            .report-container {
-                                                max-width: 600px;
-                                                margin: 0 auto;
-                                                background: white;
-                                                border-radius: 15px;
-                                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                                                overflow: hidden;
-                                            }
-
-                                            .report-header {
-                                                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-                                                color: white;
-                                                padding: 25px;
-                                                text-align: center;
-                                            }
-
-                                            .report-header h1 {
-                                                font-size: 24px;
-                                                margin-bottom: 10px;
-                                                font-weight: 600;
-                                            }
-
-                                            .report-header .subtitle {
-                                                font-size: 14px;
-                                                opacity: 0.9;
-                                            }
-
-                                            .report-body {
-                                                padding: 30px;
-                                            }
-
-                                            .member-info {
-                                                background: #f8f9fa;
-                                                border-radius: 10px;
-                                                padding: 20px;
-                                                margin-bottom: 25px;
-                                            }
-
-                                            .member-info h3 {
-                                                color: #495057;
-                                                margin-bottom: 15px;
-                                                font-size: 18px;
-                                                border-bottom: 2px solid #dee2e6;
-                                                padding-bottom: 10px;
-                                            }
-
-                                            .info-grid {
-                                                display: grid;
-                                                grid-template-columns: 1fr 1fr;
-                                                gap: 15px;
-                                            }
-
-                                            .info-item {
-                                                display: flex;
-                                                flex-direction: column;
-                                            }
-
-                                            .info-label {
-                                                font-weight: 600;
-                                                color: #6c757d;
-                                                font-size: 12px;
-                                                text-transform: uppercase;
-                                                letter-spacing: 0.5px;
-                                                margin-bottom: 5px;
-                                            }
-
-                                            .info-value {
-                                                color: #212529;
-                                                font-size: 14px;
-                                                font-weight: 500;
-                                            }
-
-                                            .archive-reason {
-                                                background: #fff3cd;
-                                                border: 1px solid #ffeaa7;
-                                                border-radius: 10px;
-                                                padding: 20px;
-                                                margin-bottom: 25px;
-                                            }
-
-                                            .archive-reason h3 {
-                                                color: #856404;
-                                                margin-bottom: 15px;
-                                                font-size: 18px;
-                                                display: flex;
-                                                align-items: center;
-                                            }
-
-                                            .archive-reason h3::before {
-                                                content: "📋";
-                                                margin-right: 10px;
-                                            }
-
-                                            .reason-text {
-                                                color: #856404;
-                                                font-size: 14px;
-                                                line-height: 1.6;
-                                                background: white;
-                                                padding: 15px;
-                                                border-radius: 8px;
-                                                border-left: 4px solid #ffc107;
-                                            }
-
-                                            .financial-note {
-                                                background: #d1ecf1;
-                                                border: 1px solid #bee5eb;
-                                                border-radius: 10px;
-                                                padding: 20px;
-                                                text-align: center;
-                                            }
-
-                                            .financial-note h4 {
-                                                color: #0c5460;
-                                                margin-bottom: 10px;
-                                                font-size: 16px;
-                                            }
-
-                                            .financial-note p {
-                                                color: #0c5460;
-                                                font-size: 14px;
-                                                margin: 0;
-                                            }
-
-                                            .report-footer {
-                                                background: #f8f9fa;
-                                                padding: 20px;
-                                                text-align: center;
-                                                border-top: 1px solid #dee2e6;
-                                            }
-
-                                            .report-footer p {
-                                                color: #6c757d;
-                                                font-size: 12px;
-                                                margin: 0;
-                                            }
-
-                                            .date-time {
-                                                color: #6c757d;
-                                                font-size: 12px;
-                                                margin-top: 10px;
-                                            }
-
-                                            @media print {
-                                                body {
-                                                    background: white;
+                                        <!DOCTYPE html>
+                                        <html lang="en">
+                                        <head>
+                                            <meta charset="UTF-8">
+                                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                            <title>Member Archive Report - ${member.full_name}</title>
+                                            <style>
+                                                * {
+                                                    margin: 0;
                                                     padding: 0;
+                                                    box-sizing: border-box;
+                                                }
+
+                                                body {
+                                                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                                    background: #f8f9fa;
+                                                    padding: 20px;
+                                                    line-height: 1.6;
                                                 }
 
                                                 .report-container {
-                                                    box-shadow: none;
-                                                    border-radius: 0;
+                                                    max-width: 600px;
+                                                    margin: 0 auto;
+                                                    background: white;
+                                                    border-radius: 15px;
+                                                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                                    overflow: hidden;
                                                 }
-                                            }
-                                        </style>
-                                    </head>
-                                    <body>
-                                        <div class="report-container">
-                                            <div class="report-header">
-                                                <h1>📦 Member Archive Report</h1>
-                                                <p class="subtitle">Member has been moved to archived status</p>
-                                            </div>
 
-                                            <div class="report-body">
-                                                <div class="member-info">
-                                                    <h3>👤 Member Information</h3>
-                                                    <div class="info-grid">
-                                                        <div class="info-item">
-                                                            <span class="info-label">Full Name</span>
-                                                            <span class="info-value">${member.full_name || 'N/A'}</span>
+                                                .report-header {
+                                                    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                                    color: white;
+                                                    padding: 25px;
+                                                    text-align: center;
+                                                }
+
+                                                .report-header h1 {
+                                                    font-size: 24px;
+                                                    margin-bottom: 10px;
+                                                    font-weight: 600;
+                                                }
+
+                                                .report-header .subtitle {
+                                                    font-size: 14px;
+                                                    opacity: 0.9;
+                                                }
+
+                                                .report-body {
+                                                    padding: 30px;
+                                                }
+
+                                                .member-info {
+                                                    background: #f8f9fa;
+                                                    border-radius: 10px;
+                                                    padding: 20px;
+                                                    margin-bottom: 25px;
+                                                }
+
+                                                .member-info h3 {
+                                                    color: #495057;
+                                                    margin-bottom: 15px;
+                                                    font-size: 18px;
+                                                    border-bottom: 2px solid #dee2e6;
+                                                    padding-bottom: 10px;
+                                                }
+
+                                                .info-grid {
+                                                    display: grid;
+                                                    grid-template-columns: 1fr 1fr;
+                                                    gap: 15px;
+                                                }
+
+                                                .info-item {
+                                                    display: flex;
+                                                    flex-direction: column;
+                                                }
+
+                                                .info-label {
+                                                    font-weight: 600;
+                                                    color: #6c757d;
+                                                    font-size: 12px;
+                                                    text-transform: uppercase;
+                                                    letter-spacing: 0.5px;
+                                                    margin-bottom: 5px;
+                                                }
+
+                                                .info-value {
+                                                    color: #212529;
+                                                    font-size: 14px;
+                                                    font-weight: 500;
+                                                }
+
+                                                .archive-reason {
+                                                    background: #fff3cd;
+                                                    border: 1px solid #ffeaa7;
+                                                    border-radius: 10px;
+                                                    padding: 20px;
+                                                    margin-bottom: 25px;
+                                                }
+
+                                                .archive-reason h3 {
+                                                    color: #856404;
+                                                    margin-bottom: 15px;
+                                                    font-size: 18px;
+                                                    display: flex;
+                                                    align-items: center;
+                                                }
+
+                                                .archive-reason h3::before {
+                                                    content: "📋";
+                                                    margin-right: 10px;
+                                                }
+
+                                                .reason-text {
+                                                    color: #856404;
+                                                    font-size: 14px;
+                                                    line-height: 1.6;
+                                                    background: white;
+                                                    padding: 15px;
+                                                    border-radius: 8px;
+                                                    border-left: 4px solid #ffc107;
+                                                }
+
+                                                .financial-note {
+                                                    background: #d1ecf1;
+                                                    border: 1px solid #bee5eb;
+                                                    border-radius: 10px;
+                                                    padding: 20px;
+                                                    text-align: center;
+                                                }
+
+                                                .financial-note h4 {
+                                                    color: #0c5460;
+                                                    margin-bottom: 10px;
+                                                    font-size: 16px;
+                                                }
+
+                                                .financial-note p {
+                                                    color: #0c5460;
+                                                    font-size: 14px;
+                                                    margin: 0;
+                                                }
+
+                                                .report-footer {
+                                                    background: #f8f9fa;
+                                                    padding: 20px;
+                                                    text-align: center;
+                                                    border-top: 1px solid #dee2e6;
+                                                }
+
+                                                .report-footer p {
+                                                    color: #6c757d;
+                                                    font-size: 12px;
+                                                    margin: 0;
+                                                }
+
+                                                .date-time {
+                                                    color: #6c757d;
+                                                    font-size: 12px;
+                                                    margin-top: 10px;
+                                                }
+
+                                                @media print {
+                                                    body {
+                                                        background: white;
+                                                        padding: 0;
+                                                    }
+
+                                                    .report-container {
+                                                        box-shadow: none;
+                                                        border-radius: 0;
+                                                    }
+                                                }
+                                            </style>
+                                        </head>
+                                        <body>
+                                            <div class="report-container">
+                                                <div class="report-header">
+                                                    <h1>📦 Member Archive Report</h1>
+                                                    <p class="subtitle">Member has been moved to archived status</p>
+                                                </div>
+
+                                                <div class="report-body">
+                                                    <div class="member-info">
+                                                        <h3>👤 Member Information</h3>
+                                                        <div class="info-grid">
+                                                            <div class="info-item">
+                                                                <span class="info-label">Full Name</span>
+                                                                <span class="info-value">${member.full_name || 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Member ID</span>
+                                                                <span class="info-value">${member.member_id || 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Phone Number</span>
+                                                                <span class="info-value">${member.phone_number || 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Email</span>
+                                                                <span class="info-value">${member.email || 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Gender</span>
+                                                                <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Membership Type</span>
+                                                                <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Date of Birth</span>
+                                                                <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                                                            </div>
+                                                            <div class="info-item">
+                                                                <span class="info-label">Registration Date</span>
+                                                                <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
+                                                            </div>
                                                         </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Member ID</span>
-                                                            <span class="info-value">${member.member_id || 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Phone Number</span>
-                                                            <span class="info-value">${member.phone_number || 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Email</span>
-                                                            <span class="info-value">${member.email || 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Gender</span>
-                                                            <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Membership Type</span>
-                                                            <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Date of Birth</span>
-                                                            <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
-                                                        </div>
-                                                        <div class="info-item">
-                                                            <span class="info-label">Registration Date</span>
-                                                            <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
-                                                        </div>
+                                                    </div>
+
+                                                    <div class="archive-reason">
+                                                        <h3>Archive Reason</h3>
+                                                        <div class="reason-text">${reason}</div>
+                                                    </div>
+
+                                                    <div class="financial-note">
+                                                        <h4>💰 Financial Records Preserved</h4>
+                                                        <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
                                                     </div>
                                                 </div>
 
-                                                <div class="archive-reason">
-                                                    <h3>Archive Reason</h3>
-                                                    <div class="reason-text">${reason}</div>
-                                                </div>
-
-                                                <div class="financial-note">
-                                                    <h4>💰 Financial Records Preserved</h4>
-                                                    <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
+                                                <div class="report-footer">
+                                                    <p><strong>Waumini Link Church Management System</strong></p>
+                                                    <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
                                                 </div>
                                             </div>
-
-                                            <div class="report-footer">
-                                                <p><strong>Waumini Link Church Management System</strong></p>
-                                                <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
-                                            </div>
-                                        </div>
-                                    </body>
-                                    </html>
-                                `;
+                                        </body>
+                                        </html>
+                                    `;
         }
 
         function printArchiveReport(member, reason) {
@@ -4068,15 +4068,15 @@
         Swal.fire({
             title: 'Archive Member',
             html: `
-                                        <div class="mb-3">
-                                            <label for="archive-reason" class="form-label">Reason for archiving${displayName}:</label>
-                                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
-                                        </div>
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
-                                        </div>
-                                    `,
+                                            <div class="mb-3">
+                                                <label for="archive-reason" class="form-label">Reason for archiving${displayName}:</label>
+                                                <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                                            </div>
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                                            </div>
+                                        `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Archive Member',
@@ -4188,11 +4188,11 @@
                                 icon: 'success',
                                 title: 'Member Archived',
                                 html: `
-                                                                <div class="text-start">
-                                                                    <p><strong>Reason:</strong> ${result.value}</p>
-                                                                    <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
-                                                                </div>
-                                                            `,
+                                                                    <div class="text-start">
+                                                                        <p><strong>Reason:</strong> ${result.value}</p>
+                                                                        <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
+                                                                    </div>
+                                                                `,
                                 showConfirmButton: true,
                                 showCancelButton: true,
                                 showDenyButton: true,
@@ -4236,7 +4236,7 @@
                     });
             }
         });
-                                    })
+                                        })
 
         // Simple client-side, real-time filtering
         function filterTable() {
@@ -4391,24 +4391,24 @@
             w.document.write('<div class="print-shell">');
             // Header
             w.document.write(`<div class="header">
-                                     <div class="header-top">
-                                         <div class="brand">
-                                             <img src="${logoUrl}" style="height:48px"/>
-                                             <div>
-                                                 <h2 class="mb-0">Member Details</h2>
+                                         <div class="header-top">
+                                             <div class="brand">
+                                                 <img src="${logoUrl}" style="height:48px"/>
+                                                 <div>
+                                                     <h2 class="mb-0">Member Details</h2>
+                                                 </div>
                                              </div>
+                                             <div class="qr-wrap"><img id="printQrImg" class="qr" src="" alt="QR"/></div>
                                          </div>
-                                         <div class="qr-wrap"><img id="printQrImg" class="qr" src="" alt="QR"/></div>
-                                     </div>
-                                 </div>`);
+                                     </div>`);
 
             // Sections (prebuilt)
             w.document.write(sectionsHtml);
 
             // Footer
             w.document.write(`<div class="footer">
-                                    Printed on ${printedAt} by ${printedBy} • © ${yearNow} Waumini Link • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
-                                </div>`);
+                                        Printed on ${printedAt} by ${printedBy} • © ${yearNow} Waumini Link • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
+                                    </div>`);
 
             w.document.write('</div>');
             // Ensure QR loads before printing
@@ -4941,25 +4941,25 @@
                     }
                 };
                 return `
-                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
-                                            <div class="notification-item-content">
-                                                <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
-                                                <div class="notification-details">
-                                                    <div class="notification-title">${event.title}</div>
-                                                    <div class="notification-meta">
-                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
-                                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
+                                                <div class="notification-item-content">
+                                                    <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
+                                                    <div class="notification-details">
+                                                        <div class="notification-title">${event.title}</div>
+                                                        <div class="notification-meta">
+                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
+                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                                        </div>
+                                                        <div class="notification-info">
+                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
+                                                            ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
+                                                        </div>
+                                                        <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
                                                     </div>
-                                                    <div class="notification-info">
-                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
-                                                        ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
-                                                    </div>
-                                                    <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
+                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                                 </div>
-                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                             </div>
-                                        </div>
-                                    `;
+                                        `;
             }).join('');
         }
 
@@ -4996,25 +4996,25 @@
                     }
                 };
                 return `
-                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
-                                            <div class="notification-item-content">
-                                                <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
-                                                <div class="notification-details">
-                                                    <div class="notification-title">${celebration.title}</div>
-                                                    <div class="notification-meta">
-                                                        <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
-                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
+                                                <div class="notification-item-content">
+                                                    <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
+                                                    <div class="notification-details">
+                                                        <div class="notification-title">${celebration.title}</div>
+                                                        <div class="notification-meta">
+                                                            <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
+                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                                        </div>
+                                                        <div class="notification-info">
+                                                            <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
+                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
+                                                        </div>
+                                                        <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
                                                     </div>
-                                                    <div class="notification-info">
-                                                        <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
-                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
-                                                    </div>
-                                                    <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
+                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                                 </div>
-                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                             </div>
-                                        </div>
-                                    `;
+                                        `;
             }).join('');
         }
 
@@ -5051,26 +5051,26 @@
                     }
                 };
                 return `
-                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
-                                            <div class="notification-item-content">
-                                                <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
-                                                <div class="notification-details">
-                                                    <div class="notification-title">${service.title}</div>
-                                                    <div class="notification-meta">
-                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
-                                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
+                                                <div class="notification-item-content">
+                                                    <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
+                                                    <div class="notification-details">
+                                                        <div class="notification-title">${service.title}</div>
+                                                        <div class="notification-meta">
+                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
+                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                                        </div>
+                                                        <div class="notification-info">
+                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
+                                                            ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
+                                                        </div>
+                                                        ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
+                                                        <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
                                                     </div>
-                                                    <div class="notification-info">
-                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
-                                                        ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
-                                                    </div>
-                                                    ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
-                                                    <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
+                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                                 </div>
-                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
                                             </div>
-                                        </div>
-                                    `;
+                                        `;
             }).join('');
         }
 
@@ -5082,27 +5082,27 @@
                 modal.id = 'eventDetailsModal';
                 modal.className = 'modal fade';
                 modal.innerHTML = `
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-light">
-                                                    <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body p-4" id="eventDetailsBody">
-                                                    <div class="text-center">
-                                                        <div class="spinner-border" role="status">
-                                                            <span class="visually-hidden">Loading...</span>
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-light">
+                                                        <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4" id="eventDetailsBody">
+                                                        <div class="text-center">
+                                                            <div class="spinner-border" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="modal-footer bg-light">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        <i class="fas fa-times me-2"></i>Close
-                                                    </button>
+                                                    <div class="modal-footer bg-light">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            <i class="fas fa-times me-2"></i>Close
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    `;
+                                        `;
                 document.body.appendChild(modal);
             }
             const bsModal = new bootstrap.Modal(modal);
@@ -5121,13 +5121,13 @@
             };
             modalTitle.textContent = titles[type] || 'Details';
             modalBody.innerHTML = `
-                                    <div class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
+                                        <div class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2 text-muted">Loading details...</p>
                                         </div>
-                                        <p class="mt-2 text-muted">Loading details...</p>
-                                    </div>
-                                `;
+                                    `;
             setTimeout(() => {
                 let eventData = null;
                 if (window.currentNotificationData) {
@@ -5179,82 +5179,82 @@
                         timeDisplay = eventData.time ? formatTime(eventData.time) : 'TBD';
                     }
                     modalBody.innerHTML = `
-                                            <div class="text-center mb-4">
-                                                <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                    <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                                <div class="text-center mb-4">
+                                                    <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                                                        <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                                    </div>
+                                                    <h3 class="text-dark mb-2">${eventData.title}</h3>
+                                                    <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
                                                 </div>
-                                                <h3 class="text-dark mb-2">${eventData.title}</h3>
-                                                <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
-                                            </div>
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <div class="card h-100 border-0 shadow-sm">
-                                                        <div class="card-body text-center">
-                                                            <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
-                                                            <h6 class="card-title">Date</h6>
-                                                            <p class="card-text text-muted">${eventDate}</p>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100 border-0 shadow-sm">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
+                                                                <h6 class="card-title">Date</h6>
+                                                                <p class="card-text text-muted">${eventDate}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card h-100 border-0 shadow-sm">
-                                                        <div class="card-body text-center">
-                                                            <i class="fas fa-clock text-success fa-2x mb-3"></i>
-                                                            <h6 class="card-title">Time</h6>
-                                                            <p class="card-text text-muted">${timeDisplay}</p>
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100 border-0 shadow-sm">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-clock text-success fa-2x mb-3"></i>
+                                                                <h6 class="card-title">Time</h6>
+                                                                <p class="card-text text-muted">${timeDisplay}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card h-100 border-0 shadow-sm">
-                                                        <div class="card-body text-center">
-                                                            <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
-                                                            <h6 class="card-title">Venue</h6>
-                                                            <p class="card-text text-muted">${eventData.venue}</p>
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100 border-0 shadow-sm">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
+                                                                <h6 class="card-title">Venue</h6>
+                                                                <p class="card-text text-muted">${eventData.venue}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card h-100 border-0 shadow-sm">
-                                                        <div class="card-body text-center">
-                                                            <i class="fas fa-user text-info fa-2x mb-3"></i>
-                                                            <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
-                                                            <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100 border-0 shadow-sm">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-user text-info fa-2x mb-3"></i>
+                                                                <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
+                                                                <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                ${eventData.theme ? `
-                                                <div class="col-12">
-                                                    <div class="card border-0 shadow-sm">
-                                                        <div class="card-body text-center">
-                                                            <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
-                                                            <h6 class="card-title">Theme</h6>
-                                                            <p class="card-text text-muted">${eventData.theme}</p>
+                                                    ${eventData.theme ? `
+                                                    <div class="col-12">
+                                                        <div class="card border-0 shadow-sm">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
+                                                                <h6 class="card-title">Theme</h6>
+                                                                <p class="card-text text-muted">${eventData.theme}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                ` : ''}
-                                                <div class="col-12">
-                                                    <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="fas fa-info-circle fa-2x me-3"></i>
-                                                            <div>
-                                                                <h6 class="mb-1">Time Remaining</h6>
-                                                                <p class="mb-0">
-                                                                    ${eventData.hours_remaining !== null ?
+                                                    ` : ''}
+                                                    <div class="col-12">
+                                                        <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-info-circle fa-2x me-3"></i>
+                                                                <div>
+                                                                    <h6 class="mb-1">Time Remaining</h6>
+                                                                    <p class="mb-0">
+                                                                        ${eventData.hours_remaining !== null ?
                             `${eventData.hours_remaining} hours left` :
                             `${eventData.days_remaining} days left`}
-                                                                </p>
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        `;
+                                            `;
                 } else {
                     modalBody.innerHTML = `
-                                            <div class="text-center py-4 text-muted">Details not found.</div>
-                                        `;
+                                                <div class="text-center py-4 text-muted">Details not found.</div>
+                                            `;
                 }
             }, 50);
         }

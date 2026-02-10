@@ -66,29 +66,29 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::resource('weekly-assignments', WeeklyAssignmentController::class);
     // Member identity cards routes
     Route::get('/members/{member}/identity-card', [MemberController::class, 'identityCard'])->name('members.identity-card');
-    
+
     // Leadership identity cards routes
     Route::get('/leaders/{leader}/identity-card', [LeaderController::class, 'identityCard'])->name('leaders.identity-card');
     Route::get('/leaders-identity-cards/bulk', [LeaderController::class, 'bulkIdentityCards'])->name('leaders.identity-cards.bulk');
     Route::get('/leaders-identity-cards/position/{position}', [LeaderController::class, 'positionIdentityCards'])->name('leaders.identity-cards.position');
     // Test leader appointment SMS
-    Route::get('/test-leader-sms', function(Request $request) {
+    Route::get('/test-leader-sms', function (Request $request) {
         $to = $request->query('to');
         $name = $request->query('name', 'John Doe');
         $position = $request->query('position', 'Pastor');
         $church = $request->query('church', 'Waumini Church');
-        
+
         if (empty($to)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Provide query params: to=+255XXXXXXXXX and optional name, position, church'
             ], 422);
         }
-        
+
         try {
             $smsService = app(\App\Services\SmsService::class);
             $result = $smsService->sendLeaderAppointmentNotificationDebug($to, $name, $position, $church);
-            
+
             return response()->json([
                 'success' => $result['ok'] ?? false,
                 'to' => $to,
@@ -113,41 +113,42 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::get('/special-events', [SpecialEventController::class, 'index'])->name('special.events.index');
     // Celebrations UI route
     Route::get('/celebrations', [CelebrationController::class, 'index'])->name('celebrations.index');
-    
+
     // Financial Management Routes
     Route::prefix('finance')->name('finance.')->group(function () {
         // Test route
-        Route::get('/test', function() {
+        Route::get('/test', function () {
             return 'Finance test route works!';
         });
-        
+
         // Dashboard
         Route::get('/dashboard', [App\Http\Controllers\FinanceController::class, 'dashboard'])->name('dashboard');
-        
+
         // Tithes
         Route::get('/tithes', [App\Http\Controllers\FinanceController::class, 'tithes'])->name('tithes');
         Route::post('/tithes', [App\Http\Controllers\FinanceController::class, 'storeTithe'])->name('tithes.store');
         Route::post('/tithes/{tithe}/paid', [App\Http\Controllers\FinanceController::class, 'markTithePaid'])->name('tithes.paid');
-        
+
         // Offerings
         Route::get('/offerings', [App\Http\Controllers\FinanceController::class, 'offerings'])->name('offerings');
         Route::post('/offerings', [App\Http\Controllers\FinanceController::class, 'storeOffering'])->name('offerings.store');
-        
+
         // Donations
         Route::get('/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('donations');
         Route::post('/donations', [App\Http\Controllers\FinanceController::class, 'storeDonation'])->name('donations.store');
-        
+
         // Pledges
         Route::get('/pledges', [App\Http\Controllers\FinanceController::class, 'pledges'])->name('pledges');
         Route::post('/pledges', [App\Http\Controllers\FinanceController::class, 'storePledge'])->name('pledges.store');
         Route::post('/pledges/{pledge}/payment', [App\Http\Controllers\FinanceController::class, 'updatePledgePayment'])->name('pledges.payment');
-        
+
         // Budgets
         Route::get('/budgets', [App\Http\Controllers\FinanceController::class, 'budgets'])->name('budgets');
         Route::post('/budgets', [App\Http\Controllers\FinanceController::class, 'storeBudget'])->name('budgets.store');
+        Route::post('/budgets/resync', [App\Http\Controllers\FinanceController::class, 'reSyncBudgets'])->name('budgets.resync');
         Route::post('/budgets/{budget}', [App\Http\Controllers\FinanceController::class, 'updateBudget'])->name('budgets.update');
         Route::delete('/budgets/{budget}', [App\Http\Controllers\FinanceController::class, 'destroyBudget'])->name('budgets.destroy');
-        
+
         // Budget Funding
         Route::post('/budgets/{budget}/allocate-funds', [App\Http\Controllers\FinanceController::class, 'allocateBudgetFunds'])->name('budgets.allocate-funds');
         Route::get('/budgets/{budget}/funding-suggestions', [App\Http\Controllers\FinanceController::class, 'getFundingSuggestions'])->name('budgets.funding-suggestions');
@@ -158,7 +159,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         Route::get('/budgets/{budgetId}/fund-summary', [App\Http\Controllers\FinanceController::class, 'getFundSummary'])->name('budgets.fund-summary');
         Route::get('/budgets/{budgetId}/line-items', [App\Http\Controllers\FinanceController::class, 'getBudgetLineItems'])->name('budgets.line-items');
         Route::get('/budgets/offering-type-fund-summary', [App\Http\Controllers\FinanceController::class, 'getOfferingTypeFundSummary'])->name('budgets.offering-type-fund-summary');
-        
+
         // Expenses
         Route::get('/expenses', [App\Http\Controllers\FinanceController::class, 'expenses'])->name('expenses');
         Route::post('/expenses', [App\Http\Controllers\FinanceController::class, 'storeExpense'])->name('expenses.store');
@@ -172,7 +173,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         Route::get('/dashboard', [FinancialApprovalController::class, 'dashboard'])->name('dashboard');
         Route::post('/approve', [FinancialApprovalController::class, 'approve'])->name('approve');
         Route::post('/reject', [FinancialApprovalController::class, 'reject'])->name('reject');
-        
+
         // Funding Requests
         Route::get('/funding-requests', [FinancialApprovalController::class, 'fundingRequests'])->name('funding-requests');
         Route::post('/funding-requests/{fundingRequest}/approve', [FinancialApprovalController::class, 'approveFundingRequest'])->name('funding-requests.approve');
@@ -186,7 +187,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         Route::get('/export-pending', [FinancialApprovalController::class, 'exportPending'])->name('export-pending');
         Route::get('/view-details/{type}/{id}', [FinancialApprovalController::class, 'viewDetails'])->name('view-details');
     });
-    
+
     // Financial Reports Routes
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
@@ -216,13 +217,13 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
         }
         return view('members.add-members');
     })->name('members.add');
-    
+
     Route::post('/members', [MemberController::class, 'store'])
         ->middleware('permission:members.create')
         ->name('members.store');
-    
+
     // Test route for debugging
-    Route::get('/test-member', function() {
+    Route::get('/test-member', function () {
         try {
             $member = new App\Models\Member();
             return response()->json(['status' => 'success', 'message' => 'Member model works', 'fillable' => $member->getFillable()]);
@@ -230,18 +231,18 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
     });
-    
+
     // Member viewing - requires members.view permission
     Route::get('/members', [MemberController::class, 'index'])
         ->middleware('permission:members.view')
         ->name('members.index');
     // Redirect /members/leaders to /member/leaders (correct route)
-    Route::get('/members/leaders', function() {
+    Route::get('/members/leaders', function () {
         return redirect()->route('member.leaders');
     })->name('members.leaders.redirect');
     Route::get('/members/next-id', [MemberController::class, 'nextId'])->name('members.next_id');
     Route::get('/members/export/csv', [MemberController::class, 'exportCsv'])->name('members.export.csv');
-    
+
     // PUT and DELETE routes must come before GET routes with parameters
     Route::put('/members/{member}', [MemberController::class, 'update'])
         ->middleware('permission:members.edit')
@@ -261,9 +262,9 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::post('/members/archived/{memberId}/restore', [MemberController::class, 'restore'])
         ->middleware('permission:members.edit')
         ->name('members.restore');
-    
+
     // Test route to check if member exists - MUST be before /members/{id} to avoid conflicts
-    Route::get('/test-member/{id}', function($id) {
+    Route::get('/test-member/{id}', function ($id) {
         try {
             // Validate ID is numeric
             if (!is_numeric($id)) {
@@ -272,7 +273,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
                     'message' => 'Invalid member ID'
                 ], 400);
             }
-            
+
             $member = \App\Models\Member::find($id);
             if ($member) {
                 return response()->json([
@@ -299,25 +300,25 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
             ], 500);
         }
     })->where('id', '[0-9]+');
-    
+
     // Password reset - Admin only (must come before GET /members/{id} route)
     Route::post('/members/{id}/reset-password', [MemberController::class, 'resetPassword'])
         ->middleware('permission:members.edit')
         ->where('id', '[0-9]+')
         ->name('members.reset-password');
-    
+
     // GET route with parameter should come last
     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show')->where('id', '[0-9]+');
-    
+
     // Children routes
     Route::post('/children', [MemberController::class, 'storeChild'])->name('children.store');
     Route::delete('/children/{child}', [MemberController::class, 'destroyChild'])->name('children.destroy');
-    
+
     // List all members for debugging
-    Route::get('/list-members', function() {
+    Route::get('/list-members', function () {
         $members = \App\Models\Member::select('id', 'member_id', 'full_name')->get();
         $archivedMembers = \App\Models\DeletedMember::select('id', 'member_id', 'member_snapshot')->get();
-        
+
         return response()->json([
             'success' => true,
             'active_members' => [
@@ -326,7 +327,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
             ],
             'archived_members' => [
                 'count' => $archivedMembers->count(),
-                'members' => $archivedMembers->map(function($archived) {
+                'members' => $archivedMembers->map(function ($archived) {
                     $snapshot = $archived->member_snapshot;
                     return [
                         'id' => $archived->id,
@@ -338,9 +339,9 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
             ]
         ]);
     });
-    
+
     // SMS test route (authenticated)
-    Route::get('/test-sms', function(Request $request) {
+    Route::get('/test-sms', function (Request $request) {
         $to = $request->query('to');
         $text = $request->query('text', 'Karibu Waumini Church!');
         if (empty($to)) {
@@ -379,7 +380,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     })->name('test.sms');
 
     // One-time setup route to configure SMS settings (authenticated)
-    Route::match(['get','post'], '/setup-sms', function(Request $request) {
+    Route::match(['get', 'post'], '/setup-sms', function (Request $request) {
         try {
             \App\Models\SystemSetting::setValue('enable_sms_notifications', '1', 'boolean');
             \App\Models\SystemSetting::setValue('sms_api_url', $request->input('sms_api_url', 'https://messaging-service.co.tz/link/sms/v1/text/single'), 'string');
@@ -404,24 +405,24 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     })->name('setup.sms');
 
     // Test payment approval SMS
-    Route::get('/test-payment-sms', function(Request $request) {
+    Route::get('/test-payment-sms', function (Request $request) {
         $to = $request->query('to');
         $memberName = $request->query('name', 'John Doe');
         $paymentType = $request->query('type', 'Tithe');
         $amount = $request->query('amount', 50000);
         $date = $request->query('date', date('Y-m-d'));
-        
+
         if (empty($to)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Provide query params: to=+255XXXXXXXXX and optional name, type, amount, date'
             ], 422);
         }
-        
+
         try {
             $smsService = app(\App\Services\SmsService::class);
             $resp = $smsService->sendPaymentApprovalNotificationDebug($to, $memberName, $paymentType, $amount, $date);
-            
+
             $conf = [
                 'enabled' => \App\Services\SettingsService::get('enable_sms_notifications', false),
                 'has_api_url' => !empty(\App\Services\SettingsService::get('sms_api_url')),
@@ -430,7 +431,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
                 'has_sender_id' => !empty(\App\Services\SettingsService::get('sms_sender_id')),
                 'has_api_key' => !empty(\App\Services\SettingsService::get('sms_api_key')),
             ];
-            
+
             return response()->json([
                 'success' => $resp['ok'] ?? false,
                 'to' => $to,
@@ -452,7 +453,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
             ], 500);
         }
     })->name('test.payment.sms');
-    
+
 
     // Sunday services routes
     Route::post('/services/sunday', [SundayServiceController::class, 'store'])->name('services.sunday.store');
@@ -489,7 +490,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::post('/attendance/biometric-sync', [AttendanceController::class, 'syncBiometricAttendance'])
         ->name('attendance.biometric.sync')
         ->middleware('auth'); // Explicitly add auth middleware
-    
+
     Route::post('/attendance/trigger-notifications', [AttendanceController::class, 'triggerNotifications'])->name('attendance.trigger.notifications');
     Route::get('/attendance/member/{memberId}/history', [AttendanceController::class, 'memberHistory'])->name('attendance.member.history');
     Route::get('/attendance/service/{serviceType}/{serviceId}/report', [AttendanceController::class, 'serviceReport'])->name('attendance.service.report');
@@ -512,7 +513,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::post('/biometric/device-info', [ZKTecoController::class, 'getDeviceInfo'])->name('biometric.device-info');
     Route::post('/biometric/attendance', [ZKTecoController::class, 'getAttendance'])->name('biometric.attendance');
     Route::post('/biometric/users', [ZKTecoController::class, 'getUsers'])->name('biometric.users');
-    
+
     // Biometric Member Registration Routes
     Route::post('/biometric/register-member', [ZKTecoController::class, 'registerMember'])->name('biometric.register-member');
     Route::post('/biometric/register-members-bulk', [ZKTecoController::class, 'registerMembersBulk'])->name('biometric.register-members-bulk');
@@ -551,7 +552,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::get('/settings', [SettingsController::class, 'index'])
         ->middleware('permission:settings.view')
         ->name('settings.index');
-    
+
     // Update settings - requires settings.edit permission
     Route::post('/settings', [SettingsController::class, 'update'])
         ->middleware('permission:settings.edit')
@@ -568,7 +569,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::post('/settings/set/{key}', [SettingsController::class, 'setValue'])
         ->middleware('permission:settings.edit')
         ->name('settings.set');
-    
+
     // View-only routes - require settings.view permission
     Route::get('/settings/export', [SettingsController::class, 'export'])
         ->middleware('permission:settings.view')
@@ -585,7 +586,8 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     Route::post('/settings/restore', [SettingsController::class, 'restore'])
         ->middleware('permission:settings.edit')
         ->name('settings.restore');
-    Route::get('/settings/help', function() { return view('settings.help'); })
+    Route::get('/settings/help', function () {
+        return view('settings.help'); })
         ->middleware('permission:settings.view')
         ->name('settings.help');
     Route::get('/settings/analytics', [SettingsController::class, 'analytics'])
@@ -610,7 +612,7 @@ Route::get('/dashboard', function () {
     if (!auth()->check()) {
         return redirect()->route('login');
     }
-    
+
     $user = auth()->user();
     if ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
@@ -646,7 +648,7 @@ Route::get('/test-member-creation', function () {
             'address' => 'Test Address',
             'tribe' => 'Test Tribe',
         ]);
-        
+
         return response()->json(['success' => true, 'member' => $member]);
     } catch (Exception $e) {
         return response()->json(['success' => false, 'error' => $e->getMessage()]);
@@ -669,7 +671,7 @@ Route::get('/test-special-event-creation', function () {
             'description' => 'Test Description',
             'notes' => 'Test Notes',
         ]);
-        
+
         return response()->json(['success' => true, 'event' => $event]);
     } catch (Exception $e) {
         return response()->json(['success' => false, 'error' => $e->getMessage()]);
@@ -726,7 +728,7 @@ Route::get('/debug-auth', function () {
     if (!auth()->check()) {
         return response()->json(['error' => 'Not authenticated']);
     }
-    
+
     $user = auth()->user();
     return response()->json([
         'user' => $user->name,
@@ -746,12 +748,12 @@ Route::get('/test-approval', function () {
     if (!auth()->check()) {
         return 'Not logged in';
     }
-    
+
     $user = auth()->user();
     if (!$user->canApproveFinances()) {
         return 'Unauthorized - cannot approve finances';
     }
-    
+
     return 'Authorized - can approve finances';
 })->middleware('auth');
 
@@ -760,7 +762,7 @@ Route::get('/simple-test', function () {
     if (!auth()->check()) {
         return 'Not logged in';
     }
-    
+
     $user = auth()->user();
     return 'Logged in as: ' . $user->name . ' (Role: ' . $user->role . ')';
 })->middleware('auth');
@@ -768,7 +770,7 @@ Route::get('/simple-test', function () {
 // Debug route to test special event creation
 Route::post('/debug-special-events', function (Request $request) {
     \Log::info('Debug special event route called', ['request_data' => $request->all()]);
-    
+
     try {
         $event = \App\Models\SpecialEvent::create([
             'event_date' => $request->event_date,
@@ -783,7 +785,7 @@ Route::post('/debug-special-events', function (Request $request) {
             'description' => $request->description,
             'notes' => $request->notes,
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Event created successfully',
@@ -801,11 +803,11 @@ Route::post('/debug-special-events', function (Request $request) {
 // Test email configuration
 Route::get('/test-email', function () {
     try {
-        \Mail::raw('Test email from Waumini Link notification system!', function($message) {
+        \Mail::raw('Test email from Waumini Link notification system!', function ($message) {
             $message->to('oftenfred.ict@gmail.com')
-                    ->subject('Waumini Link - Email Test');
+                ->subject('Waumini Link - Email Test');
         });
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Test email sent successfully to oftenfred.ict@gmail.com'
@@ -822,12 +824,12 @@ Route::get('/test-email', function () {
 Route::get('/notifications/data', [NotificationController::class, 'getNotificationData'])->name('notifications.data');
 
 // Test route to check database records
-Route::get('/test-notifications', function() {
+Route::get('/test-notifications', function () {
     try {
         $events = \App\Models\SpecialEvent::count();
         $celebrations = \App\Models\Celebration::count();
         $services = \App\Models\SundayService::count();
-        
+
         return response()->json([
             'success' => true,
             'events' => $events,
@@ -844,7 +846,7 @@ Route::get('/test-notifications', function() {
 });
 
 // Debug route to test notification controller
-Route::get('/debug-notifications', function() {
+Route::get('/debug-notifications', function () {
     try {
         $controller = new \App\Http\Controllers\NotificationController();
         $response = $controller->getNotificationData();
@@ -858,7 +860,7 @@ Route::get('/debug-notifications', function() {
 });
 
 // Test route to check approval system
-Route::get('/test-approval-system', function() {
+Route::get('/test-approval-system', function () {
     try {
         // Check if we have any pending records
         $pendingTithes = \App\Models\Tithe::where('approval_status', 'pending')->count();
@@ -866,9 +868,9 @@ Route::get('/test-approval-system', function() {
         $pendingDonations = \App\Models\Donation::where('approval_status', 'pending')->count();
         $pendingExpenses = \App\Models\Expense::where('approval_status', 'pending')->count();
         $pendingBudgets = \App\Models\Budget::where('approval_status', 'pending')->count();
-        
+
         $totalPending = $pendingTithes + $pendingOfferings + $pendingDonations + $pendingExpenses + $pendingBudgets;
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Approval system check',
@@ -891,7 +893,7 @@ Route::get('/test-approval-system', function() {
 });
 
 // Simple test route to create one pending record
-Route::get('/create-simple-test-data', function() {
+Route::get('/create-simple-test-data', function () {
     try {
         // Create a simple test member
         $member = \App\Models\Member::firstOrCreate(
@@ -942,7 +944,7 @@ Route::get('/create-simple-test-data', function() {
 });
 
 // Test route to create data for all tabs
-Route::get('/create-all-tab-test-data', function() {
+Route::get('/create-all-tab-test-data', function () {
     try {
         // Create a simple test member
         $member = \App\Models\Member::firstOrCreate(
@@ -1050,7 +1052,7 @@ Route::get('/create-all-tab-test-data', function() {
 });
 
 // Test route to create a test offering for approval
-Route::get('/test-offering-approval', function() {
+Route::get('/test-offering-approval', function () {
     try {
         // Create a test member if none exists
         $member = \App\Models\Member::first();
@@ -1110,7 +1112,7 @@ Route::get('/test-offering-approval', function() {
 });
 
 // Test route to create approval test data
-Route::get('/create-approval-test-data', function() {
+Route::get('/create-approval-test-data', function () {
     try {
         $member = \App\Models\Member::first();
         if (!$member) {
@@ -1196,10 +1198,10 @@ Route::get('/create-approval-test-data', function() {
             'approval_status' => 'pending'
         ]);
 
-        $totalPending = \App\Models\Tithe::where('approval_status', 'pending')->count() + 
-            \App\Models\Offering::where('approval_status', 'pending')->count() + 
-            \App\Models\Donation::where('approval_status', 'pending')->count() + 
-            \App\Models\Expense::where('approval_status', 'pending')->count() + 
+        $totalPending = \App\Models\Tithe::where('approval_status', 'pending')->count() +
+            \App\Models\Offering::where('approval_status', 'pending')->count() +
+            \App\Models\Donation::where('approval_status', 'pending')->count() +
+            \App\Models\Expense::where('approval_status', 'pending')->count() +
             \App\Models\Budget::where('approval_status', 'pending')->count();
 
         return response()->json([
@@ -1245,11 +1247,11 @@ Route::middleware(['auth', PreventBackHistory::class])->prefix('admin')->name('a
 
 // Debug route to test attendance clear-all (temporary - remove after testing)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/test-attendance-clear-route', function() {
+    Route::get('/test-attendance-clear-route', function () {
         $route = \Illuminate\Support\Facades\Route::getRoutes()->getByName('attendance.clear-all');
         $allRoutes = \Illuminate\Support\Facades\Route::getRoutes();
         $matchingRoutes = [];
-        
+
         foreach ($allRoutes as $r) {
             if (str_contains($r->uri(), 'attendance/clear-all') || str_contains($r->uri(), 'attendance')) {
                 $matchingRoutes[] = [
@@ -1260,13 +1262,13 @@ Route::middleware(['auth'])->group(function () {
                 ];
             }
         }
-        
+
         // Try to match the route manually
         $request = request();
         $request->setMethod('POST');
         $request->server->set('REQUEST_URI', '/attendance/clear-all');
         $matchedRoute = \Illuminate\Support\Facades\Route::getRoutes()->match($request);
-        
+
         if ($route) {
             return response()->json([
                 'success' => true,
@@ -1289,14 +1291,14 @@ Route::middleware(['auth'])->group(function () {
             ]);
         }
         return response()->json([
-            'success' => false, 
+            'success' => false,
             'route_exists' => false,
             'all_attendance_routes' => $matchingRoutes
         ]);
     });
-    
+
     // Test POST route - direct proxy to clear-all
-    Route::post('/test-attendance-clear-post', function(\Illuminate\Http\Request $request) {
+    Route::post('/test-attendance-clear-post', function (\Illuminate\Http\Request $request) {
         try {
             $controller = new \App\Http\Controllers\AttendanceController();
             return $controller->clearAll($request);
@@ -1333,21 +1335,21 @@ Route::middleware(['auth', PreventBackHistory::class])->prefix('member')->name('
 // Serve storage files directly (bypasses symlink issues)
 Route::get('/storage/{path}', function ($path) {
     $filePath = storage_path('app/public/' . $path);
-    
+
     // Security: Only allow files in public storage
     $realPath = realpath($filePath);
     $storagePath = realpath(storage_path('app/public'));
-    
+
     // Check if file exists and is within storage/app/public directory
     if (!$realPath || strpos($realPath, $storagePath) !== 0) {
         abort(404);
     }
-    
+
     // Check if file exists
     if (!file_exists($realPath) || !is_file($realPath)) {
         abort(404);
     }
-    
+
     // Get MIME type
     $mimeType = mime_content_type($realPath);
     if (!$mimeType) {
@@ -1362,7 +1364,7 @@ Route::get('/storage/{path}', function ($path) {
         ];
         $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
     }
-    
+
     // Set headers and return file
     return response()->file($realPath, [
         'Content-Type' => $mimeType,

@@ -10,6 +10,73 @@ class Expense extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::created(function ($expense) {
+            if ($expense->status === 'paid' && $expense->budget_id) {
+                $expense->budget()->increment('spent_amount', (float) $expense->amount);
+            }
+        });
+
+        static::updated(function ($expense) {
+            if ($expense->isDirty(['status', 'amount', 'budget_id'])) {
+                $oldStatus = $expense->getOriginal('status');
+                $newStatus = $expense->status;
+                $oldAmount = (float) $expense->getOriginal('amount');
+                $newAmount = (float) $expense->amount;
+                $oldBudgetId = $expense->getOriginal('budget_id');
+                $newBudgetId = $expense->budget_id;
+
+                // Handle status change
+                if ($oldStatus !== 'paid' && $newStatus === 'paid') {
+                    // Just marked as paid
+                    if ($newBudgetId) {
+                        Budget::where('id', $newBudgetId)->increment('spent_amount', $newAmount);
+                    }
+                } elseif ($oldStatus === 'paid' && $newStatus !== 'paid') {
+                    // Unmarked as paid
+                    if ($oldBudgetId) {
+                        Budget::where('id', $oldBudgetId)->decrement('spent_amount', $oldAmount);
+                    }
+                } elseif ($oldStatus === 'paid' && $newStatus === 'paid') {
+                    // Still paid, but things might have changed
+                    if ($oldBudgetId !== $newBudgetId) {
+                        // Budget changed
+                        if ($oldBudgetId) {
+                            Budget::where('id', $oldBudgetId)->decrement('spent_amount', $oldAmount);
+                        }
+                        if ($newBudgetId) {
+                            Budget::where('id', $newBudgetId)->increment('spent_amount', $newAmount);
+                        }
+                    } elseif ($oldAmount !== $newAmount) {
+                        // Amount changed for same budget
+                        $diff = $newAmount - $oldAmount;
+                        if ($newBudgetId) {
+                            Budget::where('id', $newBudgetId)->increment('spent_amount', $diff);
+                        }
+                    }
+                }
+            }
+        });
+
+        static::deleted(function ($expense) {
+            if ($expense->status === 'paid' && $expense->budget_id) {
+                $expense->budget()->decrement('spent_amount', (float) $expense->amount);
+            }
+        });
+
+        static::restored(function ($expense) {
+            if ($expense->status === 'paid' && $expense->budget_id) {
+                $expense->budget()->increment('spent_amount', (float) $expense->amount);
+            }
+        });
+    }
+
     protected $fillable = [
         'budget_id',
         'expense_category',
