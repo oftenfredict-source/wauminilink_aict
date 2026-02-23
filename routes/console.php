@@ -38,3 +38,10 @@ Schedule::command('promise-guests:send-notifications')
     ->timezone('Africa/Dar_es_Salaam')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Transition children aged 21+ to independent members daily at 12:00 AM
+Schedule::command('app:process-aged-out-children')
+    ->daily()
+    ->timezone('Africa/Dar_es_Salaam')
+    ->withoutOverlapping()
+    ->runInBackground();

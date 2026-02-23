@@ -45,8 +45,8 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <div class="small text-white-50">Net Income (This Month)</div>
-                                <div class="h4">TZS {{ number_format($netIncome, 0) }}</div>
+                                <div class="small text-white-50">Balance</div>
+                                <div class="h4">TZS {{ number_format($balance, 0) }}</div>
                             </div>
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-chart-line fa-2x"></i>
@@ -74,7 +74,8 @@
                                 <div class="h4">TZS {{ number_format($monthlyExpenses, 0) }}</div>
                                 @if(isset($currentMonthExpenses))
                                     <div class="small text-white-50 mt-1">This Month: TZS
-                                        {{ number_format($currentMonthExpenses, 0) }}</div>
+                                        {{ number_format($currentMonthExpenses, 0) }}
+                                    </div>
                                 @endif
                             </div>
                             <div class="d-flex align-items-center">
@@ -116,6 +117,33 @@
                     </div>
                 </div>
             </div>
+
+            @if(auth()->user()->canApproveFinances())
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-danger text-white mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="small text-white-50">Pending Approvals</div>
+                                    <div class="h4">{{ $totalPendingCount }}</div>
+                                    <div class="small text-white-50 mt-1">TZS {{ number_format($totalPendingAmount, 0) }}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex align-items-center justify-content-between">
+                            <a class="small text-white text-decoration-none" href="{{ route('finance.approval.dashboard') }}">
+                                Go to Approval Dashboard
+                            </a>
+                            <div class="small text-white-50">
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Income Breakdown -->
@@ -128,7 +156,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md">
                                 <div class="text-center">
                                     <div class="h5 text-primary">TZS {{ number_format($monthlyTithes, 0) }}</div>
                                     <div class="small text-muted">Tithes</div>
@@ -139,7 +167,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md">
                                 <div class="text-center">
                                     <div class="h5 text-success">TZS {{ number_format($monthlyOfferings, 0) }}</div>
                                     <div class="small text-muted">Offerings</div>
@@ -150,7 +178,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md">
                                 <div class="text-center">
                                     <div class="h5 text-info">TZS {{ number_format($monthlyDonations, 0) }}</div>
                                     <div class="small text-muted">Donations</div>
@@ -161,13 +189,24 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md">
                                 <div class="text-center">
                                     <div class="h5 text-warning">TZS {{ number_format($monthlyPledgePayments, 0) }}</div>
-                                    <div class="small text-muted">Pledge Payments</div>
+                                    <div class="small text-muted">Pledges</div>
                                     <div class="progress mt-2" style="height: 8px;">
                                         <div class="progress-bar bg-warning"
                                             style="width: {{ $totalIncome > 0 ? ($monthlyPledgePayments / $totalIncome) * 100 : 0 }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <div class="text-center">
+                                    <div class="h5 text-dark">TZS {{ number_format($monthlyAnnualFees, 0) }}</div>
+                                    <div class="small text-muted">Annual Fees</div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-dark"
+                                            style="width: {{ $totalIncome > 0 ? ($monthlyAnnualFees / $totalIncome) * 100 : 0 }}%">
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +327,8 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <div class="fw-bold">
-                                            {{ $donation->member->full_name ?? $donation->donor_name ?? 'Anonymous' }}</div>
+                                            {{ $donation->member->full_name ?? $donation->donor_name ?? 'Anonymous' }}
+                                        </div>
                                         <div class="small text-muted">{{ $donation->donation_date->format('M d, Y') }}</div>
                                     </div>
                                     <div class="text-end">
@@ -304,8 +344,45 @@
                             </div>
                         @endif
                     </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-calendar-check me-1"></i>
+                        <strong>Recent Annual Fees</strong>
+                    </div>
+                    <div class="card-body">
+                        @if($recentAnnualFees->count() > 0)
+                            @foreach($recentAnnualFees as $fee)
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-dark rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 40px; height: 40px;">
+                                            <i class="fas fa-calendar-check text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="fw-bold">{{ $fee->member->full_name ?? 'Unknown' }}</div>
+                                        <div class="small text-muted">{{ $fee->payment_date->format('M d, Y') }} (Year
+                                            {{ $fee->year }})
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-dark">TZS {{ number_format($fee->amount, 0) }}</div>
+                                        <div class="small text-muted">{{ ucfirst($fee->approval_status) }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                                <div>No recent annual fees</div>
+                            </div>
+                        @endif
+                    </div>
                     <div class="card-footer">
-                        <a href="{{ route('finance.donations') }}" class="btn btn-info btn-sm">View All Donations</a>
+                        <a href="{{ route('finance.annual_fees') }}" class="btn btn-dark btn-sm">View All Annual Fees</a>
                     </div>
                 </div>
             </div>
@@ -449,6 +526,16 @@
                                     <h5 class="card-title">Record Pledge</h5>
                                     <p class="card-text">Record a member's pledge commitment</p>
                                     <a href="{{ route('finance.pledges') }}" class="btn btn-warning">Add Pledge</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-check fa-3x text-dark mb-3"></i>
+                                    <h5 class="card-title">Record Annual Fee</h5>
+                                    <p class="card-text">Record a member's annual fee payment</p>
+                                    <a href="{{ route('finance.annual_fees') }}" class="btn btn-dark">Add Annual Fee</a>
                                 </div>
                             </div>
                         </div>

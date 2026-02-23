@@ -238,12 +238,14 @@
             </div>
             <div class="card-body p-3" id="actionsBody">
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#addBudgetModal">
-                        <i class="fas fa-plus me-1"></i>
-                        <span class="d-none d-sm-inline">Add Budget</span>
-                        <span class="d-sm-none">Add</span>
-                    </button>
+                    @if(auth()->user()->isTreasurer() || auth()->user()->isAdmin())
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#addBudgetModal">
+                            <i class="fas fa-plus me-1"></i>
+                            <span class="d-none d-sm-inline">Add Budget</span>
+                            <span class="d-sm-none">Add</span>
+                        </button>
+                    @endif
                     @if(auth()->user()->isTreasurer() || auth()->user()->isAdmin())
                         <form action="{{ route('finance.budgets.resync') }}" method="POST" id="resyncForm">
                             @csrf
@@ -432,26 +434,28 @@
                                                 <i class="fas fa-eye"></i>
                                                 <span class="d-none d-sm-inline ms-1">View</span>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-warning"
-                                                onclick="editBudget(this)" data-id="{{ $budget->id }}"
-                                                data-name="{{ $budget->budget_name }}" data-type="{{ $budget->budget_type }}"
-                                                data-fy="{{ $budget->fiscal_year }}" data-total="{{ $budget->total_budget }}"
-                                                data-start="{{ $budget->start_date }}" data-end="{{ $budget->end_date }}"
-                                                data-status="{{ $budget->status }}"
-                                                data-description="{{ $budget->description ?? '' }}" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                                <span class="d-none d-sm-inline ms-1">Edit</span>
-                                            </button>
-                                            <form class="d-inline"
-                                                onsubmit="return confirmDeleteBudget(event, {{ $budget->id }})" method="POST"
-                                                action="{{ route('finance.budgets.destroy', $budget) }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                    <span class="d-none d-sm-inline ms-1">Delete</span>
+                                            @if(auth()->user()->isTreasurer() || auth()->user()->isAdmin())
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                    onclick="editBudget(this)" data-id="{{ $budget->id }}"
+                                                    data-name="{{ $budget->budget_name }}" data-type="{{ $budget->budget_type }}"
+                                                    data-fy="{{ $budget->fiscal_year }}" data-total="{{ $budget->total_budget }}"
+                                                    data-start="{{ $budget->start_date }}" data-end="{{ $budget->end_date }}"
+                                                    data-status="{{ $budget->status }}"
+                                                    data-description="{{ $budget->description ?? '' }}" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                    <span class="d-none d-sm-inline ms-1">Edit</span>
                                                 </button>
-                                            </form>
+                                                <form class="d-inline"
+                                                    onsubmit="return confirmDeleteBudget(event, {{ $budget->id }})" method="POST"
+                                                    action="{{ route('finance.budgets.destroy', $budget) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                        <span class="d-none d-sm-inline ms-1">Delete</span>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -908,174 +912,174 @@
                 parseFloat(d.utilization) > 60 ? 'warning' : 'success';
 
             var html = `
-                        <div class="row g-4">
-                            <!-- Budget Overview Cards -->
-                            <div class="col-12">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <div class="card bg-primary text-white h-100">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-wallet fa-2x mb-2"></i>
-                                                <h6 class="card-title">Total Budget</h6>
-                                                <h4 class="mb-0">TZS ${d.total}</h4>
+                            <div class="row g-4">
+                                <!-- Budget Overview Cards -->
+                                <div class="col-12">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <div class="card bg-primary text-white h-100">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-wallet fa-2x mb-2"></i>
+                                                    <h6 class="card-title">Total Budget</h6>
+                                                    <h4 class="mb-0">TZS ${d.total}</h4>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card bg-info text-white h-100">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                                <h6 class="card-title">Amount Spent</h6>
-                                                <h4 class="mb-0">TZS ${d.spent}</h4>
+                                        <div class="col-md-3">
+                                            <div class="card bg-info text-white h-100">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                                    <h6 class="card-title">Amount Spent</h6>
+                                                    <h4 class="mb-0">TZS ${d.spent}</h4>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card bg-success text-white h-100">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-piggy-bank fa-2x mb-2"></i>
-                                                <h6 class="card-title">Remaining</h6>
-                                                <h4 class="mb-0">TZS ${d.remaining}</h4>
+                                        <div class="col-md-3">
+                                            <div class="card bg-success text-white h-100">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-piggy-bank fa-2x mb-2"></i>
+                                                    <h6 class="card-title">Remaining</h6>
+                                                    <h4 class="mb-0">TZS ${d.remaining}</h4>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="card bg-${utilizationClass} text-white h-100">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-percentage fa-2x mb-2"></i>
-                                                <h6 class="card-title">Utilization</h6>
-                                                <h4 class="mb-0">${d.utilization}%</h4>
+                                        <div class="col-md-3">
+                                            <div class="card bg-${utilizationClass} text-white h-100">
+                                                <div class="card-body text-center">
+                                                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                                                    <h6 class="card-title">Utilization</h6>
+                                                    <h4 class="mb-0">${d.utilization}%</h4>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Budget Details -->
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Budget Information</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-tag text-primary me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">Budget Name</small>
-                                                        <div class="fw-bold">${d.name}</div>
+                                <!-- Budget Details -->
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Budget Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-tag text-primary me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">Budget Name</small>
+                                                            <div class="fw-bold">${d.name}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-layer-group text-info me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">Budget Type</small>
-                                                        <div class="fw-bold">${d.type}</div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-layer-group text-info me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">Budget Type</small>
+                                                            <div class="fw-bold">${d.type}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-calendar-alt text-warning me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">Fiscal Year</small>
-                                                        <div class="fw-bold">${d.fy}</div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-calendar-alt text-warning me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">Fiscal Year</small>
+                                                            <div class="fw-bold">${d.fy}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-flag text-${statusClass} me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">Status</small>
-                                                        <div class="fw-bold">
-                                                            <span class="badge bg-${statusClass}">${d.status}</span>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-flag text-${statusClass} me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">Status</small>
+                                                            <div class="fw-bold">
+                                                                <span class="badge bg-${statusClass}">${d.status}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-play-circle text-success me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">Start Date</small>
+                                                            <div class="fw-bold">${d.start}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-stop-circle text-danger me-3"></i>
+                                                        <div>
+                                                            <small class="text-muted">End Date</small>
+                                                            <div class="fw-bold">${d.end}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-play-circle text-success me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">Start Date</small>
-                                                        <div class="fw-bold">${d.start}</div>
-                                                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                ${d.description && d.description !== '-' ? `
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-0">${d.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ''}
+
+                                <!-- Budget Line Items (for celebrations/events) -->
+                                <div class="col-12" id="budgetLineItemsSection">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-list me-2"></i>Budget Breakdown</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="lineItemsLoading" class="text-center py-3">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Loading items...
+                                            </div>
+                                            <div id="lineItemsContent" style="display: none;">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Item Name</th>
+                                                                <th class="text-end">Amount</th>
+                                                                <th>Responsible Person</th>
+                                                                <th>Notes</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="lineItemsTableBody">
+                                                            <!-- Line items will be loaded here -->
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr class="table-info">
+                                                                <th>Total</th>
+                                                                <th class="text-end" id="lineItemsTotalFooter">TZS 0.00</th>
+                                                                <th colspan="2"></th>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-stop-circle text-danger me-3"></i>
-                                                    <div>
-                                                        <small class="text-muted">End Date</small>
-                                                        <div class="fw-bold">${d.end}</div>
-                                                    </div>
-                                                </div>
+                                            <div id="lineItemsEmpty" style="display: none;">
+                                                <p class="text-muted text-center mb-0">No line items for this budget.</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Description -->
-                            ${d.description && d.description !== '-' ? `
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-0">${d.description}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
-
-                            <!-- Budget Line Items (for celebrations/events) -->
-                            <div class="col-12" id="budgetLineItemsSection">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>Budget Breakdown</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="lineItemsLoading" class="text-center py-3">
-                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading items...
-                                        </div>
-                                        <div id="lineItemsContent" style="display: none;">
-                                            <div class="table-responsive">
-                                                <table class="table table-striped">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Item Name</th>
-                                                            <th class="text-end">Amount</th>
-                                                            <th>Responsible Person</th>
-                                                            <th>Notes</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="lineItemsTableBody">
-                                                        <!-- Line items will be loaded here -->
-                                                    </tbody>
-                                                    <tfoot>
-                                                        <tr class="table-info">
-                                                            <th>Total</th>
-                                                            <th class="text-end" id="lineItemsTotalFooter">TZS 0.00</th>
-                                                            <th colspan="2"></th>
-                                                        </tr>
-                                                    </tfoot>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        <div id="lineItemsEmpty" style="display: none;">
-                                            <p class="text-muted text-center mb-0">No line items for this budget.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                        `;
 
             // Create modal if not exists
             var modal = document.getElementById('viewBudgetModal');
@@ -1084,20 +1088,20 @@
                 modal.id = 'viewBudgetModal';
                 modal.className = 'modal fade';
                 modal.innerHTML = `
-                            <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Budget Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Budget Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body" id="vb_body">
+                                            ${html}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
                                     </div>
-                                    <div class="modal-body" id="vb_body">
-                                        ${html}
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </div>`;
+                                </div>`;
                 document.body.appendChild(modal);
             }
             document.getElementById('vb_body').innerHTML = html;
@@ -1137,11 +1141,11 @@
                             total += parseFloat(item.amount) || 0;
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                        <td>${item.item_name}</td>
-                                        <td class="text-end">TZS ${parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td><span class="badge bg-info">${item.responsible_person}</span></td>
-                                        <td>${item.notes || '-'}</td>
-                                    `;
+                                            <td>${item.item_name}</td>
+                                            <td class="text-end">TZS ${parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td><span class="badge bg-info">${item.responsible_person}</span></td>
+                                            <td>${item.notes || '-'}</td>
+                                        `;
                             tableBody.appendChild(row);
                         });
 
@@ -1461,28 +1465,28 @@
                 row.className = 'line-item-row';
                 row.dataset.index = lineItemIndex;
                 row.innerHTML = `
-                            <td>
-                                <input type="text" class="form-control form-control-sm line-item-name" name="line_items[${lineItemIndex}][item_name]" 
-                                       value="${itemName}" placeholder="e.g., Rice, Cooking Oil" required>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control form-control-sm line-item-amount text-end" name="line_items[${lineItemIndex}][amount]" 
-                                       value="${amount}" step="0.01" min="0" placeholder="0.00" required>
-                            </td>
-                            <td>
-                                <input type="text" class="form-control form-control-sm line-item-person" name="line_items[${lineItemIndex}][responsible_person]" 
-                                       value="${responsiblePerson}" placeholder="e.g., Often, Gee" required>
-                            </td>
-                            <td>
-                                <input type="text" class="form-control form-control-sm line-item-notes" name="line_items[${lineItemIndex}][notes]" 
-                                       value="${notes}" placeholder="Optional">
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-danger btn-sm remove-line-item" title="Remove">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        `;
+                                <td>
+                                    <input type="text" class="form-control form-control-sm line-item-name" name="line_items[${lineItemIndex}][item_name]" 
+                                           value="${itemName}" placeholder="e.g., Rice, Cooking Oil" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm line-item-amount text-end" name="line_items[${lineItemIndex}][amount]" 
+                                           value="${amount}" step="0.01" min="0" placeholder="0.00" required>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm line-item-person" name="line_items[${lineItemIndex}][responsible_person]" 
+                                           value="${responsiblePerson}" placeholder="e.g., Often, Gee" required>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm line-item-notes" name="line_items[${lineItemIndex}][notes]" 
+                                           value="${notes}" placeholder="Optional">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm remove-line-item" title="Remove">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
 
                 container.appendChild(row);
                 lineItemIndex++;

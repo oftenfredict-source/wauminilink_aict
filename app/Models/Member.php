@@ -14,6 +14,7 @@ class Member extends Model
     protected $fillable = [
         'member_id',
         'biometric_enroll_id',
+        'envelope_number',
         'member_type',           // father, mother, independent
         'membership_type',       // permanent, temporary
         'full_name',
@@ -54,6 +55,7 @@ class Member extends Model
         'spouse_gender',
         'spouse_church_member',
         'spouse_member_id',
+        'spouse_envelope_number',
     ];
 
     protected $casts = [
@@ -99,6 +101,11 @@ class Member extends Model
         return $this->hasMany(Pledge::class);
     }
 
+    public function annualFees()
+    {
+        return $this->hasMany(AnnualFee::class);
+    }
+
     // Attendance relationships
     public function attendances()
     {
@@ -140,25 +147,37 @@ class Member extends Model
 
     /**
      * Generate a unique member ID
-     * Format: YYYY + random alphanumeric (5 chars) + -WL
-     * Example: 2025A3B7C-WL
+     * Format: AICT + YYYY + sequential number (4 digits)
+     * Example: AICT-2025-0001
      */
     public static function generateMemberId()
     {
-        do {
-            $year = date('Y');
-            $randomPart = '';
-            
-            // Generate 5 random alphanumeric characters
-            $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            for ($i = 0; $i < 5; $i++) {
-                $randomPart .= $characters[rand(0, strlen($characters) - 1)];
+        $year = date('Y');
+        $prefix = 'AICT-' . $year . '-';
+
+        // Find the highest sequence number for the current year
+        $lastMember = self::where('member_id', 'like', $prefix . '%')
+            ->orderBy('member_id', 'desc')
+            ->first();
+
+        $sequence = 1;
+        if ($lastMember) {
+            // Extract the sequence number from the last ID (e.g., AICT-2026-0012 -> 12)
+            $lastIdParts = explode('-', $lastMember->member_id);
+            if (count($lastIdParts) === 3) {
+                $sequence = (int) $lastIdParts[2] + 1;
             }
-            
-            $memberId = $year . $randomPart . '-WL';
-            
-        } while (self::where('member_id', $memberId)->exists());
-        
+        }
+
+        // Format: AICT-2025-0001
+        $memberId = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        // Final check for uniqueness (just in case of race conditions)
+        while (self::where('member_id', $memberId)->exists()) {
+            $sequence++;
+            $memberId = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        }
+
         return $memberId;
     }
 
@@ -172,25 +191,36 @@ class Member extends Model
     {
         $maxAttempts = 1000; // Prevent infinite loop
         $attempts = 0;
-        
+
         do {
             // Generate random number between 10 and 999 (2-3 digits)
             $enrollId = rand(10, 999);
             $attempts++;
-            
+
             if ($attempts >= $maxAttempts) {
                 // If we can't find a unique ID, try sequential search
                 for ($id = 10; $id <= 999; $id++) {
-                    if (!self::where('biometric_enroll_id', (string)$id)->exists()) {
-                        return (string)$id;
+                    if (!self::where('biometric_enroll_id', (string) $id)->exists()) {
+                        return (string) $id;
                     }
                 }
                 throw new \Exception('Cannot generate unique biometric enroll ID. All IDs (10-999) are taken.');
             }
-            
-        } while (self::where('biometric_enroll_id', (string)$enrollId)->exists());
-        
-        return (string)$enrollId;
+
+        } while (self::where('biometric_enroll_id', (string) $enrollId)->exists());
+
+        return (string) $enrollId;
+    }
+
+    /**
+     * Get the member's age
+     */
+    public function getAgeAttribute()
+    {
+        if (!$this->date_of_birth) {
+            return 0;
+        }
+        return \Carbon\Carbon::parse($this->date_of_birth)->age;
     }
 
     /**

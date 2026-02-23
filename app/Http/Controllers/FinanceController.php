@@ -9,7 +9,9 @@ use App\Models\Pledge;
 use App\Models\Budget;
 use App\Models\Expense;
 use App\Models\Member;
+use App\Models\AnnualFee;
 use App\Models\FundingRequest;
+use App\Models\PledgePayment;
 use App\Services\BudgetFundingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +50,11 @@ class FinanceController extends Controller
             ->where('approval_status', 'approved')
             ->sum('amount');
 
+        $monthlyAnnualFees = AnnualFee::whereMonth('payment_date', $currentMonth->month)
+            ->whereYear('payment_date', $currentYear)
+            ->where('approval_status', 'approved')
+            ->sum('amount');
+
         // Get pledge payments made this month (actual money received from pledges)
         $monthlyPledgePayments = Pledge::whereMonth('updated_at', $currentMonth->month)
             ->whereYear('updated_at', $currentYear)
@@ -80,8 +87,23 @@ class FinanceController extends Controller
                 ->count()
         ]);
 
-        $totalIncome = $monthlyTithes + $monthlyOfferings + $monthlyDonations + $monthlyPledgePayments;
-        $netIncome = $totalIncome - $monthlyExpenses;
+        // Calculate total balance (all-time approved income - all-time paid expenses)
+        $totalTithes = Tithe::where('approval_status', 'approved')->sum('amount');
+        $totalOfferings = Offering::where('approval_status', 'approved')->sum('amount');
+        $totalDonations = Donation::where('approval_status', 'approved')->sum('amount');
+        $totalAnnualFees = AnnualFee::where('approval_status', 'approved')->sum('amount');
+        $totalPledgePayments = Pledge::sum('amount_paid');
+
+        $totalOverallIncome = $totalTithes + $totalOfferings + $totalDonations + $totalPledgePayments + $totalAnnualFees;
+
+        $totalOverallExpenses = Expense::withTrashed()
+            ->where('status', 'paid')
+            ->where('approval_status', 'approved')
+            ->sum('amount');
+
+        $balance = $totalOverallIncome - $totalOverallExpenses;
+
+        $totalIncome = $monthlyTithes + $monthlyOfferings + $monthlyDonations + $monthlyPledgePayments + $monthlyAnnualFees;
 
         // Get recent transactions
         $recentTithes = Tithe::with('member')
@@ -96,6 +118,11 @@ class FinanceController extends Controller
 
         $recentDonations = Donation::with('member')
             ->orderBy('donation_date', 'desc')
+            ->limit(5)
+            ->get();
+
+        $recentAnnualFees = AnnualFee::with('member')
+            ->orderBy('payment_date', 'desc')
             ->limit(5)
             ->get();
 
@@ -150,7 +177,11 @@ class FinanceController extends Controller
                     ->sum('amount') +
                 Pledge::whereMonth('updated_at', $month->month)
                     ->whereYear('updated_at', $month->year)
-                    ->sum('amount_paid');
+                    ->sum('amount_paid') +
+                AnnualFee::whereMonth('payment_date', $month->month)
+                    ->whereYear('payment_date', $month->year)
+                    ->where('approval_status', 'approved')
+                    ->sum('amount');
 
             $incomeTrend[] = [
                 'month' => $month->format('M Y'),
@@ -161,22 +192,46 @@ class FinanceController extends Controller
         // Get total members count for the layout
         $totalMembers = Member::count();
 
+        // Get pending approvals summary
+        $pendingTithesCount = Tithe::where('approval_status', 'pending')->count();
+        $pendingOfferingsCount = Offering::where('approval_status', 'pending')->count();
+        $pendingDonationsCount = Donation::where('approval_status', 'pending')->count();
+        $pendingPledgePaymentsCount = PledgePayment::where('approval_status', 'pending')->count();
+        $pendingAnnualFeesCount = AnnualFee::where('approval_status', 'pending')->count();
+        $pendingExpensesCount = Expense::where('approval_status', 'pending')->count();
+        $pendingBudgetsCount = Budget::where('approval_status', 'pending')->count();
+
+        $totalPendingCount = $pendingTithesCount + $pendingOfferingsCount + $pendingDonationsCount +
+            $pendingPledgePaymentsCount + $pendingAnnualFeesCount +
+            $pendingExpensesCount + $pendingBudgetsCount;
+
+        $totalPendingAmount = Tithe::where('approval_status', 'pending')->sum('amount') +
+            Offering::where('approval_status', 'pending')->sum('amount') +
+            Donation::where('approval_status', 'pending')->sum('amount') +
+            PledgePayment::where('approval_status', 'pending')->sum('amount') +
+            AnnualFee::where('approval_status', 'pending')->sum('amount') +
+            Expense::where('approval_status', 'pending')->sum('amount');
+
         return view('finance.dashboard', compact(
             'monthlyTithes',
             'monthlyOfferings',
             'monthlyDonations',
             'monthlyPledgePayments',
+            'monthlyAnnualFees',
             'monthlyExpenses',
             'totalIncome',
-            'netIncome',
+            'balance',
             'recentTithes',
             'recentOfferings',
             'recentDonations',
+            'recentAnnualFees',
             'currentBudgets',
             'activePledges',
             'overduePledges',
             'incomeTrend',
-            'totalMembers'
+            'totalMembers',
+            'totalPendingCount',
+            'totalPendingAmount'
         ));
     }
 
@@ -537,6 +592,124 @@ class FinanceController extends Controller
 
         return redirect()->route('finance.pledges')
             ->with('success', 'Pledge payment recorded successfully and sent for pastor approval');
+    }
+
+    /**
+     * Display annual fees management
+     */
+    public function annualFees(Request $request)
+    {
+        $query = AnnualFee::with(['member', 'child']);
+
+        // Apply filters
+        if ($request->filled('member_id')) {
+            $memberId = $request->member_id;
+            if (str_starts_with($memberId, 'm_')) {
+                $query->where('member_id', substr($memberId, 2));
+            } elseif (str_starts_with($memberId, 'c_')) {
+                $query->where('child_id', substr($memberId, 2));
+            }
+        }
+
+        if ($request->filled('year')) {
+            $query->where('year', $request->year);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('approval_status', $request->status);
+        }
+
+        $annualFees = $query->orderBy('payment_date', 'desc')->paginate(20);
+
+        // Fetch all members
+        $members = Member::orderBy('full_name')->get()->map(function ($m) {
+            $m->prefixed_id = 'm_' . $m->id;
+            $m->is_from_children_table = false;
+            return $m;
+        });
+
+        // Fetch all children from children's table
+        $children = \App\Models\Child::orderBy('full_name')->get()->map(function ($c) {
+            $c->prefixed_id = 'c_' . $c->id;
+            $c->age = $c->getAge(); // Child model has getAge() method
+            $c->is_from_children_table = true;
+            return $c;
+        });
+
+        // Merge them for the selection list
+        $payers = $members->concat($children)->sortBy('full_name');
+
+        $totalPayers = $payers->count();
+
+        // Get treasurer/pastor information for approval messages
+        $pastor = \App\Models\User::where('role', 'treasurer')
+            ->orWhere('can_approve_finances', true)
+            ->orWhere('role', 'pastor')
+            ->orWhere('role', 'admin')
+            ->first();
+
+        $currentYear = date('Y');
+
+        // Get the annual fee amounts from settings
+        $settings = \App\Models\SystemSetting::whereIn('key', ['annual_fee_adult', 'annual_fee_child'])
+            ->get()
+            ->pluck('value', 'key');
+
+        $feeAmountAdult = $settings['annual_fee_adult'] ?? 2000;
+        $feeAmountChild = $settings['annual_fee_child'] ?? 1000;
+
+        return view('finance.annual_fees', compact(
+            'annualFees',
+            'payers',
+            'totalPayers',
+            'pastor',
+            'currentYear',
+            'feeAmountAdult',
+            'feeAmountChild'
+        ));
+    }
+
+    /**
+     * Store a new annual fee payment
+     */
+    public function storeAnnualFee(Request $request)
+    {
+        $validated = $request->validate([
+            'member_id' => 'required|string', // This will be the prefixed ID
+            'year' => 'required|integer|min:2000|max:' . (date('Y') + 1),
+            'amount' => 'required|numeric|min:0',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|string',
+            'reference_number' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'category' => 'required|string|in:Adult,Child'
+        ]);
+
+        $prefixedId = $validated['member_id'];
+        unset($validated['member_id']);
+
+        if (str_starts_with($prefixedId, 'm_')) {
+            $validated['member_id'] = substr($prefixedId, 2);
+            $validated['child_id'] = null;
+        } elseif (str_starts_with($prefixedId, 'c_')) {
+            $validated['child_id'] = substr($prefixedId, 2);
+            $validated['member_id'] = null;
+        } else {
+            return redirect()->back()
+                ->with('error', 'Invalid member or child selected.')
+                ->withInput();
+        }
+
+        $validated['recorded_by'] = auth()->user()->name ?? 'System';
+        $validated['approval_status'] = 'pending';
+
+        $annualFee = AnnualFee::create($validated);
+
+        // Send notification to treasurers about pending annual fee
+        $this->sendFinancialApprovalNotification('annual_fee', $annualFee);
+
+        return redirect()->route('finance.annual_fees')
+            ->with('success', 'Annual fee payment recorded successfully and sent for treasurer approval');
     }
 
     /**
@@ -1749,14 +1922,28 @@ class FinanceController extends Controller
     private function sendFinancialApprovalNotification($type, $record, $fundBreakdown = null)
     {
         try {
-            // Get all users who can approve finances (pastors)
-            $pastors = \App\Models\User::where('can_approve_finances', true)
-                ->orWhere('role', 'pastor')
-                ->orWhere('role', 'admin')
-                ->get();
+            // Determine recipients based on type
+            if ($type === 'annual_fee') {
+                // For annual fees, notify treasurers specifically as requested
+                $recipients = \App\Models\User::where('role', 'treasurer')->get();
 
-            if ($pastors->isEmpty()) {
-                \Log::warning('No pastors found to send financial approval notification');
+                // Fallback to pastors/admins if no treasurer is assigned
+                if ($recipients->isEmpty()) {
+                    $recipients = \App\Models\User::where('can_approve_finances', true)
+                        ->orWhere('role', 'pastor')
+                        ->orWhere('role', 'admin')
+                        ->get();
+                }
+            } else {
+                // Default logic for other financial types
+                $recipients = \App\Models\User::where('can_approve_finances', true)
+                    ->orWhere('role', 'pastor')
+                    ->orWhere('role', 'admin')
+                    ->get();
+            }
+
+            if ($recipients->isEmpty()) {
+                \Log::warning('No recipients found to send financial approval notification', ['type' => $type]);
                 return;
             }
 
@@ -1780,9 +1967,9 @@ class FinanceController extends Controller
                 // Expenses might not have a member, use expense name instead
                 $memberName = $record->expense_name ?? 'General Expense';
             } else {
-                // For other types (tithe, offering, donation, pledge), member is directly on the record
-                $memberName = $record->member->full_name ?? 'General Member';
-                $date = $record->offering_date ?? $record->tithe_date ?? $record->donation_date ?? $record->expense_date ?? $record->created_at;
+                // For other types (tithe, offering, donation, annual_fee), member is directly on the record
+                $memberName = $record->member->full_name ?? ($record->child ? $record->child->full_name : 'General Member');
+                $date = $record->offering_date ?? $record->tithe_date ?? $record->donation_date ?? $record->expense_date ?? $record->payment_date ?? $record->created_at;
                 $amount = $record->amount ?? 0;
             }
 
@@ -1808,19 +1995,19 @@ class FinanceController extends Controller
                 'created_at' => now()
             ];
 
-            // Send notification to each pastor
-            foreach ($pastors as $pastor) {
+            // Send notification to each recipient
+            foreach ($recipients as $recipient) {
                 try {
-                    $pastor->notify(new \App\Notifications\FinancialApprovalNotification($notificationData));
-                    \Log::info("Financial approval notification sent to pastor", [
-                        'pastor_id' => $pastor->id,
-                        'pastor_name' => $pastor->name,
+                    $recipient->notify(new \App\Notifications\FinancialApprovalNotification($notificationData));
+                    \Log::info("Financial approval notification sent", [
+                        'recipient_id' => $recipient->id,
+                        'recipient_name' => $recipient->name,
                         'type' => $type,
                         'record_id' => $record->id,
                         'has_fund_breakdown' => !is_null($fundBreakdown)
                     ]);
                 } catch (\Exception $e) {
-                    \Log::error("Failed to send financial approval notification to pastor {$pastor->id}: " . $e->getMessage());
+                    \Log::error("Failed to send financial approval notification to recipient {$recipient->id}: " . $e->getMessage());
                 }
             }
 

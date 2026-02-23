@@ -30,17 +30,20 @@ class FinancialApprovalNotification extends Notification
     public function via(object $notifiable): array
     {
         $channels = ['database'];
-        
-        // Add email if pastor has email
-        if (!empty($notifiable->email)) {
+
+        // Add email if notifiable has a valid email address
+        if (!empty($notifiable->email) && filter_var($notifiable->email, FILTER_VALIDATE_EMAIL)) {
             $channels[] = 'mail';
         }
-        
-        // Add SMS if pastor has phone number
+
+        // Add SMS if notifiable has phone number
         if (!empty($notifiable->phone_number)) {
+            // For annual fees, if a treasurer exists, they should be the primary SMS recipient
+            // This logic is partially handled by who is passed to this notification,
+            // but we can add an extra guard here if needed.
             $channels[] = 'sms';
         }
-        
+
         return $channels;
     }
 
@@ -49,9 +52,9 @@ class FinancialApprovalNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $type = ucfirst($this->data['type']);
+        $type = ucfirst(str_replace('_', ' ', $this->data['type']));
         $amount = number_format($this->data['amount'], 0);
-        $date = $this->data['date']->format('M d, Y');
+        $date = $this->data['date'] instanceof \Carbon\Carbon ? $this->data['date']->format('M d, Y') : \Carbon\Carbon::parse($this->data['date'])->format('M d, Y');
         $memberName = $this->data['member_name'];
         $recordedBy = $this->data['recorded_by'];
 
@@ -88,36 +91,36 @@ class FinancialApprovalNotification extends Notification
     {
         try {
             $smsService = new SmsService();
-            
+
             // Translate financial type to Swahili
             $swahiliType = $this->translateFinancialTypeToSwahili($this->data['type']);
-            
+
+            // Get professional title for the recipient
+            $title = 'Kiongozi'; // Default: Leader
+            if ($notifiable->role === 'pastor') {
+                $title = 'Mchungaji';
+            } elseif ($notifiable->role === 'treasurer') {
+                $title = 'Mweka Hazina';
+            } elseif ($notifiable->role === 'admin') {
+                $title = 'Msimamizi';
+            }
+
             // Ensure amount is properly formatted - handle null/0 cases
             $amountValue = $this->data['amount'] ?? 0;
-            if ($amountValue <= 0) {
-                \Log::warning('Financial approval SMS with zero or missing amount', [
-                    'type' => $this->data['type'],
-                    'record_id' => $this->data['record_id'] ?? null,
-                    'amount' => $amountValue,
-                    'data' => $this->data
-                ]);
-            }
             $amount = number_format($amountValue, 0);
             $memberName = $this->data['member_name'] ?? 'Mwanachama';
-            
-            $message = "Habari Mchungaji! Kuna {$swahiliType} ya TZS {$amount} kutoka kwa {$memberName} inahitaji uthibitisho wako. Tafadhali ingia kwenye mfumo wa Waumini Link ili kuithibitisha. Asante!";
-            
+
+            $message = "Habari {$title}! Kuna {$swahiliType} ya TZS {$amount} kutoka kwa {$memberName} inahitaji uthibitisho wako. Tafadhali ingia kwenye mfumo wa Waumini Link ili kuithibitisha. Asante!";
+
             // Send SMS
             $smsService->send($notifiable->phone_number, $message);
-            
+
             return $message;
         } catch (\Exception $e) {
-            \Log::error('Failed to send financial approval SMS to pastor: ' . $e->getMessage(), [
-                'type' => $this->data['type'] ?? 'unknown',
-                'record_id' => $this->data['record_id'] ?? null,
-                'amount' => $this->data['amount'] ?? null,
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            \Log::error('Failed to send financial approval SMS: ' . $e->getMessage(), [
+                'recipient_id' => $notifiable->id,
+                'role' => $notifiable->role,
+                'type' => $this->data['type'] ?? 'unknown'
             ]);
             return "Financial approval notification failed to send via SMS";
         }
@@ -134,10 +137,12 @@ class FinancialApprovalNotification extends Notification
             'donation' => 'Michango',
             'expense' => 'Matumizi',
             'budget' => 'Bajeti',
-            'pledge' => 'Ahadi'
+            'pledge' => 'Ahadi',
+            'pledge_payment' => 'Malipo ya Ahadi',
+            'annual_fee' => 'Ada ya Mwaka'
         ];
 
-        return $translations[$type] ?? ucfirst($type);
+        return $translations[$type] ?? ucfirst(str_replace('_', ' ', $type));
     }
 
     /**

@@ -48,6 +48,7 @@
                             <tr>
                                 <th>Title</th>
                                 <th>Type</th>
+                                <th>Target</th>
                                 <th>Status</th>
                                 <th>Start Date</th>
                                 <th>End Date</th>
@@ -72,6 +73,17 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @if($announcement->target_type === 'specific')
+                                            <span class="badge bg-purple" style="background-color: #6f42c1;">
+                                                <i class="fas fa-users me-1"></i>Specific ({{ $announcement->targetedMembers()->count() }})
+                                            </span>
+                                        @else
+                                            <span class="badge bg-dark">
+                                                <i class="fas fa-globe me-1"></i>All Members
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         @if($announcement->isCurrentlyActive())
                                             <span class="badge bg-success">Active</span>
                                         @else
@@ -86,7 +98,7 @@
                                             <a href="{{ route('announcements.edit', $announcement) }}" class="btn btn-outline-primary" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('announcements.send-sms', $announcement) }}" method="POST" class="d-inline" onsubmit="return confirm('Send SMS notification to all members for this announcement?');">
+                                            <form action="{{ route('announcements.send-sms', $announcement) }}" method="POST" class="d-inline" onsubmit="return confirm('Send SMS notification to the targeted audience ({{ $announcement->target_type === 'specific' ? $announcement->targetedMembers()->count() . ' members' : 'all members' }}) for this announcement?');">
                                                 @csrf
                                                 <button type="submit" class="btn btn-outline-info" title="Send SMS">
                                                     <i class="fas fa-sms"></i>

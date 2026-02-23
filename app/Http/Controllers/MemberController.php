@@ -57,6 +57,7 @@ class MemberController extends Controller
             'membership_type' => ['required', Rule::in(['permanent', 'temporary'])],
 
             'full_name' => 'required|string|max:255',
+            'envelope_number' => ['required', 'string', 'max:50', Rule::unique('members', 'envelope_number')],
             'email' => 'nullable|email|max:255',
             'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+255[0-9]{9,15}$/', Rule::unique('members', 'phone_number')],
             'date_of_birth' => 'required|date|before:today',
@@ -78,7 +79,7 @@ class MemberController extends Controller
             'children.*.date_of_birth' => 'required_with:children|date|before_or_equal:today',
 
             // Address fields - make required
-            'nida_number' => 'nullable|string|max:20',
+            'nida_number' => 'nullable|string|size:20',
             'tribe' => 'required|string|max:100',
             'other_tribe' => 'nullable|required_if:tribe,Other|string|max:100',
             'region' => 'required|string|max:100',
@@ -95,13 +96,14 @@ class MemberController extends Controller
             'spouse_date_of_birth' => 'nullable|required_if:marital_status,married|date|before:today',
             'spouse_education_level' => ['nullable', 'required_if:marital_status,married', Rule::in(['primary', 'secondary', 'high_level', 'certificate', 'diploma', 'bachelor_degree', 'masters', 'phd', 'professor', 'not_studied'])],
             'spouse_profession' => 'nullable|required_if:marital_status,married|string|max:100',
-            'spouse_nida_number' => 'nullable|string|max:20',
+            'spouse_nida_number' => 'nullable|string|size:20',
             'spouse_email' => 'nullable|email|max:255',
             'spouse_phone_number' => ['nullable', 'required_if:marital_status,married', 'string', 'max:20', 'regex:/^\+255[0-9]{9,15}$/'],
             // spouse_gender is automatically determined based on member_type (father -> female, mother -> male)
             'spouse_tribe' => 'nullable|required_if:marital_status,married|string|max:100',
             'spouse_other_tribe' => 'nullable|required_if:spouse_tribe,Other|string|max:100',
             'spouse_church_member' => ['nullable', 'required_if:marital_status,married', Rule::in(['yes', 'no'])],
+            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'max:50', 'different:envelope_number', Rule::unique('members', 'envelope_number')],
         ];
         // Custom validation for independent persons
         if ($request->member_type === 'independent' && $request->membership_type === 'permanent') {
@@ -156,6 +158,23 @@ class MemberController extends Controller
                                 }
                             } catch (\Exception $e) {
                                 $v->errors()->add("children.$i.date_of_birth", 'Invalid child date of birth.');
+                            }
+                        }
+
+                        // Validate child membership fields — only require envelope for children aged 21+
+                        if (isset($children[$i]['is_church_member']) && $children[$i]['is_church_member'] === 'yes') {
+                            $childAge = null;
+                            if (!empty($children[$i]['date_of_birth'])) {
+                                try {
+                                    $childAge = Carbon::parse($children[$i]['date_of_birth'])->age;
+                                } catch (\Exception $e) {
+                                    // ignore — DOB format error already caught above
+                                }
+                            }
+                            if ($childAge !== null && $childAge >= 21) {
+                                if (!isset($children[$i]['envelope_number']) || empty($children[$i]['envelope_number'])) {
+                                    $v->errors()->add("children.$i.envelope_number", 'Envelope number is required for church members aged 21 and above.');
+                                }
                             }
                         }
                     }
@@ -260,6 +279,7 @@ class MemberController extends Controller
                 // biometric_enroll_id will be filled after successful device registration
                 'member_type' => $request->member_type,
                 'membership_type' => $request->membership_type,
+                'envelope_number' => $request->envelope_number,
                 'full_name' => $request->full_name,
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
@@ -297,6 +317,7 @@ class MemberController extends Controller
                 'spouse_other_tribe' => $request->spouse_other_tribe,
                 // spouse_gender is automatically determined when creating spouse member
                 'spouse_church_member' => $request->spouse_church_member,
+                'spouse_envelope_number' => $request->spouse_envelope_number,
             ];
 
             \Log::info('Member data to be saved:', $memberData);
@@ -339,8 +360,7 @@ class MemberController extends Controller
                 // Continue even if user creation fails - member is already created
             }
 
-            // Children creation with age check
-            $children = [];
+            // Children creation with age check and membership logic
             if ($request->filled('children')) {
                 foreach ($request->children as $childData) {
                     $age = Carbon::parse($childData['date_of_birth'])->age;
@@ -351,14 +371,67 @@ class MemberController extends Controller
                             'errors' => ['children' => ["Child age exceeds maximum ({$childMaxAge})."]]
                         ], 422);
                     }
-                    $children[] = new Child([
+
+                    $child = new Child([
                         'full_name' => $childData['full_name'],
                         'gender' => $childData['gender'],
                         'date_of_birth' => $childData['date_of_birth'],
+                        'is_church_member' => $childData['is_church_member'] ?? 'no',
+                        'envelope_number' => $childData['envelope_number'] ?? null,
                     ]);
-                }
-                if (!empty($children)) {
-                    $member->children()->saveMany($children);
+
+                    $member->children()->save($child);
+
+                    // Create separate Member record for child if they are a church member
+                    if (isset($childData['is_church_member']) && $childData['is_church_member'] === 'yes') {
+                        try {
+                            $childMemberData = [
+                                'member_id' => Member::generateMemberId(),
+                                'envelope_number' => $childData['envelope_number'],
+                                'member_type' => 'independent',
+                                'membership_type' => 'permanent',
+                                'full_name' => $childData['full_name'],
+                                'date_of_birth' => $childData['date_of_birth'],
+                                'gender' => $childData['gender'],
+                                'phone_number' => $member->phone_number, // Use parent's phone by default
+                                'region' => $member->region,
+                                'district' => $member->district,
+                                'ward' => $member->ward,
+                                'street' => $member->street,
+                                'address' => $member->address,
+                                'residence_region' => $member->residence_region,
+                                'residence_district' => $member->residence_district,
+                                'residence_ward' => $member->residence_ward,
+                                'residence_street' => $member->residence_street,
+                                'marital_status' => 'single',
+                            ];
+
+                            $childMember = Member::create($childMemberData);
+
+                            // Link child record to their new independent member record if needed (not strictly required by current schema but good for future)
+                            // $child->member_id = $childMember->id; // Wait, child.member_id is the PARENT ID. 
+                            // We don't have a child.independent_member_id yet.
+
+                            // Create User account for child member
+                            $childNameParts = explode(' ', trim($childMember->full_name));
+                            $childLastname = !empty($childNameParts) ? strtoupper(end($childNameParts)) : 'MEMBER';
+
+                            \App\Models\User::create([
+                                'name' => $childMember->full_name,
+                                'email' => $childMember->member_id,
+                                'password' => \Hash::make($childLastname),
+                                'role' => 'member',
+                                'member_id' => $childMember->id,
+                                'phone_number' => $childMember->phone_number,
+                            ]);
+
+                            \Log::info("Child member created successfully: {$childMember->full_name}");
+                        } catch (\Exception $e) {
+                            \Log::error("Failed to create separate member record for child church member: {$childData['full_name']}", [
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
                 }
             }
 
@@ -437,6 +510,7 @@ class MemberController extends Controller
                     // Create spouse member data
                     $spouseMemberData = [
                         'member_id' => Member::generateMemberId(),
+                        'envelope_number' => $member->spouse_envelope_number,
                         'member_type' => 'independent', // Spouse is independent member
                         'membership_type' => 'permanent',
                         'full_name' => $member->spouse_full_name,
@@ -801,8 +875,21 @@ class MemberController extends Controller
         $totalPermanent = (clone $query)->where('membership_type', 'permanent')->count();
         $totalTemporary = (clone $query)->where('membership_type', 'temporary')->count();
 
-        $members = $query->orderBy('created_at', 'desc')->paginate(10);
-        $members->appends($request->query());
+        // Separate paginators per membership type so tabs paginate independently
+        $permanentMembers = (clone $query)
+            ->where('membership_type', 'permanent')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15, ['*'], 'permanent_page')
+            ->withQueryString();
+
+        $temporaryMembers = (clone $query)
+            ->where('membership_type', 'temporary')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15, ['*'], 'temporary_page')
+            ->withQueryString();
+
+        // Keep $members as a lightweight reference (used for total count in navbar etc.)
+        $members = $query->orderBy('created_at', 'desc')->get();
 
         // Fetch archived members from DeletedMember
         $archivedMembers = \App\Models\DeletedMember::orderBy('deleted_at_actual', 'desc')->get();
@@ -813,10 +900,10 @@ class MemberController extends Controller
             ->get();
 
         if ($request->wantsJson()) {
-            return response()->json($members);
+            return response()->json($permanentMembers);
         }
 
-        return view('members.view', compact('members', 'regions', 'districts', 'wards', 'tribes', 'archivedMembers', 'children', 'totalPermanent', 'totalTemporary'));
+        return view('members.view', compact('members', 'permanentMembers', 'temporaryMembers', 'regions', 'districts', 'wards', 'tribes', 'archivedMembers', 'children', 'totalPermanent', 'totalTemporary'));
     }
 
     public function view()

@@ -310,7 +310,8 @@
                             <div>
                                 <div class="small text-white-50">Profit Margin</div>
                                 <div class="h4">
-                                    {{ $totalIncome > 0 ? number_format(($netIncome / $totalIncome) * 100, 1) : 0 }}%</div>
+                                    {{ $totalIncome > 0 ? number_format(($netIncome / $totalIncome) * 100, 1) : 0 }}%
+                                </div>
                             </div>
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-percentage fa-2x"></i>
@@ -365,6 +366,13 @@
                                         <td class="text-end">TZS {{ number_format($pledgePayments, 0) }}</td>
                                         <td class="text-end">
                                             {{ $totalIncome > 0 ? number_format(($pledgePayments / $totalIncome) * 100, 1) : 0 }}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-calendar-check text-dark me-2"></i>Annual Fees</td>
+                                        <td class="text-end">TZS {{ number_format($annualFees, 0) }}</td>
+                                        <td class="text-end">
+                                            {{ $totalIncome > 0 ? number_format(($annualFees / $totalIncome) * 100, 1) : 0 }}%
                                         </td>
                                     </tr>
                                 </tbody>
@@ -554,13 +562,14 @@
             new Chart(incomeCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Tithes', 'Offerings', 'Donations'],
+                    labels: ['Tithes', 'Offerings', 'Donations', 'Annual Fees'],
                     datasets: [{
-                        data: [{{ $tithes }}, {{ $offerings }}, {{ $donations }}],
+                        data: [{{ $tithes }}, {{ $offerings }}, {{ $donations }}, {{ $annualFees }}],
                         backgroundColor: [
                             'rgba(54, 162, 235, 0.8)',
                             'rgba(75, 192, 192, 0.8)',
-                            'rgba(255, 206, 86, 0.8)'
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(52, 58, 64, 0.8)'
                         ],
                         borderWidth: 2
                     }]
@@ -746,8 +755,8 @@
                 }
             @endif
 
-        // Handle form submission
-        const form = document.getElementById('reportForm');
+            // Handle form submission
+            const form = document.getElementById('reportForm');
             const generateBtn = document.getElementById('generateBtn');
 
             if (form && generateBtn) {

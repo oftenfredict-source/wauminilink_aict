@@ -112,18 +112,70 @@
                     </div>
 
                     <div class="col-12">
+                        <label class="form-label fw-bold">Target Audience <span class="text-danger">*</span></label>
+                        <div class="card border-light bg-light">
+                            <div class="card-body">
+                                <div class="d-flex gap-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="target_type" id="target_all" value="all" 
+                                            {{ old('target_type', 'all') == 'all' ? 'checked' : '' }} onchange="toggleTargeting()">
+                                        <label class="form-check-label" for="target_all">
+                                            All Members
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="target_type" id="target_specific" value="specific" 
+                                            {{ old('target_type') == 'specific' ? 'checked' : '' }} onchange="toggleTargeting()">
+                                        <label class="form-check-label" for="target_specific">
+                                            Specific Members
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div id="specific_members_container" style="display: {{ old('target_type') == 'specific' ? 'block' : 'none' }};">
+                                    <div class="mb-2">
+                                        <input type="text" id="member_search" class="form-control mb-2" placeholder="Search members by name or ID..." onkeyup="filterMemberSelection()">
+                                    </div>
+                                    <div class="member-list-container border rounded bg-white p-2" style="max-height: 300px; overflow-y: auto;">
+                                        <div class="row g-2" id="member_selection_list">
+                                            @foreach($members as $member)
+                                                <div class="col-md-6 col-lg-4 member-selection-item" data-name="{{ strtolower($member->full_name) }}" data-id="{{ strtolower($member->member_id) }}">
+                                                    <div class="form-check border rounded p-2 px-4 h-100">
+                                                        <input class="form-check-input" type="checkbox" name="target_member_ids[]" 
+                                                            value="{{ $member->id }}" id="member_{{ $member->id }}"
+                                                            {{ is_array(old('target_member_ids')) && in_array($member->id, old('target_member_ids')) ? 'checked' : '' }}>
+                                                        <label class="form-check-label d-block cursor-pointer" for="member_{{ $member->id }}">
+                                                            <div class="fw-bold text-truncate">{{ $member->full_name }}</div>
+                                                            <small class="text-muted">{{ $member->member_id }}</small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMembers(true)">Select Visible</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMembers(false)">Deselect Visible</button>
+                                        <small class="text-muted ms-2" id="selection_count">0 selected</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
                         <div class="card border-info">
                             <div class="card-body">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="send_sms" id="send_sms" 
                                         {{ old('send_sms') ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="send_sms">
-                                        <i class="fas fa-sms text-info me-2"></i>Send SMS notification to all members
+                                        <i class="fas fa-sms text-info me-2"></i>Send SMS notification to targeted members
                                     </label>
                                 </div>
                                 <small class="text-muted d-block mt-2">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    If checked, an SMS will be sent to all members with phone numbers when this announcement is created.
+                                    If checked, an SMS will be sent to the selected target audience when this announcement is created.
                                     SMS notifications must be enabled in system settings.
                                 </small>
                             </div>
@@ -143,5 +195,52 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleTargeting() {
+    const container = document.getElementById('specific_members_container');
+    const isSpecific = document.getElementById('target_specific').checked;
+    container.style.display = isSpecific ? 'block' : 'none';
+    updateSelectionCount();
+}
+
+function filterMemberSelection() {
+    const searchTerm = document.getElementById('member_search').value.toLowerCase();
+    const items = document.querySelectorAll('.member-selection-item');
+    
+    items.forEach(item => {
+        const name = item.dataset.name;
+        const id = item.dataset.id;
+        if (name.includes(searchTerm) || id.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function selectVisibleMembers(select) {
+    const items = document.querySelectorAll('.member-selection-item');
+    items.forEach(item => {
+        if (item.style.display !== 'none') {
+            const checkbox = item.querySelector('.form-check-input');
+            if (checkbox) checkbox.checked = select;
+        }
+    });
+    updateSelectionCount();
+}
+
+function updateSelectionCount() {
+    const checked = document.querySelectorAll('input[name="target_member_ids[]"]:checked').length;
+    document.getElementById('selection_count').textContent = `${checked} selected`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="target_member_ids[]"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionCount);
+    });
+    updateSelectionCount();
+});
+</script>
 @endsection
 

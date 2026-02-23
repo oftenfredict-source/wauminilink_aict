@@ -52,7 +52,7 @@
                         <div>
                             <div class="text-xs text-uppercase fw-bold text-primary">Total Giving (YTD)</div>
                             <div class="h5 mb-0 fw-bold">TZS {{ number_format($totalGiving, 2) }}</div>
-                            <small class="text-muted">Tithes + Offerings + Donations</small>
+                            <small class="text-muted">Tithes + Offerings + Donations + Annual Fees</small>
                         </div>
                         <i class="fas fa-hand-holding-usd fa-2x text-primary opacity-75"></i>
                     </div>

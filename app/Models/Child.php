@@ -19,6 +19,8 @@ class Child extends Model
         'parent_name',
         'parent_phone',
         'parent_relationship',
+        'is_church_member',
+        'envelope_number',
     ];
 
     protected $casts = [
@@ -108,46 +110,46 @@ class Child extends Model
         }
 
         $reference = $referenceDate ?? Carbon::now();
-        // Use diffInYears which returns integer, but ensure it's cast to int for safety
-        return (int) $this->date_of_birth->diffInYears($reference);
+        // Explicitly parse to Carbon to ensure IDE/linter recognizes diffInYears
+        return (int) Carbon::parse($this->date_of_birth)->diffInYears($reference);
     }
 
     /**
      * Get the child's age group
      * 
-     * @return string|null 'infant' (< 3), 'sunday_school' (3-12), 'teenager' (13-17), or null if 18+
+     * @return string|null 'infant' (< 3), 'sunday_school' (3-12), 'teenager' (13-20), or null if 21+
      */
     public function getAgeGroup()
     {
         $age = $this->getAge();
-        
+
         if ($age < 3) {
             return 'infant';
         } elseif ($age >= 3 && $age <= 12) {
             return 'sunday_school';
-        } elseif ($age >= 13 && $age <= 17) {
+        } elseif ($age >= 13 && $age <= 20) {
             return 'teenager';
         }
-        
-        return null; // 18 or older
+
+        return null; // 21 or older
     }
 
     /**
      * Determine which service type this child should attend based on age
      * 
-     * @return string|null 'children_service' for ages 3-12, 'sunday_service' for ages 13-17, null for others
+     * @return string|null 'children_service' for ages 3-12, 'sunday_service' for ages 13-20, null for others
      */
     public function getRecommendedServiceType()
     {
         $ageGroup = $this->getAgeGroup();
-        
+
         switch ($ageGroup) {
             case 'sunday_school':
                 return 'children_service'; // Sunday School
             case 'teenager':
                 return 'sunday_service'; // Main adult service
             default:
-                return null; // Infants (< 3) or adults (18+) - not typically recorded
+                return null; // Infants (< 3) or adults (21+) - not typically recorded
         }
     }
 
@@ -162,7 +164,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child should attend main service (ages 13-17)
+     * Check if this child should attend main service (ages 13-20)
      * 
      * @return bool
      */
@@ -172,7 +174,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child is part of children's ministry (ages 3-17)
+     * Check if this child is part of children's ministry (ages 3-20)
      * 
      * @return bool
      */
@@ -183,7 +185,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child should be recorded in attendance (ages 3-17)
+     * Check if this child should be recorded in attendance (ages 3-20)
      * 
      * @return bool
      */
@@ -203,32 +205,32 @@ class Child extends Model
     {
         $maxAttempts = 1000; // Prevent infinite loop
         $attempts = 0;
-        
+
         do {
             // Generate random number between 10 and 999 (2-3 digits)
             $enrollId = rand(10, 999);
             $attempts++;
-            
+
             if ($attempts >= $maxAttempts) {
                 // If we can't find a unique ID, try sequential search
                 // Check both members and children tables
                 for ($id = 10; $id <= 999; $id++) {
-                    $existsInMembers = \App\Models\Member::where('biometric_enroll_id', (string)$id)->exists();
-                    $existsInChildren = self::where('biometric_enroll_id', (string)$id)->exists();
-                    
+                    $existsInMembers = \App\Models\Member::where('biometric_enroll_id', (string) $id)->exists();
+                    $existsInChildren = self::where('biometric_enroll_id', (string) $id)->exists();
+
                     if (!$existsInMembers && !$existsInChildren) {
-                        return (string)$id;
+                        return (string) $id;
                     }
                 }
                 throw new \Exception('Cannot generate unique biometric enroll ID. All IDs (10-999) are taken.');
             }
-            
+
         } while (
-            \App\Models\Member::where('biometric_enroll_id', (string)$enrollId)->exists() ||
-            self::where('biometric_enroll_id', (string)$enrollId)->exists()
+            \App\Models\Member::where('biometric_enroll_id', (string) $enrollId)->exists() ||
+            self::where('biometric_enroll_id', (string) $enrollId)->exists()
         );
-        
-        return (string)$enrollId;
+
+        return (string) $enrollId;
     }
 
     /**
@@ -240,8 +242,8 @@ class Child extends Model
         parent::boot();
 
         static::creating(function ($child) {
-            // Auto-generate biometric enroll ID for teenagers who should record attendance
-            // Only generate if child is a teenager (13-17) who should attend main service
+            // Auto-generate biometric enroll ID for teenagers (13-20) who should record attendance
+            // Only generate if child is a teenager (13-20) who should attend main service
             if (empty($child->biometric_enroll_id) && $child->shouldAttendMainService()) {
                 $child->biometric_enroll_id = self::generateBiometricEnrollId();
             }

@@ -25,20 +25,20 @@ class PastorDashboardController extends Controller
     {
         // Middleware is applied at route level
     }
-    
+
     private function checkPastorPermission()
     {
         if (!auth()->check()) {
             abort(401, 'Please log in to access this page.');
         }
-        
+
         $user = auth()->user();
-        
+
         // Allow admin
         if ($user->isAdmin()) {
             return;
         }
-        
+
         // Check for active pastor position in database
         if ($user->member_id) {
             $member = $user->member;
@@ -46,18 +46,18 @@ class PastorDashboardController extends Controller
                 $activePastorPosition = Leader::where('member_id', $member->id)
                     ->whereIn('position', ['pastor', 'assistant_pastor'])
                     ->where('is_active', true)
-                    ->where(function($query) {
+                    ->where(function ($query) {
                         $query->whereNull('end_date')
-                              ->orWhere('end_date', '>=', now()->toDateString());
+                            ->orWhere('end_date', '>=', now()->toDateString());
                     })
                     ->first();
-                
+
                 if ($activePastorPosition) {
                     return; // Has active pastor position
                 }
             }
         }
-        
+
         // No active position and not admin - deny access
         abort(403, 'Unauthorized access. Only active Pastors can access this dashboard.');
     }
@@ -68,70 +68,33 @@ class PastorDashboardController extends Controller
     public function index()
     {
         $this->checkPastorPermission();
-        
+
         $today = Carbon::today();
         $currentMonth = Carbon::now()->startOfMonth();
         $currentYear = Carbon::now()->year;
-        
-        // Get pending records for today
-        $pendingTithes = Tithe::with(['member', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('tithe_date', $today)
-            ->count();
-            
-        $pendingOfferings = Offering::with(['member', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('offering_date', $today)
-            ->count();
-            
-        $pendingDonations = Donation::with(['member', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('donation_date', $today)
-            ->count();
-            
-        $pendingExpenses = Expense::with(['budget', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('expense_date', $today)
-            ->count();
-            
-        $pendingBudgets = Budget::with(['approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('created_at', $today)
-            ->count();
-            
-        $pendingPledges = Pledge::with(['member', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('pledge_date', $today)
-            ->count();
-            
-        // Get pending pledge payments (actual payments that need approval)
-        $pendingPledgePayments = PledgePayment::with(['pledge.member', 'approver'])
-            ->where('approval_status', 'pending')
-            ->whereDate('payment_date', $today)
-            ->count();
 
         // Get financial summary for current month (only approved records)
         $monthlyTithes = Tithe::whereMonth('tithe_date', $currentMonth->month)
             ->whereYear('tithe_date', $currentYear)
             ->where('approval_status', 'approved')
             ->sum('amount');
-            
+
         $monthlyOfferings = Offering::whereMonth('offering_date', $currentMonth->month)
             ->whereYear('offering_date', $currentYear)
             ->where('approval_status', 'approved')
             ->sum('amount');
-            
+
         $monthlyDonations = Donation::whereMonth('donation_date', $currentMonth->month)
             ->whereYear('donation_date', $currentYear)
             ->where('approval_status', 'approved')
             ->sum('amount');
-            
+
         $monthlyExpenses = Expense::whereMonth('expense_date', $currentMonth->month)
             ->whereYear('expense_date', $currentYear)
             ->where('status', 'paid')
             ->where('approval_status', 'approved')
             ->sum('amount');
-            
+
         $monthlyPledges = Pledge::whereMonth('pledge_date', $currentMonth->month)
             ->whereYear('pledge_date', $currentYear)
             ->where('approval_status', 'approved')
@@ -139,128 +102,15 @@ class PastorDashboardController extends Controller
 
         $totalIncome = $monthlyTithes + $monthlyOfferings + $monthlyDonations + $monthlyPledges;
         $netIncome = $totalIncome - $monthlyExpenses;
-        
-        // Get recent approvals (last 7 days)
-        $recentApprovals = collect();
-        
-        $recentApprovals = $recentApprovals->merge(
-            Tithe::with(['member', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('approved_at', '>=', Carbon::now()->subDays(7))
-                ->get()
-                ->map(function($item) {
-                    $item->type = 'Tithe';
-                    $item->date = $item->tithe_date;
-                    return $item;
-                })
-        );
-        
-        $recentApprovals = $recentApprovals->merge(
-            Offering::with(['member', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('approved_at', '>=', Carbon::now()->subDays(7))
-                ->get()
-                ->map(function($item) {
-                    $item->type = 'Offering';
-                    $item->date = $item->offering_date;
-                    return $item;
-                })
-        );
-        
-        $recentApprovals = $recentApprovals->merge(
-            Donation::with(['member', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('approved_at', '>=', Carbon::now()->subDays(7))
-                ->get()
-                ->map(function($item) {
-                    $item->type = 'Donation';
-                    $item->date = $item->donation_date;
-                    return $item;
-                })
-        );
-        
-        $recentApprovals = $recentApprovals->merge(
-            Pledge::with(['member', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('approved_at', '>=', Carbon::now()->subDays(7))
-                ->get()
-                ->map(function($item) {
-                    $item->type = 'Pledge';
-                    $item->date = $item->pledge_date;
-                    return $item;
-                })
-        );
-        
-        // Add pledge payments to recent approvals
-        $recentApprovals = $recentApprovals->merge(
-            PledgePayment::with(['pledge.member', 'approver'])
-                ->where('approval_status', 'approved')
-                ->where('approved_at', '>=', Carbon::now()->subDays(7))
-                ->get()
-                ->map(function($item) {
-                    $item->type = 'Pledge Payment';
-                    $item->date = $item->payment_date;
-                    $item->amount = $item->amount;
-                    return $item;
-                })
-        );
 
-        $recentApprovals = $recentApprovals->sortByDesc('approved_at')->take(10);
-        
-        // Process recent approvals to get approver display names from Leader/Member relationship
-        $recentApprovals = $recentApprovals->map(function($record) {
-            if ($record->approver) {
-                $approverUser = $record->approver;
-                $approverDisplayName = $approverUser->name; // Default to user's name
-                
-                // Try to find the member by email match
-                $member = Member::where('email', $approverUser->email)->first();
-                
-                if ($member) {
-                    // Check if this member is assigned as a pastor
-                    $pastorLeader = Leader::with('member')
-                        ->where('member_id', $member->id)
-                        ->where('position', 'pastor')
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($pastorLeader && $pastorLeader->member) {
-                        $approverDisplayName = $pastorLeader->member->full_name;
-                    } else {
-                        // If not assigned as pastor but member exists, use member's name
-                        $approverDisplayName = $member->full_name;
-                    }
-                } else {
-                    // If no member found by email, check if user is a pastor and get active pastor
-                    if ($approverUser->isPastor()) {
-                        $activePastor = Leader::with('member')
-                            ->where('position', 'pastor')
-                            ->where('is_active', true)
-                            ->first();
-                        
-                        if ($activePastor && $activePastor->member) {
-                            $approverDisplayName = $activePastor->member->full_name;
-                        }
-                    }
-                }
-                
-                // Add the display name as an attribute
-                $record->approver_display_name = $approverDisplayName;
-            } else {
-                $record->approver_display_name = 'System';
-            }
-            
-            return $record;
-        });
-        
         // Get total members count
         $totalMembers = Member::count();
-        
+
         // Get logged-in pastor's information
         $user = auth()->user();
         $pastor = null;
         $pastorMember = null;
-        
+
         if ($user && $user->member_id) {
             // Get the logged-in pastor's leader record
             $pastor = Leader::with('member')
@@ -268,23 +118,23 @@ class PastorDashboardController extends Controller
                 ->where('position', 'pastor')
                 ->where('is_active', true)
                 ->first();
-            
+
             // Get member information
             $pastorMember = $user->member;
         }
-        
+
         // Fallback: If no logged-in pastor found, get first active pastor
         if (!$pastor) {
             $pastor = Leader::with('member')
                 ->where('position', 'pastor')
                 ->where('is_active', true)
                 ->get()
-                ->filter(function($leader) {
+                ->filter(function ($leader) {
                     return $leader->member !== null;
                 })
                 ->first();
         }
-        
+
         // Get pastor's duties/responsibilities
         $pastorDuties = [];
         if ($pastor) {
@@ -296,23 +146,23 @@ class PastorDashboardController extends Controller
                 'notes' => $pastor->notes,
             ];
         }
-        
+
         // Get pending amount (including pledge payments)
         $pendingAmount = Tithe::where('approval_status', 'pending')
             ->whereDate('tithe_date', $today)
             ->sum('amount') +
             Offering::where('approval_status', 'pending')
-            ->whereDate('offering_date', $today)
-            ->sum('amount') +
+                ->whereDate('offering_date', $today)
+                ->sum('amount') +
             Donation::where('approval_status', 'pending')
-            ->whereDate('donation_date', $today)
-            ->sum('amount') +
+                ->whereDate('donation_date', $today)
+                ->sum('amount') +
             Pledge::where('approval_status', 'pending')
-            ->whereDate('pledge_date', $today)
-            ->sum('pledge_amount') +
+                ->whereDate('pledge_date', $today)
+                ->sum('pledge_amount') +
             PledgePayment::where('approval_status', 'pending')
-            ->whereDate('payment_date', $today)
-            ->sum('amount');
+                ->whereDate('payment_date', $today)
+                ->sum('amount');
 
         // Get member portal data if pastor has member record
         $memberInfo = null;
@@ -320,7 +170,7 @@ class PastorDashboardController extends Controller
         $announcements = null;
         $unreadCount = 0;
         $leadershipData = null;
-        
+
         if ($pastorMember) {
             // Get member information
             $memberInfo = [
@@ -341,7 +191,7 @@ class PastorDashboardController extends Controller
             // Get financial summary
             $currentYear = Carbon::now()->year;
             $currentMonth = Carbon::now()->month;
-            
+
             $financialSummary = [
                 'total_tithes' => Tithe::where('member_id', $pastorMember->id)->approved()->sum('amount'),
                 'monthly_tithes' => Tithe::where('member_id', $pastorMember->id)->approved()
@@ -353,7 +203,7 @@ class PastorDashboardController extends Controller
                 'monthly_donations' => Donation::where('member_id', $pastorMember->id)->approved()
                     ->whereYear('donation_date', $currentYear)->whereMonth('donation_date', $currentMonth)->sum('amount'),
                 'total_pledges' => Pledge::where('member_id', $pastorMember->id)->sum('pledge_amount'),
-                'total_pledge_payments' => PledgePayment::whereHas('pledge', function($q) use ($pastorMember) {
+                'total_pledge_payments' => PledgePayment::whereHas('pledge', function ($q) use ($pastorMember) {
                     $q->where('member_id', $pastorMember->id);
                 })->approved()->sum('amount'),
                 'remaining_pledges' => 0,
@@ -376,7 +226,7 @@ class PastorDashboardController extends Controller
             }
             $activeAnnouncements = Announcement::active()->pluck('id');
             $unreadCount = $activeAnnouncements->diff($viewedAnnouncementIds)->count();
-            
+
             $announcements = [
                 'announcements' => $announcementsList,
                 'events' => SpecialEvent::whereDate('event_date', '>=', $now->toDateString())
@@ -389,7 +239,7 @@ class PastorDashboardController extends Controller
 
             // Get leadership data
             $memberPositions = $pastorMember->activeLeadershipPositions()
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
                 })->get();
             $leadershipData = [
@@ -399,22 +249,8 @@ class PastorDashboardController extends Controller
         }
 
         return view('pastor.dashboard', compact(
-            'pendingTithes',
-            'pendingOfferings', 
-            'pendingDonations',
-            'pendingExpenses',
-            'pendingBudgets',
-            'pendingPledges',
-            'pendingPledgePayments',
-            'pendingAmount',
-            'monthlyTithes',
-            'monthlyOfferings', 
-            'monthlyDonations',
-            'monthlyPledges',
-            'monthlyExpenses',
             'totalIncome',
             'netIncome',
-            'recentApprovals',
             'totalMembers',
             'pastor',
             'pastorMember',

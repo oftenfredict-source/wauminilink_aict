@@ -168,16 +168,22 @@
             </div>
             <div class="card-body p-3" id="actionsBody">
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="exportReport('pdf')">
-                        <i class="fas fa-file-pdf me-1"></i>
-                        <span class="d-none d-sm-inline">Export PDF</span>
-                        <span class="d-sm-none">PDF</span>
-                    </button>
-                    <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="exportReport('excel')">
-                        <i class="fas fa-file-excel me-1"></i>
-                        <span class="d-none d-sm-inline">Export Excel</span>
-                        <span class="d-sm-none">Excel</span>
-                    </button>
+                    @if($budget)
+                        <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="exportReport('pdf')">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            <span class="d-none d-sm-inline">Export PDF</span>
+                            <span class="d-sm-none">PDF</span>
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="exportReport('excel')">
+                            <i class="fas fa-file-excel me-1"></i>
+                            <span class="d-none d-sm-inline">Export Excel</span>
+                            <span class="d-sm-none">Excel</span>
+                        </button>
+                    @else
+                        <div class="small fw-semibold text-white-50">
+                            <i class="fas fa-info-circle me-1"></i> Please select a budget below to enable exports.
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -700,10 +706,14 @@
                     if (filterHeader) filterHeader.classList.add('active');
                 }
             @endif
-            });
+                    });
 
         function exportReport(format) {
             const budgetId = '{{ $budget->id ?? "" }}';
+            if (!budgetId) {
+                alert('Please select a budget first.');
+                return;
+            }
             const startDate = '{{ $startDate }}';
             const endDate = '{{ $endDate }}';
             const baseUrl = '{{ url("/") }}';

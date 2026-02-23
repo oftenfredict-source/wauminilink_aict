@@ -27,10 +27,10 @@ class SettingsService
         if ($setting) {
             $oldValue = $setting->value;
             $result = SystemSetting::setValue($key, $value, $setting->type);
-            
+
             // Log the change
             self::logChange($key, $oldValue, $value, $action);
-            
+
             return $result;
         }
         return false;
@@ -42,7 +42,7 @@ class SettingsService
     public static function bulkUpdate(array $settings, $action = 'bulk_updated')
     {
         $changes = [];
-        
+
         foreach ($settings as $key => $value) {
             $setting = SystemSetting::where('key', $key)->first();
             if ($setting) {
@@ -55,10 +55,10 @@ class SettingsService
                 ];
             }
         }
-        
+
         // Log bulk changes
         self::logBulkChange($changes, $action);
-        
+
         return count($changes);
     }
 
@@ -157,7 +157,7 @@ class SettingsService
     public static function getMembershipSettings()
     {
         return [
-            'child_max_age' => self::get('child_max_age', 18),
+            'child_max_age' => self::get('child_max_age', 21),
             'age_reference' => self::get('age_reference', 'today'),
             'auto_generate_member_id' => self::get('auto_generate_member_id', true),
             'member_id_prefix' => self::get('member_id_prefix', 'WM'),
@@ -279,11 +279,11 @@ class SettingsService
     {
         $currency = self::get('currency', 'TZS');
         $symbol = self::getCurrencySymbol();
-        
+
         if ($currency === 'TZS') {
             return $symbol . ' ' . number_format($amount, 0, '.', ',');
         }
-        
+
         return $symbol . ' ' . number_format($amount, 2, '.', ',');
     }
 

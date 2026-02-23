@@ -1915,8 +1915,8 @@
                                 </div>
                             </div>
                             
-                            <!-- Pending Financial Approvals (for Secretary, Pastor, Admin) -->
-                            @if(auth()->user() && (auth()->user()->isSecretary() || auth()->user()->isPastor() || auth()->user()->isAdmin() || auth()->user()->canApproveFinances()))
+                            <!-- Pending Financial Approvals (for Secretary, Admin, or users with explicit finance approval permission) -->
+                            @if(auth()->user() && (auth()->user()->isSecretary() || auth()->user()->isAdmin() || (auth()->user()->canApproveFinances() && !auth()->user()->isPastor())))
                             <div class="notification-section mb-3">
                                 <div class="section-header d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="mb-0 fw-bold text-warning">
@@ -2078,10 +2078,6 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-users-cog"></i></div>
                                 Leaders
                             </a>
-                            <a class="nav-link" href="{{ route('member.change-password') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
-                                Change Password
-                            </a>
                             @endif
                             
                             @if($isLeader)
@@ -2099,15 +2095,14 @@
                                 Secretary Dashboard
                             </a>
                             @endif
-                            @if(in_array('treasurer', $activeLeaderPositions) || in_array('assistant_treasurer', $activeLeaderPositions))
+                             @if(in_array('treasurer', $activeLeaderPositions) || in_array('assistant_treasurer', $activeLeaderPositions) || in_array('accountant', $activeLeaderPositions))
                             <a class="nav-link" href="{{ route('finance.dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Finance Dashboard
                             </a>
                             @endif
                             @endif
-                            
-                            @if(!auth()->user()->isTreasurer() && !auth()->user()->isAdmin() && !$isLeader)
+                                                        @if(!auth()->user()->isTreasurer() && !auth()->user()->isAccountant() && !auth()->user()->isAdmin() && !$isLeader)
                             <div class="sb-sidenav-menu-heading">Main</div>
                             <a class="nav-link" href="{{ route('dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
@@ -2120,8 +2115,7 @@
                                 Dashboard
                             </a>
                             @endif
-                            
-                            @if(!auth()->user()->isTreasurer() || auth()->user()->isAdmin())
+                                                        @if((!auth()->user()->isTreasurer() && !auth()->user()->isAccountant()) || auth()->user()->isAdmin())
                             @if(!auth()->user()->isMember())
                             
                             <div class="sb-sidenav-menu-heading">Management</div>
@@ -2188,14 +2182,13 @@
                             </div>
                             @endif
                             @endif
-                            
-                            @if(auth()->user()->isTreasurer())
+                                                        @if(auth()->user()->isTreasurer() || auth()->user()->isAccountant())
                             {{-- For Treasurer: Show finance menu items directly without dropdown --}}
                             <a class="nav-link" href="{{ route('finance.dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Dashboard
                             </a>
-                            @if(auth()->user()->canApproveFinances())
+                            @if(auth()->user()->isTreasurer() || auth()->user()->isAdmin())
                             <a class="nav-link" href="{{ route('finance.approval.dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-check-circle"></i></div>
                                 Approval Dashboard
@@ -2204,6 +2197,10 @@
                             <a class="nav-link" href="{{ route('finance.tithes') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-coins"></i></div>
                                 Tithes
+                            </a>
+                            <a class="nav-link" href="{{ route('finance.annual_fees') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div>
+                                Annual Fees
                             </a>
                             <a class="nav-link" href="{{ route('finance.offerings') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>
@@ -2229,11 +2226,6 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-pie"></i></div>
                                 Reports
                             </a>
-                            <div class="sb-sidenav-menu-heading">Account</div>
-                            <a class="nav-link" href="{{ route('leader.change-password') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
-                                Change Password
-                            </a>
                             @elseif(!auth()->user()->isMember())
                             {{-- For other users (not treasurer, not member): Show finance menu as collapsed dropdown --}}
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
@@ -2244,10 +2236,11 @@
                             <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
                                     <a class="nav-link" href="{{ route('finance.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
-                                    @if(auth()->user()->canApproveFinances())
+                                    @if(auth()->user()->isTreasurer() || auth()->user()->isAdmin())
                                     <a class="nav-link" href="{{ route('finance.approval.dashboard') }}"><i class="fas fa-check-circle me-2"></i>Approval Dashboard</a>
                                     @endif
                                     <a class="nav-link" href="{{ route('finance.tithes') }}"><i class="fas fa-coins me-2"></i>Tithes</a>
+                                    <a class="nav-link" href="{{ route('finance.annual_fees') }}"><i class="fas fa-calendar-check me-2"></i>Annual Fees</a>
                                     <a class="nav-link" href="{{ route('finance.offerings') }}"><i class="fas fa-gift me-2"></i>Offerings</a>
                                     <a class="nav-link" href="{{ route('finance.donations') }}"><i class="fas fa-heart me-2"></i>Donations</a>
                                     <a class="nav-link" href="{{ route('finance.pledges') }}"><i class="fas fa-handshake me-2"></i>Pledges</a>
@@ -2268,14 +2261,13 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
                                 All Reports
                             </a>
+                            @endif
                             
-                            @if(!auth()->user()->isMember())
                             <div class="sb-sidenav-menu-heading">Account</div>
-                            <a class="nav-link" href="{{ route('leader.change-password') }}">
+                            <a class="nav-link" href="{{ auth()->user()->isMember() && !auth()->user()->isPastor() && !auth()->user()->isAdmin() && !auth()->user()->isTreasurer() && !auth()->user()->isAccountant() && !auth()->user()->isSecretary() ? route('member.change-password') : route('leader.change-password') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-key"></i></div>
                                 Change Password
                             </a>
-                            @endif
                             
                             @if(auth()->user()->isAdmin())
                             <div class="sb-sidenav-menu-heading">Settings</div>
@@ -2283,7 +2275,6 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
                                 System Settings
                             </a>
-                            @endif
                             @endif
                         </div>
                     </div>

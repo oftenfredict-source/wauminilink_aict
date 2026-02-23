@@ -567,6 +567,13 @@
                                     <label for="member_type">Member Type</label>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" name="envelope_number" id="envelope_number"
+                                        required>
+                                    <label for="envelope_number">Envelope Number</label>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row g-4 mb-4">
@@ -619,7 +626,8 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" name="nida_number" id="nida_number">
+                                    <input type="text" class="form-control" name="nida_number" id="nida_number"
+                                        minlength="20" maxlength="20">
                                     <label for="nida_number">NIDA Number (optional)</label>
                                 </div>
                             </div>
@@ -870,7 +878,7 @@
                                     <div class="col-md-4">
                                         <div class="form-floating">
                                             <input type="text" class="form-control" name="spouse_nida_number"
-                                                id="spouse_nida_number">
+                                                id="spouse_nida_number" minlength="20" maxlength="20">
                                             <label for="spouse_nida_number">NIDA Number (optional)</label>
                                         </div>
                                     </div>
@@ -902,6 +910,15 @@
                                                     id="spouse_phone_number" placeholder="744000000">
                                             </div>
                                             <label for="spouse_phone_number"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-4 mb-3" id="spouseEnvelopeWrapper" style="display:none;">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" name="spouse_envelope_number"
+                                                id="spouse_envelope_number">
+                                            <label for="spouse_envelope_number">Spouse Envelope Number</label>
                                         </div>
                                     </div>
                                 </div>
@@ -998,7 +1015,7 @@
                             style="display:none;">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h6 class="mb-0 text-primary fw-bold"><i class="fas fa-children me-2"></i>Children</h6>
-                                <small class="text-muted">Max: 4 | Under {{ config('membership.child_max_age', 18) }}
+                                <small class="text-muted">Under {{ config('membership.child_max_age', 21) }}
                                     years</small>
                             </div>
                             <div class="mb-2">
@@ -1421,19 +1438,36 @@
 
                 document.getElementById('nextStep1').addEventListener('click', function () {
                     if (!validateStep(1)) {
-                        // Optionally highlight invalid fields
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Incomplete Information',
+                            text: 'Please fill in all required fields in Step 1.',
+                            confirmButtonColor: '#7a0000'
+                        });
                         return;
                     }
                     showStep(2, 1); setStepActive(2);
                 });
                 document.getElementById('nextStep2').addEventListener('click', function () {
                     if (!validateStep(2)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Incomplete Information',
+                            text: 'Please fill in all required fields in Step 2.',
+                            confirmButtonColor: '#7a0000'
+                        });
                         return;
                     }
                     showStep(3, 2); setStepActive(3);
                 });
                 document.getElementById('nextStep3').addEventListener('click', function () {
                     if (!validateStep(3)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Incomplete Information',
+                            text: 'Please fill in all required fields in Step 3.',
+                            confirmButtonColor: '#7a0000'
+                        });
                         return;
                     }
                     showStep(4, 3); setStepActive(4);
@@ -1471,34 +1505,44 @@
                 }
 
                 function addChild() {
-                    if (childCount >= 4) return;
                     const idx = childCount;
                     const row = document.createElement('div');
                     row.className = 'row g-3 mb-2 align-items-end child-row';
                     row.innerHTML = `
-                                                    <div class="col-md-5">
-                                                        <label class="form-label">Child ${idx + 1} Full Name</label>
-                                                        <input type="text" class="form-control child-fullname" name="children[${idx}][full_name]" required>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Gender</label>
-                                                        <select class="form-select child-gender" name="children[${idx}][gender]" required>
-                                                            <option value=""></option>
-                                                            <option value="male">Male</option>
-                                                            <option value="female">Female</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Date of Birth</label>
-                                                        <div class="input-group">
-                                                            <input type="date" class="form-control child-dob" name="children[${idx}][date_of_birth]" required>
-                                                            <span class="input-group-text child-age" style="min-width:80px;display:none;"></span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-1 text-end">
-                                                        <button type="button" class="btn btn-danger btn-sm remove-child-btn" title="Remove Child"><i class="fas fa-trash"></i></button>
-                                                    </div>
-                                                `;
+                                                                                                <div class="col-md-3">
+                                                                                                    <label class="form-label">Full Name</label>
+                                                                                                    <input type="text" class="form-control child-fullname" name="children[${idx}][full_name]" required>
+                                                                                                </div>
+                                                                                                <div class="col-md-2">
+                                                                                                    <label class="form-label">Gender</label>
+                                                                                                    <select class="form-select child-gender" name="children[${idx}][gender]" required>
+                                                                                                        <option value=""></option>
+                                                                                                        <option value="male">Male</option>
+                                                                                                        <option value="female">Female</option>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                                <div class="col-md-3">
+                                                                                                    <label class="form-label">Date of Birth</label>
+                                                                                                    <div class="input-group">
+                                                                                                        <input type="date" class="form-control child-dob" name="children[${idx}][date_of_birth]" required>
+                                                                                                        <span class="input-group-text child-age" style="min-width:60px;display:none;"></span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="col-md-2">
+                                                                                                    <label class="form-label">Church Member</label>
+                                                                                                    <select class="form-select child-church-member" name="children[${idx}][is_church_member]" onchange="toggleChildEnvelope(this, ${idx})">
+                                                                                                        <option value="no">No</option>
+                                                                                                        <option value="yes">Yes</option>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                                <div class="col-md-2" id="childEnvelopeWrapper_${idx}" style="display:none;">
+                                                                                                    <label class="form-label">Envelope #</label>
+                                                                                                    <input type="text" class="form-control child-envelope" name="children[${idx}][envelope_number]">
+                                                                                                </div>
+                                                                                                <div class="col-md-1 text-end">
+                                                                                                    <button type="button" class="btn btn-danger btn-sm remove-child-btn" title="Remove Child"><i class="fas fa-trash"></i></button>
+                                                                                                </div>
+                                                                                            `;
                     childrenContainer.appendChild(row);
                     childCount++;
                     renderChildren();
@@ -1514,6 +1558,14 @@
                             r.querySelector('.child-dob').setAttribute('name', `children[${i}][date_of_birth]`);
                         });
                     });
+
+                    // Re-evaluate envelope visibility when DOB changes
+                    row.querySelector('.child-dob').addEventListener('change', function () {
+                        const churchMemberSelect = row.querySelector('.child-church-member');
+                        if (churchMemberSelect) {
+                            toggleChildEnvelope(churchMemberSelect, idx);
+                        }
+                    });
                 }
 
                 addChildBtn.addEventListener('click', function () {
@@ -1522,6 +1574,33 @@
 
                 // If you want to start with zero children, comment out below
                 // addChild();
+
+
+                window.toggleChildEnvelope = function (select, idx) {
+                    const wrapper = document.getElementById(`childEnvelopeWrapper_${idx}`);
+                    const row = select.closest('.child-row');
+                    const dobInput = row ? row.querySelector('.child-dob') : null;
+
+                    // Only require envelope for children aged 21+
+                    let isAdult = false;
+                    if (dobInput && dobInput.value) {
+                        const dob = new Date(dobInput.value);
+                        const today = new Date();
+                        let age = today.getFullYear() - dob.getFullYear();
+                        const m = today.getMonth() - dob.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                        isAdult = age >= 21;
+                    }
+
+                    if (select.value === 'yes' && isAdult) {
+                        wrapper.style.display = 'block';
+                        wrapper.querySelector('input').setAttribute('required', 'required');
+                    } else {
+                        wrapper.style.display = 'none';
+                        wrapper.querySelector('input').removeAttribute('required');
+                        wrapper.querySelector('input').value = '';
+                    }
+                };
 
 
                 function updateVisibility() {
@@ -1643,6 +1722,23 @@
                         document.getElementById('spouse_tribe').value = '';
                         document.getElementById('spouse_other_tribe').value = '';
                         document.getElementById('spouse_church_member').value = '';
+                        document.getElementById('spouse_envelope_number').value = '';
+                        document.getElementById('spouseEnvelopeWrapper').style.display = 'none';
+                    }
+                });
+
+                // Spouse church member change logic
+                const spouseChurchMemberSelect = document.getElementById('spouse_church_member');
+                const spouseEnvelopeWrapper = document.getElementById('spouseEnvelopeWrapper');
+                const spouseEnvelopeInput = document.getElementById('spouse_envelope_number');
+
+                spouseChurchMemberSelect.addEventListener('change', function () {
+                    if (this.value === 'yes') {
+                        spouseEnvelopeWrapper.style.display = '';
+                    } else {
+                        spouseEnvelopeWrapper.style.display = 'none';
+                        spouseEnvelopeInput.value = '';
+                        markValid(spouseEnvelopeInput, true); // Reset validation state
                     }
                 });
 
@@ -1681,7 +1777,7 @@
                     if (step === 1) {
                         const membershipType = document.getElementById('membership_type').value;
                         const memberType = document.getElementById('member_type').value;
-                        const req = ['membership_type', 'full_name', 'date_of_birth', 'profession'];
+                        const req = ['membership_type', 'full_name', 'date_of_birth', 'profession', 'envelope_number'];
 
                         // Only require member_type for permanent members
                         if (membershipType === 'permanent') {
@@ -1747,8 +1843,19 @@
                     }
                     if (step === 4) {
                         let ok = true;
+                        const mType = document.getElementById('member_type').value;
+                        const mShip = document.getElementById('membership_type').value;
+
+                        // Marital status required for Mother/Father
+                        if (mShip === 'permanent' && (mType === 'father' || mType === 'mother')) {
+                            const ms = document.getElementById('marital_status');
+                            const msOk = !!ms.value;
+                            markValid(ms, msOk);
+                            ok = ok && msOk;
+                        }
+
                         // Validate guardian fields for temporary members
-                        if (membershipTypeEl.value === 'temporary') {
+                        if (mShip === 'temporary' || (mShip === 'permanent' && mType === 'independent')) {
                             const gName = document.getElementById('guardian_name');
                             const gPhone = document.getElementById('guardian_phone');
                             const gRel = document.getElementById('guardian_relationship');
@@ -1760,6 +1867,28 @@
                             markValid(gPhone, gPhoneOk);
                             markValid(gRel, gRelOk);
                             ok = ok && gNameOk && gPhoneOk && gRelOk;
+                        }
+                        // Validate spouse fields if married
+                        if (document.getElementById('marital_status').value === 'married') {
+                            const sName = document.getElementById('spouse_full_name');
+                            const sDob = document.getElementById('spouse_date_of_birth');
+                            const sChurch = document.getElementById('spouse_church_member');
+                            const sEnv = document.getElementById('spouse_envelope_number');
+
+                            const sNameOk = !!sName.value.trim();
+                            const sDobOk = !!sDob.value;
+                            const sChurchOk = !!sChurch.value;
+                            let sEnvOk = true;
+                            if (sChurch.value === 'yes') {
+                                sEnvOk = !!sEnv.value.trim();
+                                markValid(sEnv, sEnvOk);
+                            }
+
+                            markValid(sName, sNameOk);
+                            markValid(sDob, sDobOk);
+                            markValid(sChurch, sChurchOk);
+
+                            ok = ok && sNameOk && sDobOk && sChurchOk && sEnvOk;
                         }
                         // children required when count > 0
                         const childRows = childrenContainer.querySelectorAll('.child-row');
@@ -1795,15 +1924,15 @@
                 summaryStep.id = 'step5';
                 summaryStep.style.display = 'none';
                 summaryStep.innerHTML = `
-                                                <div class="card p-4 mb-4">
-                                                    <h5 class="mb-3 text-primary fw-bold"><i class="fas fa-eye me-2"></i>Review Information</h5>
-                                                    <div id="summaryContent"></div>
-                                                    <div class="d-flex justify-content-between mt-4">
-                                                        <button type="button" class="btn btn-outline-secondary btn-lg px-4 shadow-sm prev-step" id="prevStep5"><i class="fas fa-arrow-left me-1"></i>Back</button>
-                                                        <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm"><i class="fas fa-save me-2"></i>Save Member</button>
-                                                    </div>
-                                                </div>
-                                            `;
+                                                                                            <div class="card p-4 mb-4">
+                                                                                                <h5 class="mb-3 text-primary fw-bold"><i class="fas fa-eye me-2"></i>Review Information</h5>
+                                                                                                <div id="summaryContent"></div>
+                                                                                                <div class="d-flex justify-content-between mt-4">
+                                                                                                    <button type="button" class="btn btn-outline-secondary btn-lg px-4 shadow-sm prev-step" id="prevStep5"><i class="fas fa-arrow-left me-1"></i>Back</button>
+                                                                                                    <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm"><i class="fas fa-save me-2"></i>Save Member</button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        `;
                 document.getElementById('addMemberForm').appendChild(summaryStep);
 
                 // Verify step 5 was created
@@ -1814,10 +1943,13 @@
                 // Next button on step3 is now in HTML
 
                 document.getElementById('nextStep4').addEventListener('click', function () {
-                    console.log('Next Step 4 button clicked');
                     if (!validateStep(4)) {
-                        console.log('Step 4 validation failed');
-                        Swal.fire('Validation', 'Please complete required fields in Step 4.', 'warning');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Incomplete Information',
+                            text: 'Please fill in all required fields in Step 4.',
+                            confirmButtonColor: '#7a0000'
+                        });
                         return;
                     }
                     console.log('Step 4 validation passed, moving to step 5 (summary)');
@@ -1876,6 +2008,9 @@
                             familyFields.push({ label: (memberTypeEl.value === 'father' ? 'Wife' : 'Husband') + ' Phone', value: '+255' + document.getElementById('spouse_phone_number').value });
                             const spouseChurchMember = document.getElementById('spouse_church_member').value;
                             familyFields.push({ label: (memberTypeEl.value === 'father' ? 'Wife' : 'Husband') + ' Church Member', value: spouseChurchMember ? (spouseChurchMember === 'yes' ? 'Yes' : 'No') : 'Not specified' });
+                            if (spouseChurchMember === 'yes') {
+                                familyFields.push({ label: (memberTypeEl.value === 'father' ? 'Wife' : 'Husband') + ' Envelope Number', value: document.getElementById('spouse_envelope_number').value });
+                            }
                         }
                     }
                     // Guardian Information (all fields)
@@ -1922,7 +2057,14 @@
                             const name = row.querySelector('.child-fullname').value;
                             const gender = row.querySelector('.child-gender').value;
                             const dob = row.querySelector('.child-dob').value;
-                            html += `<li>Child ${idx + 1}: <b>Name:</b> ${name ? name : '<span class=\"text-secondary\">None</span>'}, <b>Gender:</b> ${gender ? gender : '<span class=\"text-secondary\">None</span>'}, <b>DOB:</b> ${dob ? dob : '<span class=\"text-secondary\">None</span>'}</li>`;
+                            const isMember = row.querySelector('.child-church-member').value;
+                            const envNum = row.querySelector('.child-envelope').value;
+
+                            let childInfo = `Child ${idx + 1}: <b>Name:</b> ${name ? name : '<span class=\"text-secondary\">None</span>'}, <b>Gender:</b> ${gender ? gender : '<span class=\"text-secondary\">None</span>'}, <b>DOB:</b> ${dob ? dob : '<span class=\"text-secondary\">None</span>'}, <b>Member:</b> ${isMember === 'yes' ? 'Yes' : 'No'}`;
+                            if (isMember === 'yes') {
+                                childInfo += `, <b>Envelope:</b> ${envNum ? envNum : '<span class=\"text-secondary\">Required</span>'}`;
+                            }
+                            html += `<li>${childInfo}</li>`;
                         });
                     } else {
                         html += '<li class="text-secondary">No children added</li>';
@@ -2386,25 +2528,25 @@
                     }
                 };
                 return `
-                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
-                                                <div class="notification-item-content">
-                                                    <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
-                                                    <div class="notification-details">
-                                                        <div class="notification-title">${event.title}</div>
-                                                        <div class="notification-meta">
-                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
-                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
-                                                        </div>
-                                                        <div class="notification-info">
-                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
-                                                            ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
-                                                        </div>
-                                                        <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
-                                                    </div>
-                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                </div>
-                                            </div>
-                                        `;
+                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
+                                                                                        <div class="notification-item-content">
+                                                                                            <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
+                                                                                            <div class="notification-details">
+                                                                                                <div class="notification-title">${event.title}</div>
+                                                                                                <div class="notification-meta">
+                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
+                                                                                                    <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                                                                                </div>
+                                                                                                <div class="notification-info">
+                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
+                                                                                                    ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
+                                                                                                </div>
+                                                                                                <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
+                                                                                            </div>
+                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                `;
             }).join('');
         }
 
@@ -2440,25 +2582,25 @@
                     }
                 };
                 return `
-                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
-                                                <div class="notification-item-content">
-                                                    <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
-                                                    <div class="notification-details">
-                                                        <div class="notification-title">${celebration.title}</div>
-                                                        <div class="notification-meta">
-                                                            <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
-                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
-                                                        </div>
-                                                        <div class="notification-info">
-                                                            <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
-                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
-                                                        </div>
-                                                        <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
-                                                    </div>
-                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                </div>
-                                            </div>
-                                        `;
+                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
+                                                                                        <div class="notification-item-content">
+                                                                                            <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
+                                                                                            <div class="notification-details">
+                                                                                                <div class="notification-title">${celebration.title}</div>
+                                                                                                <div class="notification-meta">
+                                                                                                    <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
+                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                                                                                </div>
+                                                                                                <div class="notification-info">
+                                                                                                    <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
+                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
+                                                                                                </div>
+                                                                                                <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
+                                                                                            </div>
+                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                `;
             }).join('');
         }
 
@@ -2494,26 +2636,26 @@
                     }
                 };
                 return `
-                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
-                                                <div class="notification-item-content">
-                                                    <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
-                                                    <div class="notification-details">
-                                                        <div class="notification-title">${service.title}</div>
-                                                        <div class="notification-meta">
-                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
-                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
-                                                        </div>
-                                                        <div class="notification-info">
-                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
-                                                            ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
-                                                        </div>
-                                                        ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
-                                                        <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
-                                                    </div>
-                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                </div>
-                                            </div>
-                                        `;
+                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
+                                                                                        <div class="notification-item-content">
+                                                                                            <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
+                                                                                            <div class="notification-details">
+                                                                                                <div class="notification-title">${service.title}</div>
+                                                                                                <div class="notification-meta">
+                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
+                                                                                                    <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                                                                                </div>
+                                                                                                <div class="notification-info">
+                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
+                                                                                                    ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
+                                                                                                </div>
+                                                                                                ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
+                                                                                                <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
+                                                                                            </div>
+                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                `;
             }).join('');
         }
 
@@ -2528,27 +2670,27 @@
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.appendChild(modal);
                 modal.innerHTML = `
-                                            <div class="modal-dialog modal-lg">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-light">
-                                                        <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4" id="eventDetailsBody">
-                                                        <div class="text-center">
-                                                            <div class="spinner-border" role="status">
-                                                                <span class="visually-hidden">Loading...</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer bg-light">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                            <i class="fas fa-times me-2"></i>Close
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        `;
+                                                                                    <div class="modal-dialog modal-lg">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header bg-light">
+                                                                                                <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
+                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body p-4" id="eventDetailsBody">
+                                                                                                <div class="text-center">
+                                                                                                    <div class="spinner-border" role="status">
+                                                                                                        <span class="visually-hidden">Loading...</span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="modal-footer bg-light">
+                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                                                    <i class="fas fa-times me-2"></i>Close
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                `;
                 document.body.appendChild(modal);
             }
             const bsModal = new bootstrap.Modal(modal);
@@ -2566,13 +2708,13 @@
             };
             modalTitle.textContent = titles[type] || 'Details';
             modalBody.innerHTML = `
-                                        <div class="text-center py-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            <p class="mt-2 text-muted">Loading details...</p>
-                                        </div>
-                                    `;
+                                                                                <div class="text-center py-4">
+                                                                                    <div class="spinner-border text-primary" role="status">
+                                                                                        <span class="visually-hidden">Loading...</span>
+                                                                                    </div>
+                                                                                    <p class="mt-2 text-muted">Loading details...</p>
+                                                                                </div>
+                                                                            `;
             setTimeout(() => {
                 let eventData = null;
                 if (window.currentNotificationData) {
@@ -2624,82 +2766,82 @@
                         timeDisplay = eventData.time ? formatTime(eventData.time) : 'TBD';
                     }
                     modalBody.innerHTML = `
-                                                <div class="text-center mb-4">
-                                                    <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                        <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
-                                                    </div>
-                                                    <h3 class="text-dark mb-2">${eventData.title}</h3>
-                                                    <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
-                                                </div>
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100 border-0 shadow-sm">
-                                                            <div class="card-body text-center">
-                                                                <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
-                                                                <h6 class="card-title">Date</h6>
-                                                                <p class="card-text text-muted">${eventDate}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100 border-0 shadow-sm">
-                                                            <div class="card-body text-center">
-                                                                <i class="fas fa-clock text-success fa-2x mb-3"></i>
-                                                                <h6 class="card-title">Time</h6>
-                                                                <p class="card-text text-muted">${timeDisplay}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100 border-0 shadow-sm">
-                                                            <div class="card-body text-center">
-                                                                <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
-                                                                <h6 class="card-title">Venue</h6>
-                                                                <p class="card-text text-muted">${eventData.venue}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100 border-0 shadow-sm">
-                                                            <div class="card-body text-center">
-                                                                <i class="fas fa-user text-info fa-2x mb-3"></i>
-                                                                <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
-                                                                <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    ${eventData.theme ? `
-                                                    <div class="col-12">
-                                                        <div class="card border-0 shadow-sm">
-                                                            <div class="card-body text-center">
-                                                                <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
-                                                                <h6 class="card-title">Theme</h6>
-                                                                <p class="card-text text-muted">${eventData.theme}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    ` : ''}
-                                                    <div class="col-12">
-                                                        <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
-                                                            <div class="d-flex align-items-center">
-                                                                <i class="fas fa-info-circle fa-2x me-3"></i>
-                                                                <div>
-                                                                    <h6 class="mb-1">Time Remaining</h6>
-                                                                    <p class="mb-0">
-                                                                        ${eventData.hours_remaining !== null ?
+                                                                                        <div class="text-center mb-4">
+                                                                                            <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                                                                                                <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                                                                            </div>
+                                                                                            <h3 class="text-dark mb-2">${eventData.title}</h3>
+                                                                                            <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
+                                                                                        </div>
+                                                                                        <div class="row g-3">
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="card h-100 border-0 shadow-sm">
+                                                                                                    <div class="card-body text-center">
+                                                                                                        <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
+                                                                                                        <h6 class="card-title">Date</h6>
+                                                                                                        <p class="card-text text-muted">${eventDate}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="card h-100 border-0 shadow-sm">
+                                                                                                    <div class="card-body text-center">
+                                                                                                        <i class="fas fa-clock text-success fa-2x mb-3"></i>
+                                                                                                        <h6 class="card-title">Time</h6>
+                                                                                                        <p class="card-text text-muted">${timeDisplay}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="card h-100 border-0 shadow-sm">
+                                                                                                    <div class="card-body text-center">
+                                                                                                        <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
+                                                                                                        <h6 class="card-title">Venue</h6>
+                                                                                                        <p class="card-text text-muted">${eventData.venue}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="card h-100 border-0 shadow-sm">
+                                                                                                    <div class="card-body text-center">
+                                                                                                        <i class="fas fa-user text-info fa-2x mb-3"></i>
+                                                                                                        <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
+                                                                                                        <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            ${eventData.theme ? `
+                                                                                            <div class="col-12">
+                                                                                                <div class="card border-0 shadow-sm">
+                                                                                                    <div class="card-body text-center">
+                                                                                                        <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
+                                                                                                        <h6 class="card-title">Theme</h6>
+                                                                                                        <p class="card-text text-muted">${eventData.theme}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            ` : ''}
+                                                                                            <div class="col-12">
+                                                                                                <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
+                                                                                                    <div class="d-flex align-items-center">
+                                                                                                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                                                                                                        <div>
+                                                                                                            <h6 class="mb-1">Time Remaining</h6>
+                                                                                                            <p class="mb-0">
+                                                                                                                ${eventData.hours_remaining !== null ?
                             `${eventData.hours_remaining} hours left` :
                             `${eventData.days_remaining} days left`}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            `;
+                                                                                                            </p>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    `;
                 } else {
                     modalBody.innerHTML = `
-                                                <div class="text-center py-4 text-muted">Details not found.</div>
-                                            `;
+                                                                                        <div class="text-center py-4 text-muted">Details not found.</div>
+                                                                                    `;
                 }
             }, 50);
         }

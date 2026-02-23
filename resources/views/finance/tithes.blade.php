@@ -350,6 +350,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            @if(!auth()->user()->isAccountant())
                             <div class="col-md-6">
                                 <div class="form-check mt-4">
                                     <input class="form-check-input" type="checkbox" id="is_verified" name="is_verified"
@@ -359,6 +360,9 @@
                                     </label>
                                 </div>
                             </div>
+                            @else
+                            <input type="hidden" name="is_verified" value="0">
+                            @endif
                             <div class="col-12">
                                 <label for="notes" class="form-label">Notes</label>
                                 <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes"
@@ -458,7 +462,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        @if(!$tithe->is_verified)
+                        @if(!$tithe->is_verified && !auth()->user()->isAccountant())
                             <button type="button" class="btn btn-success" onclick="verifyTithe({{ $tithe->id }})">
                                 <i class="fas fa-check me-1"></i>Verify
                             </button>

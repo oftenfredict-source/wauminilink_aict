@@ -142,6 +142,10 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         Route::post('/pledges', [App\Http\Controllers\FinanceController::class, 'storePledge'])->name('pledges.store');
         Route::post('/pledges/{pledge}/payment', [App\Http\Controllers\FinanceController::class, 'updatePledgePayment'])->name('pledges.payment');
 
+        // Annual Fees
+        Route::get('/annual-fees', [App\Http\Controllers\FinanceController::class, 'annualFees'])->name('annual_fees');
+        Route::post('/annual-fees', [App\Http\Controllers\FinanceController::class, 'storeAnnualFee'])->name('annual_fees.store');
+
         // Budgets
         Route::get('/budgets', [App\Http\Controllers\FinanceController::class, 'budgets'])->name('budgets');
         Route::post('/budgets', [App\Http\Controllers\FinanceController::class, 'storeBudget'])->name('budgets.store');
@@ -587,7 +591,8 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         ->middleware('permission:settings.edit')
         ->name('settings.restore');
     Route::get('/settings/help', function () {
-        return view('settings.help'); })
+        return view('settings.help');
+    })
         ->middleware('permission:settings.view')
         ->name('settings.help');
     Route::get('/settings/analytics', [SettingsController::class, 'analytics'])
@@ -618,7 +623,7 @@ Route::get('/dashboard', function () {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isPastor()) {
         return redirect()->route('dashboard.pastor');
-    } elseif ($user->isTreasurer()) {
+    } elseif ($user->isTreasurer() || $user->isAccountant()) {
         return redirect()->route('finance.dashboard');
     } elseif ($user->isMember()) {
         return redirect()->route('member.dashboard');

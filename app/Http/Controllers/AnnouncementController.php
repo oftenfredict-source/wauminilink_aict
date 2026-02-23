@@ -18,12 +18,12 @@ class AnnouncementController extends Controller
     public function index()
     {
         $today = \Carbon\Carbon::now()->toDateString();
-        
-        $announcements = Announcement::where(function($query) use ($today) {
-                // Show announcements that don't have an end_date or end_date is in the future
-                $query->whereNull('end_date')
-                      ->orWhere('end_date', '>', $today);
-            })
+
+        $announcements = Announcement::where(function ($query) use ($today) {
+            // Show announcements that don't have an end_date or end_date is in the future
+            $query->whereNull('end_date')
+                ->orWhere('end_date', '>', $today);
+        })
             ->orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -36,7 +36,8 @@ class AnnouncementController extends Controller
      */
     public function create()
     {
-        return view('announcements.create');
+        $members = Member::orderBy('full_name')->get();
+        return view('announcements.create', compact('members'));
     }
 
     /**
@@ -73,6 +74,11 @@ class AnnouncementController extends Controller
             }
 
             $announcement = Announcement::create($validated);
+
+            // Handle specific targeting
+            if ($validated['target_type'] === 'specific' && $request->has('target_member_ids')) {
+                $announcement->targetedMembers()->sync($request->target_member_ids);
+            }
 
             \Log::info('Announcement created successfully', [
                 'id' => $announcement->id,
@@ -117,7 +123,9 @@ class AnnouncementController extends Controller
      */
     public function edit(Announcement $announcement)
     {
-        return view('announcements.edit', compact('announcement'));
+        $members = Member::orderBy('full_name')->get();
+        $targetedMemberIds = $announcement->targetedMembers()->pluck('members.id')->toArray();
+        return view('announcements.edit', compact('announcement', 'members', 'targetedMemberIds'));
     }
 
     /**
@@ -132,6 +140,9 @@ class AnnouncementController extends Controller
                 'type' => 'required|in:general,urgent,event,reminder',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
+                'target_type' => 'required|in:all,specific',
+                'target_member_ids' => 'nullable|array',
+                'target_member_ids.*' => 'exists:members,id',
             ];
 
             // Only validate end_date after start_date if start_date is provided
@@ -153,6 +164,14 @@ class AnnouncementController extends Controller
             }
 
             $announcement->update($validated);
+
+            // Handle specific targeting
+            if ($validated['target_type'] === 'specific' && $request->has('target_member_ids')) {
+                $announcement->targetedMembers()->sync($request->target_member_ids);
+            } else {
+                // Remove any existing targeting if changed back to 'all'
+                $announcement->targetedMembers()->detach();
+            }
 
             \Log::info('Announcement updated successfully', [
                 'id' => $announcement->id,
@@ -201,7 +220,7 @@ class AnnouncementController extends Controller
     {
         try {
             $this->sendAnnouncementSms($announcement);
-            
+
             return redirect()->route('announcements.index')
                 ->with('success', 'SMS notifications sent to all members successfully!');
         } catch (\Exception $e) {
@@ -233,10 +252,17 @@ class AnnouncementController extends Controller
             // Build SMS message
             $message = $this->buildAnnouncementMessage($announcement, $churchName);
 
-            // Get all members with phone numbers
-            $members = Member::whereNotNull('phone_number')
-                ->where('phone_number', '!=', '')
-                ->get();
+            // Get members to send to based on targeting
+            if ($announcement->target_type === 'specific') {
+                $members = $announcement->targetedMembers()
+                    ->whereNotNull('phone_number')
+                    ->where('phone_number', '!=', '')
+                    ->get();
+            } else {
+                $members = Member::whereNotNull('phone_number')
+                    ->where('phone_number', '!=', '')
+                    ->get();
+            }
 
             $smsService = app(SmsService::class);
             $successCount = 0;
@@ -245,7 +271,7 @@ class AnnouncementController extends Controller
             foreach ($members as $member) {
                 try {
                     $result = $smsService->sendDebug($member->phone_number, $message);
-                    
+
                     if ($result['ok'] ?? false) {
                         $successCount++;
                     } else {
@@ -296,7 +322,7 @@ class AnnouncementController extends Controller
         ];
 
         $typeLabel = $typeLabels[$announcement->type] ?? 'TAARIFA';
-        
+
         // Truncate content to fit SMS (SMS typically 160 characters, but we'll use 120 to be safe)
         $content = mb_substr($announcement->content, 0, 100);
         if (mb_strlen($announcement->content) > 100) {

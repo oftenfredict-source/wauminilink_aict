@@ -34,7 +34,7 @@ class MemberDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Ensure user has a member_id (allows both members and leaders who are members)
         if (!$user->member_id) {
             Auth::logout();
@@ -42,7 +42,7 @@ class MemberDashboardController extends Controller
         }
 
         $member = $user->member;
-        
+
         if (!$member) {
             Auth::logout();
             return redirect()->route('login')->withErrors(['member' => 'Member record not found.']);
@@ -91,7 +91,7 @@ class MemberDashboardController extends Controller
         $totalTithes = Tithe::where('member_id', $member->id)
             ->approved()
             ->sum('amount');
-        
+
         $monthlyTithes = Tithe::where('member_id', $member->id)
             ->approved()
             ->whereYear('tithe_date', $currentYear)
@@ -102,7 +102,7 @@ class MemberDashboardController extends Controller
         $totalOfferings = Offering::where('member_id', $member->id)
             ->approved()
             ->sum('amount');
-        
+
         $monthlyOfferings = Offering::where('member_id', $member->id)
             ->approved()
             ->whereYear('offering_date', $currentYear)
@@ -113,7 +113,7 @@ class MemberDashboardController extends Controller
         $totalDonations = Donation::where('member_id', $member->id)
             ->approved()
             ->sum('amount');
-        
+
         $monthlyDonations = Donation::where('member_id', $member->id)
             ->approved()
             ->whereYear('donation_date', $currentYear)
@@ -122,7 +122,7 @@ class MemberDashboardController extends Controller
 
         // Get pledges - use pledge_amount column
         $totalPledges = Pledge::where('member_id', $member->id)->sum('pledge_amount');
-        $totalPledgePayments = PledgePayment::whereHas('pledge', function($query) use ($member) {
+        $totalPledgePayments = PledgePayment::whereHas('pledge', function ($query) use ($member) {
             $query->where('member_id', $member->id);
         })->approved()->sum('amount');
         $remainingPledges = $totalPledges - $totalPledgePayments;
@@ -172,6 +172,7 @@ class MemberDashboardController extends Controller
 
         // Get active church announcements (pinned first, then by date)
         $announcements = Announcement::active()
+            ->targetedFor($member?->id)
             ->orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -182,7 +183,7 @@ class MemberDashboardController extends Controller
                 ->whereIn('announcement_id', $announcements->pluck('id'))
                 ->pluck('announcement_id')
                 ->toArray();
-            
+
             foreach ($announcements as $announcement) {
                 $announcement->is_unread = !in_array($announcement->id, $viewedAnnouncementIds);
             }
@@ -220,13 +221,13 @@ class MemberDashboardController extends Controller
     public function information()
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
         $member = $user->member;
-        
+
         return view('members.information', compact('member'));
     }
 
@@ -236,7 +237,7 @@ class MemberDashboardController extends Controller
     public function finance()
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
@@ -246,9 +247,11 @@ class MemberDashboardController extends Controller
 
         // Get all pledges with payments for detailed view
         $pledges = Pledge::where('member_id', $member->id)
-            ->with(['payments' => function($query) {
-                $query->approved()->orderBy('payment_date', 'desc');
-            }])
+            ->with([
+                'payments' => function ($query) {
+                    $query->approved()->orderBy('payment_date', 'desc');
+                }
+            ])
             ->orderBy('pledge_date', 'desc')
             ->get();
 
@@ -267,7 +270,7 @@ class MemberDashboardController extends Controller
     public function announcements()
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
@@ -306,9 +309,9 @@ class MemberDashboardController extends Controller
         // Get all active leaders with their member information
         $allLeaders = Leader::with('member')
             ->where('is_active', true)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->orderBy('position')
             ->orderBy('appointment_date', 'desc')
@@ -316,9 +319,9 @@ class MemberDashboardController extends Controller
 
         // Get current member's leadership positions
         $memberLeadershipPositions = $member->activeLeadershipPositions()
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->get();
 
@@ -342,12 +345,14 @@ class MemberDashboardController extends Controller
      */
     private function getUnreadAnnouncementsCount($member)
     {
-        $activeAnnouncements = Announcement::active()->pluck('id');
-        
+        $activeAnnouncements = Announcement::active()
+            ->targetedFor($member->id)
+            ->pluck('id');
+
         $viewedAnnouncementIds = AnnouncementView::where('member_id', $member->id)
             ->whereIn('announcement_id', $activeAnnouncements)
             ->pluck('announcement_id');
-        
+
         return $activeAnnouncements->diff($viewedAnnouncementIds)->count();
     }
 
@@ -357,35 +362,35 @@ class MemberDashboardController extends Controller
     public function leaders()
     {
         $user = Auth::user();
-        
+
         // Ensure user has member_id
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
         $member = $user->member;
-        
+
         // Get all active leaders with their member information
         $leaders = Leader::with('member')
             ->where('is_active', true)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->orderBy('position')
             ->orderBy('appointment_date', 'desc')
             ->get();
 
         // Filter out leaders without members (data integrity issue)
-        $leaders = $leaders->filter(function($leader) {
+        $leaders = $leaders->filter(function ($leader) {
             return $leader->member !== null;
         });
 
         // Get current member's leadership positions
         $memberPositions = $member->activeLeadershipPositions()
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->get();
 
@@ -401,7 +406,7 @@ class MemberDashboardController extends Controller
     public function markNotificationAsRead($notificationId)
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
@@ -423,7 +428,7 @@ class MemberDashboardController extends Controller
     public function showChangePassword()
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
@@ -437,7 +442,7 @@ class MemberDashboardController extends Controller
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
@@ -480,13 +485,13 @@ class MemberDashboardController extends Controller
     public function settings()
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
 
         $member = $user->member;
-        
+
         return view('members.settings', compact('member', 'user'));
     }
 
@@ -496,7 +501,7 @@ class MemberDashboardController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         if (!$user->member_id) {
             return redirect()->route('member.dashboard')->withErrors(['error' => 'Unauthorized access.']);
         }
@@ -525,7 +530,7 @@ class MemberDashboardController extends Controller
         // Handle profile picture upload
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
-            
+
             // Delete old profile picture if exists
             if ($member->profile_picture) {
                 // Handle old public path (assets/images/...) - delete if exists
@@ -540,7 +545,7 @@ class MemberDashboardController extends Controller
                     Storage::disk('public')->delete($member->profile_picture);
                 }
             }
-            
+
             // Save to public/assets/images/members/profile-pictures/ for direct access
             $uploadPath = public_path('assets/images/members/profile-pictures');
             if (!file_exists($uploadPath)) {
@@ -567,7 +572,7 @@ class MemberDashboardController extends Controller
 
         if ($updated) {
             $member->save();
-            
+
             \Log::info('Member profile updated', [
                 'user_id' => $user->id,
                 'member_id' => $member->id,

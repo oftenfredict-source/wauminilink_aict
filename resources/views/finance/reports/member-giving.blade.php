@@ -307,6 +307,22 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
+                                    <div class="text-xs text-uppercase fw-bold text-primary mb-1">Total Annual Fees</div>
+                                    <div class="h4 mb-0 fw-bold">TZS {{ number_format($totalAnnualFees, 0) }}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calendar-check fa-2x text-primary opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-12">
+                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #940000 !important;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
                                     <div class="text-xs text-uppercase fw-bold text-primary mb-1">Total Giving</div>
                                     <div class="h4 mb-0 fw-bold">TZS {{ number_format($totalGiving, 0) }}</div>
                                 </div>
@@ -461,6 +477,40 @@
 
                 <div class="col-xl-6 col-12">
                     <div class="card mb-4">
+                        <div class="card-header bg-dark py-2">
+                            <h6 class="mb-0 text-white"><i class="fas fa-calendar-check me-1"></i>Annual Fees</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($annualFees as $fee)
+                                            <tr>
+                                                <td>{{ $fee->payment_date->format('M d, Y') }}</td>
+                                                <td>TZS {{ number_format($fee->amount, 0) }}</td>
+                                                <td>{{ $fee->year }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center">No annual fees found</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-6 col-12">
+                    <div class="card mb-4">
                         <div class="card-header report-header-warning py-2">
                             <h6 class="mb-0 text-white"><i class="fas fa-handshake me-1"></i>Pledges</h6>
                         </div>
@@ -567,6 +617,12 @@
                             data: monthlyData.map(item => item.donations),
                             backgroundColor: 'rgba(0, 0, 0, 0.05)',
                             borderColor: 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Annual Fees',
+                            data: monthlyData.map(item => item.annual_fees),
+                            backgroundColor: 'rgba(52, 58, 64, 0.5)',
+                            borderColor: '#343a40',
                             borderWidth: 1
                         }]
                     },
@@ -738,7 +794,7 @@
                 return;
             @endif
 
-                        const memberId = '{{ $member->id ?? "" }}';
+                            const memberId = '{{ $member->id ?? "" }}';
             const startDate = '{{ $startDate ? $startDate->format("Y-m-d") : date("Y-01-01") }}';
             const endDate = '{{ $endDate ? $endDate->format("Y-m-d") : date("Y-12-31") }}';
             const baseUrl = '{{ url("/") }}';
@@ -760,8 +816,8 @@
                 return;
             @endif
 
-                        // Show loading message
-                        const loadingMsg = document.createElement('div');
+                            // Show loading message
+                            const loadingMsg = document.createElement('div');
             loadingMsg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 30px; border-radius: 8px; z-index: 10000; font-size: 16px;';
             loadingMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
             document.body.appendChild(loadingMsg);

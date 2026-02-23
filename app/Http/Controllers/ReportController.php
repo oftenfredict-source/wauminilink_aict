@@ -9,6 +9,7 @@ use App\Models\Pledge;
 use App\Models\Budget;
 use App\Models\Expense;
 use App\Models\Member;
+use App\Models\AnnualFee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -55,9 +56,10 @@ class ReportController extends Controller
         $totalTithes = (clone $tithes)->sum('amount');
         $totalOfferings = (clone $offerings)->sum('amount');
         $totalDonations = (clone $donations)->sum('amount');
-        $totalGiving = $totalTithes + $totalOfferings + $totalDonations;
+        $totalAnnualFees = AnnualFee::whereBetween('payment_date', [$start, $end])->where('approval_status', 'approved')->sum('amount');
+        $totalGiving = $totalTithes + $totalOfferings + $totalDonations + $totalAnnualFees;
 
-        $transactionsCount = (clone $tithes)->count() + (clone $offerings)->count() + (clone $donations)->count();
+        $transactionsCount = (clone $tithes)->count() + (clone $offerings)->count() + (clone $donations)->count() + AnnualFee::whereBetween('payment_date', [$start, $end])->where('approval_status', 'approved')->count();
 
         // Offerings by type
         $offeringTypes = (clone $offerings)
@@ -128,6 +130,7 @@ class ReportController extends Controller
                     COALESCE((SELECT SUM(amount) FROM tithes WHERE tithes.member_id = members.id AND tithes.approval_status = "approved" AND tithes.tithe_date BETWEEN "' . $start->format('Y-m-d') . '" AND "' . $end->format('Y-m-d') . '"), 0)
                     + COALESCE((SELECT SUM(amount) FROM offerings WHERE offerings.member_id = members.id AND offerings.approval_status = "approved" AND offerings.offering_date BETWEEN "' . $start->format('Y-m-d') . '" AND "' . $end->format('Y-m-d') . '"), 0)
                     + COALESCE((SELECT SUM(amount) FROM donations WHERE donations.member_id = members.id AND donations.approval_status = "approved" AND donations.donation_date BETWEEN "' . $start->format('Y-m-d') . '" AND "' . $end->format('Y-m-d') . '"), 0)
+                    + COALESCE((SELECT SUM(amount) FROM annual_fees WHERE annual_fees.member_id = members.id AND annual_fees.approval_status = "approved" AND annual_fees.payment_date BETWEEN "' . $start->format('Y-m-d') . '" AND "' . $end->format('Y-m-d') . '"), 0)
                 ) as total_giving')
         )
             ->orderByDesc('total_giving')
@@ -140,6 +143,7 @@ class ReportController extends Controller
             'totalTithes',
             'totalOfferings',
             'totalDonations',
+            'totalAnnualFees',
             'totalGiving',
             'transactionsCount',
             'offeringTypes',
@@ -324,6 +328,17 @@ class ReportController extends Controller
             ->orderBy('total_amount', 'desc')
             ->get();
 
+        // ANNUAL FEES - Only approved
+        $totalAnnualFees = AnnualFee::whereBetween('payment_date', [$start, $end])
+            ->where('approval_status', 'approved')
+            ->sum('amount');
+        $annualFeesCount = AnnualFee::whereBetween('payment_date', [$start, $end])
+            ->where('approval_status', 'approved')
+            ->count();
+        $pendingAnnualFees = AnnualFee::whereBetween('payment_date', [$start, $end])
+            ->where('approval_status', 'pending')
+            ->sum('amount');
+
         // PLEDGES - All pledges (not just approved)
         $totalPledged = Pledge::whereBetween('pledge_date', [$start, $end])
             ->sum('pledge_amount');
@@ -383,9 +398,9 @@ class ReportController extends Controller
             ->sum('amount');
 
         // Calculate totals
-        $totalIncome = $totalTithes + $totalOfferings + $totalDonations + $totalPledgePayments;
+        $totalIncome = $totalTithes + $totalOfferings + $totalDonations + $totalPledgePayments + $totalAnnualFees;
         $netIncome = $totalIncome - $totalExpenses;
-        $totalPending = $pendingTithes + $pendingOfferings + $pendingDonations;
+        $totalPending = $pendingTithes + $pendingOfferings + $pendingDonations + $pendingAnnualFees;
 
         return [
             'period' => [
@@ -428,6 +443,11 @@ class ReportController extends Controller
                 'total_expenses' => $totalExpenses,
                 'net_income' => $netIncome,
                 'total_pending' => $totalPending
+            ],
+            'annual_fees' => [
+                'total' => $totalAnnualFees,
+                'count' => $annualFeesCount,
+                'pending' => $pendingAnnualFees
             ],
             'combined_by_purpose' => $combinedByPurpose
         ];
@@ -482,6 +502,7 @@ class ReportController extends Controller
                         'totalTithes' => 0,
                         'totalOfferings' => 0,
                         'totalDonations' => 0,
+                        'totalAnnualFees' => 0,
                         'totalPledged' => 0,
                         'totalPaid' => 0,
                         'totalGiving' => 0,
@@ -520,6 +541,17 @@ class ReportController extends Controller
                 ->orderBy('donation_date', 'desc')
                 ->get();
 
+            $childIds = \App\Models\Child::where('member_id', $memberId)->pluck('id');
+
+            $annualFees = AnnualFee::where(function ($q) use ($memberId, $childIds) {
+                $q->where('member_id', $memberId)
+                    ->orWhereIn('child_id', $childIds);
+            })
+                ->where('approval_status', 'approved')
+                ->whereBetween('payment_date', [$startDate, $endDate])
+                ->orderBy('payment_date', 'desc')
+                ->get();
+
             $pledges = Pledge::where('member_id', $memberId)
                 ->whereBetween('pledge_date', [$startDate, $endDate])
                 ->orderBy('pledge_date', 'desc')
@@ -529,9 +561,10 @@ class ReportController extends Controller
             $totalTithes = $tithes->sum('amount') ?? 0;
             $totalOfferings = $offerings->sum('amount') ?? 0;
             $totalDonations = $donations->sum('amount') ?? 0;
+            $totalAnnualFees = $annualFees->sum('amount') ?? 0;
             $totalPledged = $pledges->sum('pledge_amount') ?? 0;
             $totalPaid = $pledges->sum('amount_paid') ?? 0;
-            $totalGiving = $totalTithes + $totalOfferings + $totalDonations;
+            $totalGiving = $totalTithes + $totalOfferings + $totalDonations + $totalAnnualFees;
 
             // Monthly breakdown
             $monthlyData = [];
@@ -557,12 +590,21 @@ class ReportController extends Controller
                     ->whereBetween('donation_date', [$monthStart, $monthEnd])
                     ->sum('amount') ?? 0;
 
+                $monthAnnualFees = AnnualFee::where(function ($q) use ($memberId, $childIds) {
+                    $q->where('member_id', $memberId)
+                        ->orWhereIn('child_id', $childIds);
+                })
+                    ->where('approval_status', 'approved')
+                    ->whereBetween('payment_date', [$monthStart, $monthEnd])
+                    ->sum('amount') ?? 0;
+
                 $monthlyData[] = [
                     'month' => $current->format('M Y'),
                     'tithes' => $monthTithes,
                     'offerings' => $monthOfferings,
                     'donations' => $monthDonations,
-                    'total' => $monthTithes + $monthOfferings + $monthDonations
+                    'annual_fees' => $monthAnnualFees,
+                    'total' => $monthTithes + $monthOfferings + $monthDonations + $monthAnnualFees
                 ];
 
                 $current->addMonth();
@@ -577,10 +619,12 @@ class ReportController extends Controller
                 'tithes',
                 'offerings',
                 'donations',
+                'annualFees',
                 'pledges',
                 'totalTithes',
                 'totalOfferings',
                 'totalDonations',
+                'totalAnnualFees',
                 'totalPledged',
                 'totalPaid',
                 'totalGiving',
@@ -691,9 +735,10 @@ class ReportController extends Controller
         $tithes = Tithe::whereBetween('tithe_date', [$startDate, $endDate])->sum('amount');
         $offerings = Offering::whereBetween('offering_date', [$startDate, $endDate])->sum('amount');
         $donations = Donation::whereBetween('donation_date', [$startDate, $endDate])->sum('amount');
+        $annualFees = AnnualFee::whereBetween('payment_date', [$startDate, $endDate])->sum('amount');
         $pledgePayments = Pledge::whereBetween('updated_at', [$startDate, $endDate])->sum('amount_paid');
 
-        $totalIncome = $tithes + $offerings + $donations + $pledgePayments;
+        $totalIncome = $tithes + $offerings + $donations + $annualFees + $pledgePayments;
 
         // Get expenditure data
         $expenses = Expense::whereBetween('expense_date', [$startDate, $endDate])
@@ -724,6 +769,7 @@ class ReportController extends Controller
             $monthTithes = Tithe::whereBetween('tithe_date', [$monthStart, $monthEnd])->sum('amount');
             $monthOfferings = Offering::whereBetween('offering_date', [$monthStart, $monthEnd])->sum('amount');
             $monthDonations = Donation::whereBetween('donation_date', [$monthStart, $monthEnd])->sum('amount');
+            $monthAnnualFees = AnnualFee::whereBetween('payment_date', [$monthStart, $monthEnd])->sum('amount');
             $monthPledgePayments = Pledge::whereBetween('updated_at', [$monthStart, $monthEnd])->sum('amount_paid');
             $monthExpenses = Expense::whereBetween('expense_date', [$monthStart, $monthEnd])
                 ->where('status', 'paid')
@@ -731,9 +777,9 @@ class ReportController extends Controller
 
             $monthlyData[] = [
                 'month' => $current->format('M Y'),
-                'income' => $monthTithes + $monthOfferings + $monthDonations + $monthPledgePayments,
+                'income' => $monthTithes + $monthOfferings + $monthDonations + $monthAnnualFees + $monthPledgePayments,
                 'expenses' => $monthExpenses,
-                'net' => ($monthTithes + $monthOfferings + $monthDonations + $monthPledgePayments) - $monthExpenses
+                'net' => ($monthTithes + $monthOfferings + $monthDonations + $monthAnnualFees + $monthPledgePayments) - $monthExpenses
             ];
 
             $current->addMonth();
@@ -746,6 +792,7 @@ class ReportController extends Controller
             'tithes',
             'offerings',
             'donations',
+            'annualFees',
             'pledgePayments',
             'totalIncome',
             'totalExpenses',
@@ -1710,24 +1757,100 @@ class ReportController extends Controller
     }
 
     /**
-     * Export Budget Performance PDF (placeholder - to be implemented)
+     * Export Budget Performance PDF
      */
     private function exportBudgetPerformancePdf($request, $start, $end)
     {
         $budgetId = $request->get('budget_id');
         if (!$budgetId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Budget ID is required for budget performance report'
-            ], 400);
+            return redirect()->route('reports.budget-performance')
+                ->with('error', 'Please select a budget first.');
         }
 
-        // For now, redirect to the regular view
-        return redirect()->route('reports.budget-performance', [
-            'budget_id' => $budgetId,
-            'start_date' => $start->format('Y-m-d'),
-            'end_date' => $end->format('Y-m-d')
-        ]);
+        $budget = Budget::findOrFail($budgetId);
+
+        // Calculate pending expenses for this budget (pending + approved)
+        $pendingExpensesAmount = Expense::where('budget_id', $budgetId)
+            ->where(function ($query) {
+                $query->where('status', '!=', 'paid')
+                    ->where(function ($q) {
+                        $q->whereIn('approval_status', ['pending', 'approved'])
+                            ->orWhereNull('approval_status');
+                    });
+            })
+            ->sum('amount');
+
+        $budget->pending_expenses_amount = (float) $pendingExpensesAmount;
+        $budget->total_committed = (float) $budget->spent_amount + $budget->pending_expenses_amount;
+        $budget->utilization_committed_percentage = $budget->total_budget > 0
+            ? round(($budget->total_committed / (float) $budget->total_budget) * 100, 2)
+            : 0;
+        $budget->remaining_with_pending = (float) $budget->total_budget - $budget->total_committed;
+
+        // Get expenses for this budget
+        $expenses = Expense::where('budget_id', $budgetId)
+            ->whereBetween('expense_date', [$start, $end])
+            ->orderBy('expense_date', 'desc')
+            ->get();
+
+        // Get expenses by category
+        $expensesByCategory = $expenses->groupBy('expense_category')
+            ->map(function ($categoryExpenses) {
+                return [
+                    'total' => (float) $categoryExpenses->sum('amount'),
+                    'count' => $categoryExpenses->count(),
+                    'avg' => (float) $categoryExpenses->avg('amount')
+                ];
+            })
+            ->sortByDesc('total');
+
+        // Monthly breakdown
+        $monthlyData = [];
+        $current = $start->copy();
+        $targetEnd = $end->copy();
+
+        while ($current->lte($targetEnd)) {
+            $monthStart = $current->copy()->startOfMonth();
+            $monthEnd = $current->copy()->endOfMonth();
+
+            $monthPaid = Expense::where('budget_id', $budgetId)
+                ->whereBetween('expense_date', [$monthStart, $monthEnd])
+                ->where('status', 'paid')
+                ->sum('amount');
+
+            $monthPending = Expense::where('budget_id', $budgetId)
+                ->whereBetween('expense_date', [$monthStart, $monthEnd])
+                ->where('status', '!=', 'paid')
+                ->where(function ($q) {
+                    $q->whereIn('approval_status', ['pending', 'approved'])
+                        ->orWhereNull('approval_status');
+                })
+                ->sum('amount');
+
+            $monthTotal = (float) $monthPaid + (float) $monthPending;
+
+            $monthlyData[] = [
+                'month' => $current->format('M Y'),
+                'spent' => (float) $monthPaid,
+                'pending' => (float) $monthPending,
+                'committed' => $monthTotal,
+                'budget' => (float) $budget->total_budget,
+                'utilization' => $budget->total_budget > 0 ? round(($monthTotal / (float) $budget->total_budget) * 100, 2) : 0
+            ];
+
+            $current->addMonth();
+        }
+
+        $filename = 'Budget_Performance_' . str_replace(' ', '_', $budget->budget_name) . '_' . now()->format('YmdHis') . '.pdf';
+
+        return $this->generatePdfResponse('finance.reports.pdf.budget-performance', compact(
+            'budget',
+            'expenses',
+            'expensesByCategory',
+            'monthlyData',
+            'start',
+            'end'
+        ), $filename);
     }
 
     /**

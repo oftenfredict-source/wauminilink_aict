@@ -37,7 +37,7 @@ class LeaderController extends Controller
             ->get();
 
         // Filter out leaders without members (data integrity issue)
-        $leaders = $leaders->filter(function($leader) {
+        $leaders = $leaders->filter(function ($leader) {
             return $leader->member !== null;
         });
 
@@ -54,7 +54,7 @@ class LeaderController extends Controller
     {
         $members = Member::orderBy('full_name')->get();
         $positions = $this->getPositionOptions();
-        
+
         return view('leaders.create', compact('members', 'positions'));
     }
 
@@ -65,7 +65,7 @@ class LeaderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'member_id' => 'required|exists:members,id',
-            'position' => 'required|string|in:pastor,assistant_pastor,secretary,assistant_secretary,treasurer,assistant_treasurer,elder,deacon,deaconess,youth_leader,children_leader,worship_leader,choir_leader,usher_leader,evangelism_leader,prayer_leader,other',
+            'position' => 'required|string|in:pastor,assistant_pastor,secretary,assistant_secretary,treasurer,assistant_treasurer,accountant,elder,deacon,deaconess,youth_leader,children_leader,worship_leader,choir_leader,usher_leader,evangelism_leader,prayer_leader,other',
             'position_title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'appointment_date' => 'required|date',
@@ -95,7 +95,7 @@ class LeaderController extends Controller
         }
 
         $leader = Leader::create($request->all());
-        
+
         // Load member relationship for notification
         $leader->load('member');
 
@@ -130,7 +130,7 @@ class LeaderController extends Controller
     {
         $members = Member::orderBy('full_name')->get();
         $positions = $this->getPositionOptions();
-        
+
         return view('leaders.edit', compact('leader', 'members', 'positions'));
     }
 
@@ -141,7 +141,7 @@ class LeaderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'member_id' => 'required|exists:members,id',
-            'position' => 'required|string|in:pastor,assistant_pastor,secretary,assistant_secretary,treasurer,assistant_treasurer,elder,deacon,deaconess,youth_leader,children_leader,worship_leader,choir_leader,usher_leader,evangelism_leader,prayer_leader,other',
+            'position' => 'required|string|in:pastor,assistant_pastor,secretary,assistant_secretary,treasurer,assistant_treasurer,accountant,elder,deacon,deaconess,youth_leader,children_leader,worship_leader,choir_leader,usher_leader,evangelism_leader,prayer_leader,other',
             'position_title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'appointment_date' => 'required|date',
@@ -176,10 +176,10 @@ class LeaderController extends Controller
 
         $oldIsActive = $leader->is_active;
         $leader->update($request->all());
-        
+
         // Reload leader with member relationship
         $leader->load('member');
-        
+
         // Update user account if leader is active
         if ($leader->is_active) {
             $this->createOrUpdateLeaderUserAccount($leader);
@@ -190,7 +190,7 @@ class LeaderController extends Controller
                 $activePositions = Leader::where('member_id', $member->id)
                     ->where('is_active', true)
                     ->get();
-                
+
                 if ($activePositions->isEmpty()) {
                     // No active positions, change user role to 'member'
                     $user = User::where('member_id', $member->id)->first();
@@ -216,15 +216,15 @@ class LeaderController extends Controller
     {
         // Get member before deleting
         $member = $leader->member;
-        
+
         $leader->delete();
-        
+
         // Update user account - remove leader role if no active leadership positions
         if ($member) {
             $activePositions = Leader::where('member_id', $member->id)
                 ->where('is_active', true)
                 ->get();
-            
+
             if ($activePositions->isEmpty()) {
                 // No active positions, change user role to 'member'
                 $user = User::where('member_id', $member->id)->first();
@@ -248,17 +248,17 @@ class LeaderController extends Controller
     public function deactivate(Leader $leader)
     {
         $leader->update(['is_active' => false]);
-        
+
         // Reload leader with member relationship
         $leader->load('member');
-        
+
         // Update user account - remove leader role if no active leadership positions
         if ($leader->member) {
             $member = $leader->member;
             $activePositions = Leader::where('member_id', $member->id)
                 ->where('is_active', true)
                 ->get();
-            
+
             if ($activePositions->isEmpty()) {
                 // No active positions, change user role to 'member'
                 $user = User::where('member_id', $member->id)->first();
@@ -282,13 +282,13 @@ class LeaderController extends Controller
     public function reactivate(Leader $leader)
     {
         $leader->update(['is_active' => true]);
-        
+
         // Reload leader with member relationship
         $leader->load('member');
-        
+
         // Update user account when reactivated
         $this->createOrUpdateLeaderUserAccount($leader);
-        
+
         // Also update role based on position
         if ($leader->member) {
             $role = $this->mapPositionToRole($leader->position);
@@ -316,30 +316,30 @@ class LeaderController extends Controller
     public function reports()
     {
         $leaders = Leader::with('member')->get();
-        
+
         // Group by position
         $leadersByPosition = $leaders->groupBy('position');
-        
+
         // Active vs Inactive
         $activeLeaders = $leaders->where('is_active', true);
         $inactiveLeaders = $leaders->where('is_active', false);
-        
+
         // By appointment year
-        $leadersByYear = $leaders->groupBy(function($leader) {
+        $leadersByYear = $leaders->groupBy(function ($leader) {
             return $leader->appointment_date->year;
         });
-        
+
         // Recent appointments (last 6 months)
         $recentAppointments = $leaders->where('appointment_date', '>=', now()->subMonths(6));
-        
+
         // Expiring terms (next 3 months)
         $expiringTerms = $leaders->where('end_date', '>=', now())
             ->where('end_date', '<=', now()->addMonths(3));
-        
+
         return view('leaders.reports', compact(
-            'leaders', 
-            'leadersByPosition', 
-            'activeLeaders', 
+            'leaders',
+            'leadersByPosition',
+            'activeLeaders',
             'inactiveLeaders',
             'leadersByYear',
             'recentAppointments',
@@ -353,17 +353,17 @@ class LeaderController extends Controller
     public function exportCsv()
     {
         $leaders = Leader::with('member')->get();
-        
+
         $filename = 'leadership_report_' . date('Y-m-d_H-i-s') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
-        
-        $callback = function() use ($leaders) {
+
+        $callback = function () use ($leaders) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV Headers
             fputcsv($file, [
                 'Member ID',
@@ -377,7 +377,7 @@ class LeaderController extends Controller
                 'Description',
                 'Notes'
             ]);
-            
+
             // CSV Data
             foreach ($leaders as $leader) {
                 fputcsv($file, [
@@ -393,10 +393,10 @@ class LeaderController extends Controller
                     $leader->notes ?? ''
                 ]);
             }
-            
+
             fclose($file);
         };
-        
+
         return response()->stream($callback, 200, $headers);
     }
 
@@ -408,7 +408,7 @@ class LeaderController extends Controller
         $leaders = Leader::with('member')->get();
         $leadersByPosition = $leaders->groupBy('position');
         $activeLeaders = $leaders->where('is_active', true);
-        
+
         // For now, return a simple HTML view that can be printed as PDF
         // In a real application, you'd use a PDF library like DomPDF or TCPDF
         return view('leaders.reports-pdf', compact('leaders', 'leadersByPosition', 'activeLeaders'));
@@ -420,13 +420,13 @@ class LeaderController extends Controller
     public function identityCard(Leader $leader)
     {
         $leader->load('member');
-        
+
         // Get church information from settings or use defaults
         $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Church');
         $churchAddress = \App\Services\SettingsService::get('church_address', 'Dar es Salaam, Tanzania');
         $churchPhone = \App\Services\SettingsService::get('church_phone', '+255 XXX XXX XXX');
         $churchEmail = \App\Services\SettingsService::get('church_email', 'info@waumini.org');
-        
+
         return view('leaders.identity-card', compact('leader', 'churchName', 'churchAddress', 'churchPhone', 'churchEmail'));
     }
 
@@ -436,13 +436,13 @@ class LeaderController extends Controller
     public function bulkIdentityCards()
     {
         $leaders = Leader::with('member')->active()->get();
-        
+
         // Get church information from settings or use defaults
         $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Church');
         $churchAddress = \App\Services\SettingsService::get('church_address', 'Dar es Salaam, Tanzania');
         $churchPhone = \App\Services\SettingsService::get('church_phone', '+255 XXX XXX XXX');
         $churchEmail = \App\Services\SettingsService::get('church_email', 'info@waumini.org');
-        
+
         return view('leaders.bulk-identity-cards', compact('leaders', 'churchName', 'churchAddress', 'churchPhone', 'churchEmail'));
     }
 
@@ -452,17 +452,17 @@ class LeaderController extends Controller
     public function positionIdentityCards($position)
     {
         $leaders = Leader::with('member')->where('position', $position)->active()->get();
-        
+
         if ($leaders->isEmpty()) {
             return redirect()->back()->with('error', 'No active leaders found for this position.');
         }
-        
+
         // Get church information from settings or use defaults
         $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Church');
         $churchAddress = \App\Services\SettingsService::get('church_address', 'Dar es Salaam, Tanzania');
         $churchPhone = \App\Services\SettingsService::get('church_phone', '+255 XXX XXX XXX');
         $churchEmail = \App\Services\SettingsService::get('church_email', 'info@waumini.org');
-        
+
         return view('leaders.bulk-identity-cards', compact('leaders', 'churchName', 'churchAddress', 'churchPhone', 'churchEmail'));
     }
 
@@ -486,14 +486,14 @@ class LeaderController extends Controller
 
             // Get church name from settings (use same default as member registration)
             $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
-            
+
             // Build the message using the requested template/content
             $message = "Hongera {$leader->member->full_name}! Umechaguliwa rasmi kuwa {$leader->position_display} wa kanisa la {$churchName}. Mungu akupe hekima, ujasiri na neema katika kutimiza wajibu huu wa kiroho. Tunaamini uongozi wako utaleta umoja, upendo, na maendeleo katika huduma ya Bwana.";
-            
+
             // Send SMS using the same method as member registration (sendDebug)
             $smsService = app(SmsService::class);
             $resp = $smsService->sendDebug($leader->member->phone_number, $message);
-            
+
             \Log::info('Leader appointment SMS provider response', [
                 'leader_name' => $leader->member->full_name,
                 'position' => $leader->position_display,
@@ -535,6 +535,7 @@ class LeaderController extends Controller
             'usher_leader' => 'Usher Leader',
             'evangelism_leader' => 'Evangelism Leader',
             'prayer_leader' => 'Prayer Leader',
+            'accountant' => 'Accountant',
             'other' => 'Other (Custom Position)'
         ];
     }
@@ -552,10 +553,10 @@ class LeaderController extends Controller
         }
 
         $member = $leader->member;
-        
+
         // Map leader position to user role
         $role = $this->mapPositionToRole($leader->position);
-        
+
         if (!$role) {
             Log::info('Position does not require user account', ['position' => $leader->position]);
             return; // Some positions don't need user accounts
@@ -564,13 +565,13 @@ class LeaderController extends Controller
         // Extract last name from full_name (assume last word is last name)
         $nameParts = explode(' ', trim($member->full_name));
         $lastName = !empty($nameParts) ? strtoupper(end($nameParts)) : 'PASSWORD';
-        
+
         // Username is member_id
         $username = $member->member_id;
-        
+
         // Check if user already exists
         $user = User::where('member_id', $member->id)->first();
-        
+
         if ($user) {
             // Update existing user
             $user->update([
@@ -609,12 +610,13 @@ class LeaderController extends Controller
      */
     private function mapPositionToRole($position)
     {
-        return match($position) {
+        return match ($position) {
             'pastor', 'assistant_pastor' => 'pastor',
             'secretary', 'assistant_secretary' => 'secretary',
-            'treasurer', 'assistant_treasurer' => 'treasurer',
-            'elder', 'deacon', 'deaconess', 'youth_leader', 'children_leader', 
-            'worship_leader', 'choir_leader', 'usher_leader', 'evangelism_leader', 
+            'treasurer', 'assistant_treasurer' => 'treasurer', // Added missing treasurer roles
+            'accountant' => 'accountant',
+            'elder', 'deacon', 'deaconess', 'youth_leader', 'children_leader',
+            'worship_leader', 'choir_leader', 'usher_leader', 'evangelism_leader', // Added missing evangelism_leader
             'prayer_leader', 'other' => 'member', // Other positions get member role
             default => null
         };
