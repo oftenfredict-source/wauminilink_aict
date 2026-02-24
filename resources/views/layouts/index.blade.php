@@ -1840,7 +1840,7 @@
         <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
             <!-- Navbar Brand - Hidden on Mobile -->
             <a class="navbar-brand ps-3 d-none d-lg-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
+                <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo" style="height: 75px; max-width: 300px; object-fit: contain;">
             </a>
             <!-- Sidebar Toggle - First on Mobile -->
             <button class="btn btn-link btn-sm order-first order-lg-0 me-3 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>

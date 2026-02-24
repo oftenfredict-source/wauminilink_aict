@@ -45,7 +45,7 @@
         }
 
         .navbar-custom .navbar-brand img {
-            height: 50px;
+            height: 80px;
         }
 
         .forgot-password-container {
@@ -132,7 +132,7 @@
         .forgot-password-form .logo {
             display: block;
             margin: 0 auto 20px;
-            height: 70px;
+            height: 120px;
         }
 
         .forgot-password-form h2 {
@@ -322,7 +322,7 @@
     <!-- Navbar/Header -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="{{ route('landing_page') }}">
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
         </a>
     </nav>
 

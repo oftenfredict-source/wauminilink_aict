@@ -21,6 +21,8 @@ class Child extends Model
         'parent_relationship',
         'is_church_member',
         'envelope_number',
+        'linked_member_id',
+        'relationship',
     ];
 
     protected $casts = [
@@ -30,6 +32,11 @@ class Child extends Model
     public function member()
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function linkedMember()
+    {
+        return $this->belongsTo(Member::class, 'linked_member_id');
     }
 
     /**

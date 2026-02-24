@@ -47,7 +47,7 @@
         padding: 8px 30px;
     }
     .navbar-custom .navbar-brand img {
-        height: 50px;
+        height: 80px;
         transition: height 0.3s ease;
     }
     .navbar-custom.scrolled .navbar-brand img {
@@ -137,7 +137,7 @@
     .login-form .logo {
         display: block;
         margin: 0 auto 20px;
-        height: 70px;
+        height: 120px;
         transition: all 0.3s ease;
     }
     .login-form .logo:hover {
@@ -566,7 +566,7 @@
             padding: 10px 15px;
         }
         .navbar-custom .navbar-brand img {
-            height: 40px;
+            height: 60px;
         }
     }
 
@@ -631,7 +631,7 @@
 <!-- Navbar/Header -->
 <nav class="navbar navbar-custom">
     <a class="navbar-brand" href="{{ route('landing_page') }}">
-        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+        <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
     </a>
 </nav>
 

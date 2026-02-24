@@ -22,6 +22,80 @@ use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
+    /**
+     * Promote a child to a full independent member
+     */
+    public function promoteToMember(Request $request, Child $child)
+    {
+        try {
+            DB::beginTransaction();
+
+            $age = $child->getAge();
+            if ($age < 21) {
+                return response()->json(['ok' => false, 'message' => 'Only children aged 21 and above can be promoted to full members.'], 400);
+            }
+
+            if ($child->linked_member_id) {
+                return response()->json(['ok' => false, 'message' => 'This child is already a member.'], 400);
+            }
+
+            // Get parent member for address data
+            $parent = $child->member;
+
+            // Create new member record
+            $memberData = [
+                'member_id' => Member::generateMemberId(),
+                'envelope_number' => $child->envelope_number ?? Member::generateMemberId(), // Use fallback if no envelope
+                'member_type' => 'independent',
+                'membership_type' => 'permanent',
+                'full_name' => $child->full_name,
+                'date_of_birth' => $child->date_of_birth,
+                'gender' => $child->gender,
+                'phone_number' => $parent ? $parent->phone_number : null,
+                'profession' => 'N/A (Promoted from Child)',
+                'tribe' => $parent ? $parent->tribe : 'N/A',
+                'other_tribe' => $parent ? $parent->other_tribe : null,
+                'region' => $parent ? $parent->region : 'N/A',
+                'district' => $parent ? $parent->district : 'N/A',
+                'ward' => $parent ? $parent->ward : 'N/A',
+                'street' => $parent ? $parent->street : 'N/A',
+                'address' => $parent ? $parent->address : 'N/A',
+                'marital_status' => 'single',
+            ];
+
+            $newMember = Member::create($memberData);
+
+            // Link child record
+            $child->update(['linked_member_id' => $newMember->id]);
+
+            // Create User account
+            $nameParts = explode(' ', trim($newMember->full_name));
+            $lastname = !empty($nameParts) ? strtoupper(end($nameParts)) : 'MEMBER';
+
+            User::create([
+                'name' => $newMember->full_name,
+                'email' => $newMember->member_id,
+                'password' => Hash::make($lastname),
+                'role' => 'member',
+                'member_id' => $newMember->id,
+                'phone_number' => $newMember->phone_number,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'ok' => true,
+                'message' => "{$child->full_name} has been promoted to a full member successfully.",
+                'member_id' => $newMember->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Promotion failed', ['error' => $e->getMessage(), 'child_id' => $child->id]);
+            return response()->json(['ok' => false, 'message' => 'Failed to promote child: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function create()
     {
         return view('members.add-members');
@@ -77,6 +151,7 @@ class MemberController extends Controller
             'children.*.full_name' => 'required_with:children|string|max:255',
             'children.*.gender' => ['required_with:children', Rule::in(['male', 'female'])],
             'children.*.date_of_birth' => 'required_with:children|date|before_or_equal:today',
+            'children.*.relationship' => 'nullable|string|max:100',
 
             // Address fields - make required
             'nida_number' => 'nullable|string|size:20',
@@ -91,7 +166,7 @@ class MemberController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
             // Marital status and spouse info fields
-            'marital_status' => ['nullable', Rule::in(['married', 'divorced', 'widowed', 'separated'])],
+            'marital_status' => ['nullable', Rule::in(['single', 'married', 'divorced', 'widowed', 'separated'])],
             'spouse_full_name' => 'nullable|required_if:marital_status,married|string|max:255',
             'spouse_date_of_birth' => 'nullable|required_if:marital_status,married|date|before:today',
             'spouse_education_level' => ['nullable', 'required_if:marital_status,married', Rule::in(['primary', 'secondary', 'high_level', 'certificate', 'diploma', 'bachelor_degree', 'masters', 'phd', 'professor', 'not_studied'])],
@@ -153,9 +228,8 @@ class MemberController extends Controller
                         } else {
                             try {
                                 $age = Carbon::parse($children[$i]['date_of_birth'])->age;
-                                if ($age > $childMaxAge) {
-                                    $v->errors()->add("children.$i.date_of_birth", "Child age exceeds maximum ({$childMaxAge}).");
-                                }
+                                // Removed strict childMaxAge restriction to allow adult children (21+) 
+                                // who will be registered as separate members.
                             } catch (\Exception $e) {
                                 $v->errors()->add("children.$i.date_of_birth", 'Invalid child date of birth.');
                             }
@@ -364,13 +438,6 @@ class MemberController extends Controller
             if ($request->filled('children')) {
                 foreach ($request->children as $childData) {
                     $age = Carbon::parse($childData['date_of_birth'])->age;
-                    if ($age > $childMaxAge) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => "Child age exceeds maximum ({$childMaxAge}).",
-                            'errors' => ['children' => ["Child age exceeds maximum ({$childMaxAge})."]]
-                        ], 422);
-                    }
 
                     $child = new Child([
                         'full_name' => $childData['full_name'],
@@ -378,22 +445,27 @@ class MemberController extends Controller
                         'date_of_birth' => $childData['date_of_birth'],
                         'is_church_member' => $childData['is_church_member'] ?? 'no',
                         'envelope_number' => $childData['envelope_number'] ?? null,
+                        'relationship' => $childData['relationship'] ?? 'Son/Daughter',
                     ]);
 
                     $member->children()->save($child);
 
-                    // Create separate Member record for child if they are a church member
-                    if (isset($childData['is_church_member']) && $childData['is_church_member'] === 'yes') {
+                    // Create separate Member record for ALL children aged 21+
+                    // (previously only if is_church_member === 'yes')
+                    if ($age >= 21) {
                         try {
                             $childMemberData = [
                                 'member_id' => Member::generateMemberId(),
-                                'envelope_number' => $childData['envelope_number'],
+                                'envelope_number' => $childData['envelope_number'] ?? Member::generateMemberId(),
                                 'member_type' => 'independent',
                                 'membership_type' => 'permanent',
                                 'full_name' => $childData['full_name'],
                                 'date_of_birth' => $childData['date_of_birth'],
                                 'gender' => $childData['gender'],
                                 'phone_number' => $member->phone_number, // Use parent's phone by default
+                                'profession' => 'N/A (Update Required)',
+                                'tribe' => $member->tribe,
+                                'other_tribe' => $member->other_tribe,
                                 'region' => $member->region,
                                 'district' => $member->district,
                                 'ward' => $member->ward,
@@ -408,9 +480,8 @@ class MemberController extends Controller
 
                             $childMember = Member::create($childMemberData);
 
-                            // Link child record to their new independent member record if needed (not strictly required by current schema but good for future)
-                            // $child->member_id = $childMember->id; // Wait, child.member_id is the PARENT ID. 
-                            // We don't have a child.independent_member_id yet.
+                            // Link child record to their new independent member record
+                            $child->update(['linked_member_id' => $childMember->id]);
 
                             // Create User account for child member
                             $childNameParts = explode(' ', trim($childMember->full_name));
@@ -425,9 +496,9 @@ class MemberController extends Controller
                                 'phone_number' => $childMember->phone_number,
                             ]);
 
-                            \Log::info("Child member created successfully: {$childMember->full_name}");
+                            \Log::info("Adult child auto-promoted to member: {$childMember->full_name}");
                         } catch (\Exception $e) {
-                            \Log::error("Failed to create separate member record for child church member: {$childData['full_name']}", [
+                            \Log::error("Failed to create member record for adult child: {$childData['full_name']}", [
                                 'error' => $e->getMessage()
                             ]);
                         }
@@ -841,7 +912,8 @@ class MemberController extends Controller
                 $q->where('full_name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%")
-                    ->orWhere('member_id', 'like', "%{$search}%");
+                    ->orWhere('member_id', 'like', "%{$search}%")
+                    ->orWhere('envelope_number', 'like', "%{$search}%");
             });
         }
 
@@ -894,16 +966,27 @@ class MemberController extends Controller
         // Fetch archived members from DeletedMember
         $archivedMembers = \App\Models\DeletedMember::orderBy('deleted_at_actual', 'desc')->get();
 
-        // Fetch all children
-        $children = \App\Models\Child::with('member')
-            ->orderBy('full_name', 'asc')
-            ->get();
+        // Fetch children, filtered by search if present
+        $childrenQuery = \App\Models\Child::with(['member', 'linkedMember']);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $childrenQuery->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('envelope_number', 'like', "%{$search}%");
+            });
+        }
+        // Filter out children who are 21 or older - adults belong in the Permanent Members tab
+        $children = $childrenQuery->orderBy('full_name', 'asc')->get()->filter(function ($child) {
+            /** @var \App\Models\Child $child */
+            return $child->getAge() < 21;
+        });
+        $childrenCount = $children->count();
 
         if ($request->wantsJson()) {
             return response()->json($permanentMembers);
         }
 
-        return view('members.view', compact('members', 'permanentMembers', 'temporaryMembers', 'regions', 'districts', 'wards', 'tribes', 'archivedMembers', 'children', 'totalPermanent', 'totalTemporary'));
+        return view('members.view', compact('members', 'permanentMembers', 'temporaryMembers', 'regions', 'districts', 'wards', 'tribes', 'archivedMembers', 'children', 'childrenCount', 'totalPermanent', 'totalTemporary'));
     }
 
     public function view()
@@ -924,7 +1007,7 @@ class MemberController extends Controller
             \Log::info('SHOW_MEMBER_FOUND_REGULAR', ['id' => $id]);
 
             // Load the member with children and spouse relationship
-            $member->load(['children', 'spouseMember', 'mainMember']);
+            $member->load(['children.linkedMember', 'spouseMember', 'mainMember']);
 
             // If this member has a spouse member, add spouse details
             if ($member->spouseMember) {
@@ -1009,6 +1092,14 @@ class MemberController extends Controller
         }
     }
 
+    /**
+     * Show the Complete Registration form for an adult member with incomplete registration.
+     */
+    public function showCompleteRegistration(Member $member)
+    {
+        return view('members.complete-registration', compact('member'));
+    }
+
     public function update(Request $request, Member $member)
     {
         \Log::info('MEMBER_UPDATE_REQUEST', [
@@ -1027,7 +1118,7 @@ class MemberController extends Controller
             'date_of_birth' => 'sometimes|required|date|before:today',
             'gender' => 'sometimes|required|in:male,female',
             'nida_number' => 'nullable|string|max:20',
-            // Location fields - made optional since they're not in edit form
+            // Location fields
             'tribe' => 'nullable|string|max:100',
             'other_tribe' => 'nullable|string|max:100',
             'region' => 'nullable|string|max:100',
@@ -1035,6 +1126,13 @@ class MemberController extends Controller
             'ward' => 'nullable|string|max:100',
             'street' => 'nullable|string|max:255',
             'address' => 'sometimes|nullable|string',
+            // Residence
+            'residence_region' => 'nullable|string|max:100',
+            'residence_district' => 'nullable|string|max:100',
+            'residence_ward' => 'nullable|string|max:100',
+            'residence_street' => 'nullable|string|max:255',
+            'residence_road' => 'nullable|string|max:255',
+            'residence_house_number' => 'nullable|string|max:50',
             // Family / guardian
             'living_with_family' => 'sometimes|nullable|in:yes,no',
             'family_relationship' => 'nullable|required_if:living_with_family,yes|string|max:100',
@@ -1042,27 +1140,216 @@ class MemberController extends Controller
             'guardian_phone' => 'sometimes|nullable|string|max:20',
             'guardian_relationship' => 'sometimes|nullable|string|max:100',
             // Marital / spouse
-            'marital_status' => 'sometimes|nullable|in:married,divorced,widowed,separated',
+            'marital_status' => 'sometimes|nullable|in:single,married,divorced,widowed,separated',
             'spouse_full_name' => 'sometimes|nullable|string|max:255',
             'spouse_date_of_birth' => 'sometimes|nullable|date',
             'spouse_education_level' => 'sometimes|nullable|string|max:100',
             'spouse_profession' => 'sometimes|nullable|string|max:255',
             'spouse_nida_number' => 'sometimes|nullable|string|max:20',
             'spouse_email' => 'sometimes|nullable|email|max:255',
-            'spouse_phone_number' => 'sometimes|nullable|string|max:20',
             'spouse_tribe' => 'nullable|string|max:100',
             'spouse_other_tribe' => 'nullable|string|max:100',
+            'spouse_phone_number' => 'sometimes|nullable|string|max:20',
             'spouse_church_member' => 'sometimes|nullable|in:yes,no',
+            'spouse_gender' => 'sometimes|nullable|in:male,female',
+            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'max:50', 'different:envelope_number'],
+
+            // Children/Dependents
+            'children' => 'nullable|array',
+            'children.*.full_name' => 'required_with:children|string|max:255',
+            'children.*.gender' => ['required_with:children', Rule::in(['male', 'female'])],
+            'children.*.date_of_birth' => 'required_with:children|date|before_or_equal:today',
+            'children.*.relationship' => 'nullable|string|max:100',
+            'children.*.is_church_member' => 'nullable|in:yes,no',
+            'children.*.envelope_number' => 'nullable|string|max:50',
         ];
 
+        \Log::info('MEMBER_UPDATE_START', ['id' => $member->id, 'data' => $request->all()]);
+
         $validated = $request->validate($rules);
+
+        \Log::info('MEMBER_UPDATE_VALIDATED', ['id' => $member->id, 'validated' => $validated]);
+
+        // If profession is being updated from the N/A placeholder, clear the flag
+        if (isset($validated['profession']) && str_starts_with($validated['profession'], 'N/A (')) {
+            // keep as-is — admin re-submitted without changing profession
+        }
+
         $member->update($validated);
         $member->refresh();
+
+        \Log::info('MEMBER_UPDATED_REFRESHED', [
+            'id' => $member->id,
+            'marital_status' => $member->marital_status,
+            'spouse_church_member' => $member->spouse_church_member,
+            'spouse_member_id' => $member->spouse_member_id,
+            'spouse_full_name' => $member->spouse_full_name
+        ]);
+
+        // --- Spouse Member Creation Logic ---
+        if (
+            $member->marital_status === 'married' &&
+            $member->spouse_church_member === 'yes' &&
+            empty($member->spouse_member_id) &&
+            !empty($member->spouse_full_name)
+        ) {
+            \Log::info('SPOUSE_CREATION_TRIGGERED', ['member_id' => $member->id]);
+            try {
+                // Check if spouse already exists by name and phone
+                // CRITICAL: Exclude the current member from this search to avoid self-linking
+                $existingSpouse = Member::where('id', '!=', $member->id)
+                    ->where('full_name', $member->spouse_full_name);
+
+                if (!empty($member->spouse_phone_number)) {
+                    $existingSpouse->where('phone_number', $member->spouse_phone_number);
+                }
+                $existingSpouse = $existingSpouse->first();
+
+                if (!$existingSpouse) {
+                    $spouseGender = $request->spouse_gender ?? $validated['spouse_gender'] ?? ($member->gender === 'male' ? 'female' : 'male');
+                    if ($member->member_type === 'father')
+                        $spouseGender = 'female';
+                    if ($member->member_type === 'mother')
+                        $spouseGender = 'male';
+
+                    $spouseMemberType = $member->member_type === 'father' ? 'mother' : ($member->member_type === 'mother' ? 'father' : 'independent');
+
+                    $spouseMemberData = [
+                        'member_id' => Member::generateMemberId(),
+                        'full_name' => $validated['spouse_full_name'] ?? $member->spouse_full_name,
+                        'gender' => $validated['spouse_gender'] ?? $spouseGender,
+                        'date_of_birth' => $validated['spouse_date_of_birth'] ?? $member->spouse_date_of_birth,
+                        'phone_number' => $validated['spouse_phone_number'] ?? $member->spouse_phone_number ?? $request->spouse_phone_number,
+                        'email' => $validated['spouse_email'] ?? $member->spouse_email,
+                        'profession' => $validated['spouse_profession'] ?? $member->spouse_profession,
+                        'nida_number' => $validated['spouse_nida_number'] ?? $member->spouse_nida_number,
+                        'tribe' => $validated['spouse_tribe'] ?? $member->spouse_tribe ?? $member->tribe,
+                        'other_tribe' => $validated['spouse_other_tribe'] ?? $member->spouse_other_tribe ?? $member->other_tribe,
+                        'membership_type' => $member->membership_type,
+                        'member_type' => $spouseMemberType,
+                        'marital_status' => 'married',
+                        'spouse_full_name' => $member->full_name,
+                        'spouse_member_id' => $member->id,
+                        'spouse_church_member' => 'yes',
+                        'envelope_number' => $validated['spouse_envelope_number'] ?? $request->spouse_envelope_number ?? null,
+                        'region' => $member->region,
+                        'district' => $member->district,
+                        'ward' => $member->ward,
+                        'street' => $member->street,
+                        'address' => $member->address,
+                        'residence_region' => $member->residence_region,
+                        'residence_district' => $member->residence_district,
+                        'residence_ward' => $member->residence_ward,
+                        'residence_street' => $member->residence_street,
+                    ];
+
+                    $spouseMember = Member::create($spouseMemberData);
+                    $member->update(['spouse_member_id' => $spouseMember->id]);
+
+                    // Create User account for spouse
+                    $spouseNameParts = explode(' ', trim($spouseMember->full_name));
+                    $spouseLastname = !empty($spouseNameParts) ? strtoupper(end($spouseNameParts)) : 'MEMBER';
+                    \App\Models\User::create([
+                        'name' => $spouseMember->full_name,
+                        'email' => $spouseMember->member_id,
+                        'password' => \Hash::make($spouseLastname),
+                        'role' => 'member',
+                        'member_id' => $spouseMember->id,
+                        'phone_number' => $spouseMember->phone_number,
+                    ]);
+
+                    \Log::info('Spouse member created and linked during update', ['member_id' => $member->id, 'spouse_id' => $spouseMember->id]);
+                } else {
+                    $member->update(['spouse_member_id' => $existingSpouse->id]);
+                    if (empty($existingSpouse->spouse_member_id)) {
+                        $existingSpouse->update(['spouse_member_id' => $member->id]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to create/link spouse during update', ['member_id' => $member->id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        // --- Dependent Handling ---
+        if ($request->filled('children')) {
+            // Option 1: Simple approach - delete existing children and recreate
+            // (Only for those not linked to a Member record)
+            $member->children()->whereNull('linked_member_id')->delete();
+
+            foreach ($request->children as $childData) {
+                $age = Carbon::parse($childData['date_of_birth'])->age;
+
+                $child = new Child([
+                    'full_name' => $childData['full_name'],
+                    'gender' => $childData['gender'],
+                    'date_of_birth' => $childData['date_of_birth'],
+                    'is_church_member' => $childData['is_church_member'] ?? 'no',
+                    'envelope_number' => $childData['envelope_number'] ?? null,
+                    'relationship' => $childData['relationship'] ?? 'Son/Daughter',
+                ]);
+
+                $member->children()->save($child);
+
+                // Create separate Member record if 21+ and church member
+                if ($age >= 21 && ($childData['is_church_member'] ?? 'no') === 'yes') {
+                    try {
+                        // Check if already exists
+                        if (!Member::where('full_name', $child->full_name)->where('date_of_birth', $child->date_of_birth)->exists()) {
+                            $newMember = Member::create([
+                                'member_id' => Member::generateMemberId(),
+                                'full_name' => $child->full_name,
+                                'gender' => $child->gender,
+                                'date_of_birth' => $child->date_of_birth,
+                                'envelope_number' => $child->envelope_number,
+                                'membership_type' => 'permanent',
+                                'member_type' => 'independent',
+                                'profession' => 'N/A (Update Required)',
+                                'phone_number' => $member->phone_number,
+                                'region' => $member->region,
+                                'district' => $member->district,
+                                'ward' => $member->ward,
+                                'street' => $member->street,
+                                'address' => $member->address,
+                                'residence_region' => $member->residence_region,
+                                'residence_district' => $member->residence_district,
+                                'residence_ward' => $member->residence_ward,
+                                'residence_street' => $member->residence_street,
+                                'marital_status' => 'single',
+                            ]);
+
+                            $child->update(['linked_member_id' => $newMember->id]);
+
+                            // Create user account
+                            $nameParts = explode(' ', trim($newMember->full_name));
+                            $lastname = !empty($nameParts) ? strtoupper(end($nameParts)) : 'MEMBER';
+                            \App\Models\User::create([
+                                'name' => $newMember->full_name,
+                                'email' => $newMember->member_id,
+                                'password' => \Hash::make($lastname),
+                                'role' => 'member',
+                                'member_id' => $newMember->id,
+                                'phone_number' => $newMember->phone_number,
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to create adult dependent member during update', ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+        }
+
         \Log::info('MEMBER_UPDATE_SAVED', [
             'member_id' => $member->id,
             'saved_email' => $member->email,
             'validated' => $validated,
         ]);
+
+        // If this is a full-page form submission (Complete Registration page), redirect
+        if ($request->has('_complete_registration')) {
+            return redirect()->route('members.view', ['tab' => 'permanent'])
+                ->with('success', "Registration for {$member->full_name} has been completed successfully.");
+        }
+
         return response()->json(['success' => true, 'message' => 'Member updated successfully', 'member' => $member]);
     }
 

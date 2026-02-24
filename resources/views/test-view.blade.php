@@ -1,388 +1,478 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Dashboard</title>
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
-        <!-- SweetAlert2 CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
-            .logo-white-section {
-                background-color: white !important;
-                border-radius: 8px;
-                margin: 8px 0;
-                padding: 8px 16px !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                transition: all 0.3s ease;
-            }
-            .logo-white-section:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            }
-            .navbar-brand .logo {
-                transition: all 0.3s ease;
-            }
-            .navbar-brand .logo:hover {
-                transform: scale(1.05);
-            }
-            .navbar-brand {
-                min-height: 60px;
-                display: flex !important;
-                align-items: center !important;
-            }
-            .sb-sidenav {
-                background-color: #17082d !important;
-            }
-            .sb-sidenav .nav-link {
-                color: white !important;
-                transition: all 0.3s ease;
-            }
-            .sb-sidenav .nav-link:hover {
-                background-color: #293846 !important;
-                color: white !important;
-            }
-            .sb-sidenav .sb-sidenav-menu-heading {
-                color: rgba(255, 255, 255, 0.6) !important;
-            }
-            .sb-sidenav .sb-nav-link-icon {
-                color: white !important;
-            }
-            .sb-sidenav .sb-sidenav-collapse-arrow {
-                color: white !important;
-            }
-            .sb-sidenav .sb-sidenav-footer {
-                background-color: rgba(255, 255, 255, 0.1) !important;
-                color: white !important;
-            }
-            .card-header {
-                color: white !important;
-                font-weight: 600;
-            }
-            .card .small.text-white-50 {
-                color: white !important;
-                font-weight: 500;
-            }
-            /* Interactive table styling for details tables */
-            .table.interactive-table tbody tr {
-                transition: background-color 0.2s ease, box-shadow 0.2s ease;
-            }
-            .table.interactive-table tbody tr:hover {
-                background-color: #f8f9ff;
-            }
-            .table.interactive-table tbody tr td:first-child {
-                border-left: 4px solid #5b2a86;
-            }
-            /* Slightly wider member details modal */
-            #memberDetailsModal .modal-dialog { max-width: 700px; }
-            #memberDetailsModal .modal-footer {
-                background: linear-gradient(135deg, #1f2b6c 0%, #5b2a86 100%);
-                border-top: 0;
-                color: #ffffff;
-            }
-            #memberDetailsModal .modal-footer a.emca-link { color: #ffffff; text-decoration: none; }
-            #memberDetailsModal .modal-footer a.emca-link:hover { text-decoration: underline; opacity: 0.95; }
-            /* QR styling */
-            #inlineQrImg { border: 3px solid #5b2a86; border-radius: 8px; padding: 4px; background: #ffffff; }
-            #qrSpinner { width: 2.5rem; height: 2.5rem; }
-        </style>
-    </head>
-    <body class="sb-nav-fixed">
-        <!-- Header -->
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 200px; object-fit: contain;">
-            </a>
-            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
-                <strong>Welcome to Waumini Link</strong>
-            </div>
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-                <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
-                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
-                </div>
-            </form>
-            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        @if(auth()->check() && auth()->user()->isMember())
-                            <li><a class="dropdown-item" href="{{ route('member.settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                        @else
-                            <li><a class="dropdown-item" href="#!">Settings</a></li>
-                            <li><a class="dropdown-item" href="#!">Activity Log</a></li>
-                        @endif
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}" 
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <div id="layoutSidenav">
-            <!-- Sidebar -->
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu">
-                        <div class="nav">
-                            <div class="sb-sidenav-menu-heading">Main</div>
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
-                            <div class="sb-sidenav-menu-heading">Management</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
-                                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                                Members
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseMembers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="{{ route('members.view') }}"><i class="fas fa-list me-2"></i>All Members</a>
-                                </nav>
-                            </div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
-                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
-                                Events & Services
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="#"><i class="fas fa-church me-2"></i>Sunday Services</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
-                                </nav>
-                            </div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-donate"></i></div>
-                                Finance
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseFinance" aria-labelledby="headingThree" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" href="#"><i class="fas fa-money-bill-wave me-2"></i>Donations</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-receipt me-2"></i>Expenses</a>
-                                    <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Financial Reports</a>
-                                </nav>
-                            </div>
-                            <div class="sb-sidenav-menu-heading">Reports</div>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Analytics
-                            </a>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
-                                Reports
-                            </a>
-                            <div class="sb-sidenav-menu-heading">Settings</div>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
-                                System Settings
-                            </a>
-                        </div>
-                    </div>
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Logged in as:</div>
-                        {{ Auth::user()->name ?? 'User' }}
-                    </div>
-                </nav>
-            </div>
-            
-            <div id="layoutSidenav_content">
-                <main>
-                    <div class="container-fluid px-4">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
-                            <h2 class="mb-0">Members</h2>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('members.export.csv', request()->query()) }}" class="btn btn-outline-success"><i class="fas fa-file-excel me-2"></i>Export CSV</a>
-                                <button class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-2"></i>Print</button>
-                            </div>
-                        </div>
 
-                        <!-- Filters & Search -->
-                        <form method="GET" action="{{ route('members.index') }}" class="card mb-3" id="filtersForm">
-                            <div class="card-body">
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-md-4">
-                                        <label class="form-label">Search</label>
-                                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}" class="form-control" placeholder="Search name, phone, email, member ID">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Gender</label>
-                                        <select name="gender" id="genderFilter" class="form-select">
-                                            <option value="">All</option>
-                                            <option value="male" {{ request('gender')==='male' ? 'selected' : '' }}>Male</option>
-                                            <option value="female" {{ request('gender')==='female' ? 'selected' : '' }}>Female</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Region</label>
-                                        <select name="region" id="regionFilter" class="form-select">
-                                            <option value="">All</option>
-                                            @foreach(($regions ?? []) as $region)
-                                                <option value="{{ $region }}" {{ request('region')===$region ? 'selected' : '' }}>{{ $region }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">District</label>
-                                        <select name="district" id="districtFilter" class="form-select">
-                                            <option value="">All</option>
-                                            @foreach(($districts ?? []) as $district)
-                                                <option value="{{ $district }}" {{ request('district')===$district ? 'selected' : '' }}>{{ $district }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Ward</label>
-                                        <select name="ward" id="wardFilter" class="form-select">
-                                            <option value="">All</option>
-                                            @foreach(($wards ?? []) as $ward)
-                                                <option value="{{ $ward }}" {{ request('ward')===$ward ? 'selected' : '' }}>{{ $ward }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-12 d-flex gap-2 mt-2">
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>Apply</button>
-                                        <a href="{{ route('members.index') }}" class="btn btn-outline-secondary">Reset</a>
-                                    </div>
-                                </div>
-                            </div>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Waumini Link - Dashboard</title>
+    <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
+    <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .logo-white-section {
+            background-color: white !important;
+            border-radius: 8px;
+            margin: 8px 0;
+            padding: 8px 16px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .logo-white-section:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .navbar-brand .logo {
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand {
+            min-height: 60px;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .sb-sidenav {
+            background-color: #17082d !important;
+        }
+
+        .sb-sidenav .nav-link {
+            color: white !important;
+            transition: all 0.3s ease;
+        }
+
+        .sb-sidenav .nav-link:hover {
+            background-color: #293846 !important;
+            color: white !important;
+        }
+
+        .sb-sidenav .sb-sidenav-menu-heading {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        .sb-sidenav .sb-nav-link-icon {
+            color: white !important;
+        }
+
+        .sb-sidenav .sb-sidenav-collapse-arrow {
+            color: white !important;
+        }
+
+        .sb-sidenav .sb-sidenav-footer {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+
+        .card-header {
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .card .small.text-white-50 {
+            color: white !important;
+            font-weight: 500;
+        }
+
+        /* Interactive table styling for details tables */
+        .table.interactive-table tbody tr {
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .table.interactive-table tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .table.interactive-table tbody tr td:first-child {
+            border-left: 4px solid #5b2a86;
+        }
+
+        /* Slightly wider member details modal */
+        #memberDetailsModal .modal-dialog {
+            max-width: 700px;
+        }
+
+        #memberDetailsModal .modal-footer {
+            background: linear-gradient(135deg, #1f2b6c 0%, #5b2a86 100%);
+            border-top: 0;
+            color: #ffffff;
+        }
+
+        #memberDetailsModal .modal-footer a.emca-link {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        #memberDetailsModal .modal-footer a.emca-link:hover {
+            text-decoration: underline;
+            opacity: 0.95;
+        }
+
+        /* QR styling */
+        #inlineQrImg {
+            border: 3px solid #5b2a86;
+            border-radius: 8px;
+            padding: 4px;
+            background: #ffffff;
+        }
+
+        #qrSpinner {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    </style>
+</head>
+
+<body class="sb-nav-fixed">
+    <!-- Header -->
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+        <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
+            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo"
+                style="height: 75px; max-width: 300px; object-fit: contain;">
+        </a>
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i
+                class="fas fa-bars"></i></button>
+        <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
+            <strong>Welcome to Waumini Link</strong>
+        </div>
+        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <div class="input-group">
+                <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..."
+                    aria-describedby="btnNavbarSearch" />
+                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i
+                        class="fas fa-search"></i></button>
+            </div>
+        </form>
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    @if(auth()->check() && auth()->user()->isMember())
+                        <li><a class="dropdown-item" href="{{ route('member.settings') }}"><i
+                                    class="fas fa-cog me-2"></i>Settings</a></li>
+                    @else
+                        <li><a class="dropdown-item" href="#!">Settings</a></li>
+                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                    @endif
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
                         </form>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <div id="layoutSidenav">
+        <!-- Sidebar -->
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <div class="sb-sidenav-menu-heading">Main</div>
+                        <a class="nav-link" href="{{ route('dashboard') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Dashboard
+                        </a>
+                        <div class="sb-sidenav-menu-heading">Management</div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseMembers" aria-expanded="false" aria-controls="collapseMembers">
+                            <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                            Members
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseMembers" aria-labelledby="headingOne"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="{{ route('members.view') }}"><i
+                                        class="fas fa-list me-2"></i>All Members</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseEvents" aria-expanded="false" aria-controls="collapseEvents">
+                            <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
+                            Events & Services
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseEvents" aria-labelledby="headingTwo"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="#"><i class="fas fa-church me-2"></i>Sunday Services</a>
+                                <a class="nav-link" href="#"><i class="fas fa-calendar-plus me-2"></i>Special Events</a>
+                                <a class="nav-link" href="#"><i class="fas fa-birthday-cake me-2"></i>Celebrations</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
+                            <div class="sb-nav-link-icon"><i class="fas fa-donate"></i></div>
+                            Finance
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseFinance" aria-labelledby="headingThree"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="#"><i class="fas fa-money-bill-wave me-2"></i>Donations</a>
+                                <a class="nav-link" href="#"><i class="fas fa-receipt me-2"></i>Expenses</a>
+                                <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Financial Reports</a>
+                            </nav>
+                        </div>
+                        <div class="sb-sidenav-menu-heading">Reports</div>
+                        <a class="nav-link" href="#">
+                            <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                            Analytics
+                        </a>
+                        <a class="nav-link" href="#">
+                            <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
+                            Reports
+                        </a>
+                        <div class="sb-sidenav-menu-heading">Settings</div>
+                        <a class="nav-link" href="#">
+                            <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
+                            System Settings
+                        </a>
+                    </div>
+                </div>
+                <div class="sb-sidenav-footer">
+                    <div class="small">Logged in as:</div>
+                    {{ Auth::user()->name ?? 'User' }}
+                </div>
+            </nav>
+        </div>
 
-                        <!-- Members Table -->
-                        <div class="card">
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0" id="membersTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="text-nowrap">#</th>
-                                                <th>Full Name</th>
-                                                <th>Member ID</th>
-                                                <th>Phone</th>
-                                                <th>Email</th>
-                                                <th>Gender</th>
-                                                <th class="text-end">
-                                                    <span>Actions</span>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse(($members ?? collect()) as $member)
-                                                <tr id="row-{{ $member->id }}"
-                                                    data-name="{{ strtolower($member->full_name) }}"
-                                                    data-memberid="{{ strtolower($member->member_id) }}"
-                                                    data-phone="{{ strtolower($member->phone_number) }}"
-                                                    data-email="{{ strtolower($member->email) }}"
-                                                    data-gender="{{ strtolower($member->gender ?? '') }}"
-                                                    data-region="{{ strtolower($member->region ?? '') }}"
-                                                    data-district="{{ strtolower($member->district ?? '') }}"
-                                                    data-ward="{{ strtolower($member->ward ?? '') }}">
-                                                    <td class="text-muted">{{ isset($members) ? $members->firstItem() + $loop->index : $loop->iteration }}</td>
-                                                    <td>{{ $member->full_name }}</td>
-                                                    <td><span class="badge bg-secondary">{{ $member->member_id }}</span></td>
-                                                    <td>{{ $member->phone_number }}</td>
-                                                    <td>{{ $member->email }}</td>
-                                                    <td>{{ ucfirst($member->gender ?? '-') }}</td>
-                                                    <td class="text-end">
-                                                        <div class="btn-group btn-group-sm" role="group">
-                                                            <button class="btn btn-outline-info" onclick="viewDetails({{ $member->id }})"><i class="fas fa-eye"></i></button>
-                                                            <button class="btn btn-outline-primary" onclick="openEdit({{ $member->id }})"><i class="fas fa-edit"></i></button>
-                                                            <button class="btn btn-outline-warning" onclick="confirmDelete({{ $member->id }})" title="Archive Member"><i class="fas fa-archive"></i></button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr><td colspan="6" class="text-center py-4">No members found.</td></tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            @if(isset($members))
-                                <div class="card-footer d-flex justify-content-between align-items-center">
-                                    <div class="text-muted small">
-                                        Showing {{ $members->firstItem() }} to {{ $members->lastItem() }} of {{ $members->total() }} entries
-                                    </div>
-                                    <div>
-                                        {{ $members->withQueryString()->links() }}
-                                    </div>
-                                </div>
-                            @endif
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-4 mb-3 gap-2">
+                        <h2 class="mb-0">Members</h2>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('members.export.csv', request()->query()) }}"
+                                class="btn btn-outline-success"><i class="fas fa-file-excel me-2"></i>Export CSV</a>
+                            <button class="btn btn-outline-secondary" onclick="window.print()"><i
+                                    class="fas fa-print me-2"></i>Print</button>
                         </div>
                     </div>
-                </main>
 
-                <!-- Details Modal -->
-                <div class="modal fade" id="memberDetailsModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
-                            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1f2b6c 0%, #5b2a86 100%); border: none;">
-                                <h5 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-id-card" aria-label="Member details"></i><span>Member Details</span></h5>
-                                <div class="ms-auto d-flex gap-2 align-items-center">
-                                    <button class="btn btn-sm btn-outline-light" id="btnCopyAllDetails" title="Copy all details" aria-label="Copy all details"><i class="fas fa-copy"></i></button>
-                                    <div class="vr opacity-50 mx-1"></div>
-                                    <button class="btn btn-sm btn-light" id="btnDownloadExcel" title="Download Excel"><i class="fas fa-file-excel text-success"></i></button>
-                                    <button class="btn btn-sm btn-light" id="btnDownloadPDF" title="Download PDF"><i class="fas fa-file-pdf text-danger"></i></button>
-                                    <button class="btn btn-sm btn-light" id="btnPrintDetails" title="Print"><i class="fas fa-print text-secondary"></i></button>
+                    <!-- Filters & Search -->
+                    <form method="GET" action="{{ route('members.index') }}" class="card mb-3" id="filtersForm">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">Search</label>
+                                    <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
+                                        class="form-control" placeholder="Search name, phone, email, member ID">
                                 </div>
-                                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body bg-light" id="memberDetailsBody">
-                                <div class="text-center text-muted py-4">Loading...</div>
-                            </div>
-                            <div class="modal-footer d-flex justify-content-between align-items-center">
-                                <div class="small">
-                                    <span class="me-1">Powered by</span>
-                                    <a href="https://emca.tech/#" target="_blank" rel="noopener" class="emca-link fw-semibold" style="color: #940000 !important;">EmCa Technologies</a>
+                                <div class="col-md-2">
+                                    <label class="form-label">Gender</label>
+                                    <select name="gender" id="genderFilter" class="form-select">
+                                        <option value="">All</option>
+                                        <option value="male" {{ request('gender') === 'male' ? 'selected' : '' }}>Male
+                                        </option>
+                                        <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>
+                                            Female</option>
+                                    </select>
                                 </div>
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                <div class="col-md-2">
+                                    <label class="form-label">Region</label>
+                                    <select name="region" id="regionFilter" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach(($regions ?? []) as $region)
+                                            <option value="{{ $region }}" {{ request('region') === $region ? 'selected' : '' }}>{{ $region }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">District</label>
+                                    <select name="district" id="districtFilter" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach(($districts ?? []) as $district)
+                                            <option value="{{ $district }}" {{ request('district') === $district ? 'selected' : '' }}>{{ $district }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Ward</label>
+                                    <select name="ward" id="wardFilter" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach(($wards ?? []) as $ward)
+                                            <option value="{{ $ward }}" {{ request('ward') === $ward ? 'selected' : '' }}>
+                                                {{ $ward }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 d-flex gap-2 mt-2">
+                                    <button type="submit" class="btn btn-primary"><i
+                                            class="fas fa-filter me-2"></i>Apply</button>
+                                    <a href="{{ route('members.index') }}" class="btn btn-outline-secondary">Reset</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Members Table -->
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="membersTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-nowrap">#</th>
+                                            <th>Full Name</th>
+                                            <th>Member ID</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>Gender</th>
+                                            <th class="text-end">
+                                                <span>Actions</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse(($members ?? collect()) as $member)
+                                            <tr id="row-{{ $member->id }}" data-name="{{ strtolower($member->full_name) }}"
+                                                data-memberid="{{ strtolower($member->member_id) }}"
+                                                data-phone="{{ strtolower($member->phone_number) }}"
+                                                data-email="{{ strtolower($member->email) }}"
+                                                data-gender="{{ strtolower($member->gender ?? '') }}"
+                                                data-region="{{ strtolower($member->region ?? '') }}"
+                                                data-district="{{ strtolower($member->district ?? '') }}"
+                                                data-ward="{{ strtolower($member->ward ?? '') }}">
+                                                <td class="text-muted">
+                                                    {{ isset($members) ? $members->firstItem() + $loop->index : $loop->iteration }}
+                                                </td>
+                                                <td>{{ $member->full_name }}</td>
+                                                <td><span class="badge bg-secondary">{{ $member->member_id }}</span></td>
+                                                <td>{{ $member->phone_number }}</td>
+                                                <td>{{ $member->email }}</td>
+                                                <td>{{ ucfirst($member->gender ?? '-') }}</td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button class="btn btn-outline-info"
+                                                            onclick="viewDetails({{ $member->id }})"><i
+                                                                class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-outline-primary"
+                                                            onclick="openEdit({{ $member->id }})"><i
+                                                                class="fas fa-edit"></i></button>
+                                                        <button class="btn btn-outline-warning"
+                                                            onclick="confirmDelete({{ $member->id }})"
+                                                            title="Archive Member"><i class="fas fa-archive"></i></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4">No members found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @if(isset($members))
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    Showing {{ $members->firstItem() }} to {{ $members->lastItem() }} of
+                                    {{ $members->total() }} entries
+                                </div>
+                                <div>
+                                    {{ $members->withQueryString()->links() }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </main>
+
+            <!-- Details Modal -->
+            <div class="modal fade" id="memberDetailsModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+                        <div class="modal-header text-white"
+                            style="background: linear-gradient(135deg, #1f2b6c 0%, #5b2a86 100%); border: none;">
+                            <h5 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-id-card"
+                                    aria-label="Member details"></i><span>Member Details</span></h5>
+                            <div class="ms-auto d-flex gap-2 align-items-center">
+                                <button class="btn btn-sm btn-outline-light" id="btnCopyAllDetails"
+                                    title="Copy all details" aria-label="Copy all details"><i
+                                        class="fas fa-copy"></i></button>
+                                <div class="vr opacity-50 mx-1"></div>
+                                <button class="btn btn-sm btn-light" id="btnDownloadExcel" title="Download Excel"><i
+                                        class="fas fa-file-excel text-success"></i></button>
+                                <button class="btn btn-sm btn-light" id="btnDownloadPDF" title="Download PDF"><i
+                                        class="fas fa-file-pdf text-danger"></i></button>
+                                <button class="btn btn-sm btn-light" id="btnPrintDetails" title="Print"><i
+                                        class="fas fa-print text-secondary"></i></button>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body bg-light" id="memberDetailsBody">
+                            <div class="text-center text-muted py-4">Loading...</div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between align-items-center">
+                            <div class="small">
+                                <span class="me-1">Powered by</span>
+                                <a href="https://emca.tech/#" target="_blank" rel="noopener"
+                                    class="emca-link fw-semibold" style="color: #940000 !important;">EmCa
+                                    Technologies</a>
+                            </div>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Section Chooser Modal -->
+            <div class="modal fade" id="editSectionChooserModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content border-0 shadow" style="border-radius: 14px; overflow: hidden;">
+                        <div class="modal-header text-white"
+                            style="background: linear-gradient(135deg,#5b2a86 0%, #0ea5ea 100%); border: none;">
+                            <h6 class="modal-title"><i class="fas fa-edit me-2"></i>Select Section to Edit</h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" id="btnEditPersonal"><i
+                                        class="fas fa-user me-2"></i>Personal</button>
+                                <button class="btn btn-outline-primary" id="btnEditLocation"><i
+                                        class="fas fa-map-marker-alt me-2"></i>Location</button>
+                                <button class="btn btn-outline-primary" id="btnEditFamily"><i
+                                        class="fas fa-home me-2"></i>Family</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Edit Section Chooser Modal -->
-                <div class="modal fade" id="editSectionChooserModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-sm">
-                        <div class="modal-content border-0 shadow" style="border-radius: 14px; overflow: hidden;">
-                            <div class="modal-header text-white" style="background: linear-gradient(135deg,#5b2a86 0%, #0ea5ea 100%); border: none;">
-                                <h6 class="modal-title"><i class="fas fa-edit me-2"></i>Select Section to Edit</h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-primary" id="btnEditPersonal"><i class="fas fa-user me-2"></i>Personal</button>
-                                    <button class="btn btn-outline-primary" id="btnEditLocation"><i class="fas fa-map-marker-alt me-2"></i>Location</button>
-                                    <button class="btn btn-outline-primary" id="btnEditFamily"><i class="fas fa-home me-2"></i>Family</button>
-                                        </div>
-                            </div>
-                        </div>
-                    </div>
 
                 <!-- Edit Personal Modal -->
                 <div class="modal fade" id="memberEditPersonalModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-md">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
                             <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-user text-primary"></i><span>Edit Personal</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h6 class="modal-title d-flex align-items-center gap-2"><i
+                                        class="fas fa-user text-primary"></i><span>Edit Personal</span></h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form id="editPersonalForm">
@@ -390,7 +480,8 @@
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label class="form-label">Full Name</label>
-                                            <input type="text" class="form-control" id="edit_personal_full_name" required>
+                                            <input type="text" class="form-control" id="edit_personal_full_name"
+                                                required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email</label>
@@ -420,13 +511,16 @@
                                             <label class="form-label">Tribe</label>
                                             <select id="edit_personal_tribe" class="form-select"></select>
                                         </div>
-                                        <div class="col-md-6" id="edit_personal_other_tribe_group" style="display:none;">
+                                        <div class="col-md-6" id="edit_personal_other_tribe_group"
+                                            style="display:none;">
                                             <label class="form-label">Other Tribe</label>
-                                            <input type="text" class="form-control" id="edit_personal_other_tribe" placeholder="Specify tribe">
+                                            <input type="text" class="form-control" id="edit_personal_other_tribe"
+                                                placeholder="Specify tribe">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary">Save</button>
                                     </div>
                                 </form>
@@ -440,8 +534,10 @@
                     <div class="modal-dialog modal-md">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
                             <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-map-marker-alt text-primary"></i><span>Edit Location</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h6 class="modal-title d-flex align-items-center gap-2"><i
+                                        class="fas fa-map-marker-alt text-primary"></i><span>Edit Location</span></h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form id="editLocationForm">
@@ -469,7 +565,8 @@
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary">Save</button>
                                     </div>
                                 </form>
@@ -483,8 +580,10 @@
                     <div class="modal-dialog modal-md">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
                             <div class="modal-header bg-white border-0">
-                                <h6 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-home text-primary"></i><span>Edit Family</span></h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h6 class="modal-title d-flex align-items-center gap-2"><i
+                                        class="fas fa-home text-primary"></i><span>Edit Family</span></h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <form id="editFamilyForm">
@@ -500,11 +599,13 @@
                                         </div>
                                         <div class="col-md-8">
                                             <label class="form-label">Family relationship</label>
-                                            <input type="text" class="form-control" id="edit_family_family_relationship">
+                                            <input type="text" class="form-control"
+                                                id="edit_family_family_relationship">
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary">Save</button>
                                     </div>
                                 </form>
@@ -517,9 +618,12 @@
                 <div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-md">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-                            <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                                <h5 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-user-plus"></i><span>Register New Member</span></h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <div class="modal-header text-white"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                                <h5 class="modal-title d-flex align-items-center gap-2"><i
+                                        class="fas fa-user-plus"></i><span>Register New Member</span></h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body bg-light">
                                 <form id="quickAddMemberForm">
@@ -566,7 +670,8 @@
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2 mt-3">
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary">Register</button>
                                     </div>
                                 </form>
@@ -576,24 +681,25 @@
                 </div>
 
                 <footer class="bg-dark text-light py-4 mt-auto">
-  <div class="container px-4">
-    <div class="row align-items-center">
-      <!-- Left Side -->
-      <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-        <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
-      </div>
+                    <div class="container px-4">
+                        <div class="row align-items-center">
+                            <!-- Left Side -->
+                            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                                <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
+                            </div>
 
-      <!-- Right Side -->
-      <div class="col-md-6 text-center text-md-end">
-        <small>
-          Powered by 
-          <a href="https://emca.tech/#" class="text-decoration-none fw-semibold" style="color: #940000 !important;">
-            EmCa Technologies
-          </a>
-        </small>
-      </div>
-    </div>
-  </div>
+                            <!-- Right Side -->
+                            <div class="col-md-6 text-center text-md-end">
+                                <small>
+                                    Powered by
+                                    <a href="https://emca.tech/#" class="text-decoration-none fw-semibold"
+                                        style="color: #940000 !important;">
+                                        EmCa Technologies
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
                 </footer>
             </div>
         </div>
@@ -602,29 +708,29 @@
         <script>
             // Globals to share state between details/print
             let currentDetailsMember = null;
-            function formatDateDisplay(value){
-                if(!value) return '-';
-                try{
+            function formatDateDisplay(value) {
+                if (!value) return '-';
+                try {
                     const d = new Date(value);
                     if (!isNaN(d.getTime())) {
-                        const dd = String(d.getDate()).padStart(2,'0');
-                        const mm = String(d.getMonth()+1).padStart(2,'0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
                         const yyyy = d.getFullYear();
                         return `${dd}/${mm}/${yyyy}`;
                     }
-                }catch(e){}
+                } catch (e) { }
                 const datePart = String(value).split('T')[0];
-                if (datePart && datePart.includes('-')){
-                    const [y,m,d] = datePart.split('-');
+                if (datePart && datePart.includes('-')) {
+                    const [y, m, d] = datePart.split('-');
                     if (y && m && d) return `${d}/${m}/${y}`;
                 }
                 return datePart || '-';
             }
-            function confirmThen(message, onConfirm){
-                Swal.fire({ title: message, icon: 'question', showCancelButton: true, confirmButtonText: 'Yes', cancelButtonText: 'No', confirmButtonColor: '#5b2a86', cancelButtonColor: '#6c757d' }).then(r=>{ if(r.isConfirmed) { try{ onConfirm && onConfirm(); }catch(e){ console.error(e); } }});
+            function confirmThen(message, onConfirm) {
+                Swal.fire({ title: message, icon: 'question', showCancelButton: true, confirmButtonText: 'Yes', cancelButtonText: 'No', confirmButtonColor: '#5b2a86', cancelButtonColor: '#6c757d' }).then(r => { if (r.isConfirmed) { try { onConfirm && onConfirm(); } catch (e) { console.error(e); } } });
             }
 
-            function handleAction(fn){ confirmThen('Proceed with this action?', fn); return false; }
+            function handleAction(fn) { confirmThen('Proceed with this action?', fn); return false; }
 
             function viewDetails(id) {
                 fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
@@ -638,7 +744,7 @@
                             `Member ID: ${m.member_id || '-'}`,
                             `Phone: ${m.phone_number || '-'}`,
                             `Email: ${m.email || '-'}`,
-                            `Gender: ${m.gender ? m.gender.charAt(0).toUpperCase()+m.gender.slice(1) : '-'}`,
+                            `Gender: ${m.gender ? m.gender.charAt(0).toUpperCase() + m.gender.slice(1) : '-'}`,
                             `Date of Birth: ${formatDateDisplay(m.date_of_birth)}`,
                             `NIDA Number: ${m.nida_number || '-'}`,
                             `Region: ${m.region || '-'}`,
@@ -653,11 +759,11 @@
                         const qrPayload = lines.join('\n');
                         const actionCell = (content, actionsHtml = '') => `<div class="d-flex align-items-center justify-content-between">${content}<span class="ms-2 d-inline-flex gap-2">${actionsHtml}</span></div>`;
                         const badge = (text, tone = 'secondary') => `<span class="badge bg-${tone}">${text}</span>`;
-                        const copyBtn = (text, title, icon) => `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('${(text||'').toString().replace(/'/g, "&#39;")}').then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' }))" title="${title}" aria-label="${title}"><i class="${icon}"></i></button>`;
+                        const copyBtn = (text, title, icon) => `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('${(text || '').toString().replace(/'/g, "&#39;")}').then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' }))" title="${title}" aria-label="${title}"><i class="${icon}"></i></button>`;
                         const mailto = (email) => {
                             if (!email) return '';
                             const raw = String(email).trim();
-                            const escaped = raw.replace(/[&"<>]/g, c => ({'&':'&amp;','"':'&quot;','<':'&lt;','>':'&gt;'}[c]));
+                            const escaped = raw.replace(/[&"<>]/g, c => ({ '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;' }[c]));
                             return `<a href="mailto:${escaped}" onclick="window.location.href=this.href; return false;" class="btn btn-sm btn-outline-primary" title="Send email" aria-label="Send email"><i class="fas fa-paper-plane"></i></a>`;
                         };
                         const telto = (phone) => {
@@ -686,7 +792,7 @@
 										${row('fas fa-id-badge', 'Member ID', m.member_id, copyBtn(m.member_id, 'Copy ID', 'fas fa-copy'))}
 										${row('fas fa-phone', 'Phone', m.phone_number, telto(m.phone_number) + copyBtn(m.phone_number, 'Copy phone', 'fas fa-copy'))}
 										${row('fas fa-envelope', 'Email', m.email, mailto(m.email) + copyBtn(m.email, 'Copy email', 'fas fa-copy'))}
-										${row('fas fa-venus-mars', 'Gender', m.gender ? badge(m.gender.charAt(0).toUpperCase()+m.gender.slice(1), (m.gender||'').toLowerCase()==='male' ? 'primary' : 'danger') : '—')}
+										${row('fas fa-venus-mars', 'Gender', m.gender ? badge(m.gender.charAt(0).toUpperCase() + m.gender.slice(1), (m.gender || '').toLowerCase() === 'male' ? 'primary' : 'danger') : '—')}
 										${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(m.date_of_birth))}
 										${row('fas fa-id-card', 'NIDA Number', m.nida_number)}
 									</tbody>
@@ -694,11 +800,11 @@
 								<div class=\"small text-uppercase text-muted mt-3 mb-1\">Location</div>
 								<table class=\"table table-bordered table-striped align-middle interactive-table\">
 									<tbody>
-										${row('fas fa-map', 'Region', m.region ? badge(m.region, 'secondary') : '—', mapsBtn([m.region,'Tanzania'].filter(Boolean).join(', ')))}
-										${row('fas fa-city', 'District', m.district ? badge(m.district, 'secondary') : '—', mapsBtn([m.district,m.region,'Tanzania'].filter(Boolean).join(', ')))}
-										${row('fas fa-location-arrow', 'Ward', m.ward ? badge(m.ward, 'secondary') : '—', mapsBtn([m.ward,m.district,m.region,'Tanzania'].filter(Boolean).join(', ')))}
-										${row('fas fa-road', 'Street', m.street || '—', mapsBtn([m.street,m.ward,m.district,m.region,'Tanzania'].filter(Boolean).join(', ')))}
-										${row('fas fa-address-card', 'Address', m.address || '—', mapsBtn([m.address,m.street,m.ward,m.district,m.region,'Tanzania'].filter(Boolean).join(', ')))}
+										${row('fas fa-map', 'Region', m.region ? badge(m.region, 'secondary') : '—', mapsBtn([m.region, 'Tanzania'].filter(Boolean).join(', ')))}
+										${row('fas fa-city', 'District', m.district ? badge(m.district, 'secondary') : '—', mapsBtn([m.district, m.region, 'Tanzania'].filter(Boolean).join(', ')))}
+										${row('fas fa-location-arrow', 'Ward', m.ward ? badge(m.ward, 'secondary') : '—', mapsBtn([m.ward, m.district, m.region, 'Tanzania'].filter(Boolean).join(', ')))}
+										${row('fas fa-road', 'Street', m.street || '—', mapsBtn([m.street, m.ward, m.district, m.region, 'Tanzania'].filter(Boolean).join(', ')))}
+										${row('fas fa-address-card', 'Address', m.address || '—', mapsBtn([m.address, m.street, m.ward, m.district, m.region, 'Tanzania'].filter(Boolean).join(', ')))}
 									</tbody>
 								</table>
 								<div class=\"small text-uppercase text-muted mt-3 mb-1\">Family</div>
@@ -727,7 +833,7 @@
                                     img.style.display = 'none';
                                     img.onload = () => { spinner && (spinner.style.display = 'none'); img.style.display = 'inline-block'; };
                                     img.onerror = () => { spinner && (spinner.style.display = 'none'); };
-                                } catch (e) {}
+                                } catch (e) { }
                                 img.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
                             }
                         }, 0);
@@ -741,12 +847,12 @@
                         btnPdf && (btnPdf.onclick = () => confirmThen('Generate a PDF of these details?', () => downloadMemberPDF()))
                         // Copy all details
                         const btnCopyAll = document.getElementById('btnCopyAllDetails');
-                        btnCopyAll && (btnCopyAll.onclick = () => confirmThen('Copy all details to clipboard?', () => { navigator.clipboard.writeText(`${qrPayload}`).then(()=>Swal.fire({ icon:'success', title:'Copied', timer:900, showConfirmButton:false })).catch(()=>Swal.fire({ icon:'error', title:'Copy failed' })); }));
+                        btnCopyAll && (btnCopyAll.onclick = () => confirmThen('Copy all details to clipboard?', () => { navigator.clipboard.writeText(`${qrPayload}`).then(() => Swal.fire({ icon: 'success', title: 'Copied', timer: 900, showConfirmButton: false })).catch(() => Swal.fire({ icon: 'error', title: 'Copy failed' })); }));
                         // Header edit buttons removed per requirement
                     })
                     .catch((err) => {
                         document.getElementById('memberDetailsBody').innerHTML = `
-                            <div class="text-danger">Failed to load member details. ${err && err.message ? '('+err.message+')' : ''}</div>
+                            <div class="text-danger">Failed to load member details. ${err && err.message ? '(' + err.message + ')' : ''}</div>
                             <div class="mt-2">
                                 <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
                             </div>`;
@@ -754,22 +860,22 @@
                     });
             }
 
-			// Ensure openEdit sets state for chooser and header buttons
- 			let currentEditMember = null;
+            // Ensure openEdit sets state for chooser and header buttons
+            let currentEditMember = null;
             function openEdit(id) {
- 				confirmThen('Open edit for this member?', () => {
-					fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
- 					.then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(m => {
- 						currentEditMember = m;
- 						const chooser = new bootstrap.Modal(document.getElementById('editSectionChooserModal'));
- 						chooser.show();
- 					})
- 					.catch(err => {
- 						Swal.fire({ icon: 'error', title: 'Failed to load member', text: err && err.message ? err.message : 'Please try again.' });
- 					});
-				});
- 			}
+                confirmThen('Open edit for this member?', () => {
+                    fetch(`{{ url('/members') }}/${id}`, { headers: { 'Accept': 'application/json' } })
+                        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                        .then(m => {
+                            currentEditMember = m;
+                            const chooser = new bootstrap.Modal(document.getElementById('editSectionChooserModal'));
+                            chooser.show();
+                        })
+                        .catch(err => {
+                            Swal.fire({ icon: 'error', title: 'Failed to load member', text: err && err.message ? err.message : 'Please try again.' });
+                        });
+                });
+            }
 
             // Wire chooser buttons to open respective modals with prefill
             document.getElementById('btnEditPersonal').addEventListener('click', () => {
@@ -837,7 +943,7 @@
             });
 
             // Submit handlers for section forms
-            document.getElementById('editPersonalForm').addEventListener('submit', function(e) {
+            document.getElementById('editPersonalForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const id = document.getElementById('edit_personal_id').value;
                 const fd = new FormData();
@@ -854,13 +960,13 @@
                 fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
                     .then(r => r.json())
                     .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
+                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(() => location.reload()); }
                         else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
                     })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
+                    .catch(() => Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
-            document.getElementById('editLocationForm').addEventListener('submit', function(e) {
+            document.getElementById('editLocationForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const id = document.getElementById('edit_location_id').value;
                 const fd = new FormData();
@@ -873,13 +979,13 @@
                 fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
                     .then(r => r.json())
                     .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
+                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(() => location.reload()); }
                         else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
                     })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
+                    .catch(() => Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
-            document.getElementById('editFamilyForm').addEventListener('submit', function(e) {
+            document.getElementById('editFamilyForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const id = document.getElementById('edit_family_id').value;
                 const fd = new FormData();
@@ -889,10 +995,10 @@
                 fetch(`{{ url('/members') }}/${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
                     .then(r => r.json())
                     .then(res => {
-                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(()=>location.reload()); }
+                        if (res.success) { Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false }).then(() => location.reload()); }
                         else { Swal.fire({ icon: 'error', title: 'Update failed', text: res.message || 'Please try again.' }); }
                     })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
+                    .catch(() => Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
             // Quick Add modal cascading + tribe
@@ -922,7 +1028,7 @@
                 tribeEl.onchange = () => { const show = tribeEl.value === 'Other'; otherGroup.style.display = show ? '' : 'none'; if (!show) otherInput.value = ''; };
             }
 
-            function resetAddMemberForm(){
+            function resetAddMemberForm() {
                 // Reset form fields
                 const form = document.getElementById('quickAddMemberForm');
                 if (form && typeof form.reset === 'function') { form.reset(); }
@@ -930,11 +1036,11 @@
                 const otherGroup = document.getElementById('add_other_tribe_group');
                 if (otherGroup) otherGroup.style.display = 'none';
                 // Clear any existing options in selects to avoid stale state
-                ['add_region','add_district','add_ward','add_tribe'].forEach(id => { const s = document.getElementById(id); if (s) s.innerHTML = ''; });
+                ['add_region', 'add_district', 'add_ward', 'add_tribe'].forEach(id => { const s = document.getElementById(id); if (s) s.innerHTML = ''; });
                 // Remove any validation classes/messages if present
                 const modal = document.getElementById('addMemberModal');
                 if (modal) {
-                    modal.querySelectorAll('.is-invalid, .is-valid').forEach(el => el.classList.remove('is-invalid','is-valid'));
+                    modal.querySelectorAll('.is-invalid, .is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
                     modal.querySelectorAll('.invalid-feedback, .valid-feedback').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
                 }
             }
@@ -943,7 +1049,7 @@
             // Ensure fresh state after cancel/close
             document.getElementById('addMemberModal').addEventListener('hidden.bs.modal', resetAddMemberForm);
 
-            document.getElementById('quickAddMemberForm').addEventListener('submit', function(e) {
+            document.getElementById('quickAddMemberForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const fd = new FormData();
                 fd.append('full_name', document.getElementById('add_full_name').value);
@@ -957,59 +1063,59 @@
                 fd.append('tribe', tribeVal === 'Other' ? '' : tribeVal);
                 fd.append('other_tribe', document.getElementById('add_other_tribe').value);
                 fetch(`{{ url('/members') }}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: fd })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
                             // Reset form state before reload just in case
                             resetAddMemberForm();
-                            Swal.fire({ icon: 'success', title: 'Member registered', timer: 1400, showConfirmButton: false }).then(()=>location.reload());
-                    } else {
+                            Swal.fire({ icon: 'success', title: 'Member registered', timer: 1400, showConfirmButton: false }).then(() => location.reload());
+                        } else {
                             Swal.fire({ icon: 'error', title: 'Registration failed', text: res.message || 'Please review and try again.' });
-                    }
-                })
-                    .catch(()=> Swal.fire({ icon: 'error', title: 'Network error' }));
+                        }
+                    })
+                    .catch(() => Swal.fire({ icon: 'error', title: 'Network error' }));
             });
 
             function downloadArchiveReport(member, reason) {
                 try {
                     console.log('Starting download for member:', member);
-                    
+
                     // Generate the report HTML
                     const reportHTML = generateArchiveReportHTML(member, reason);
                     console.log('Generated HTML length:', reportHTML.length);
-                    
+
                     // Method 1: Try blob download first
                     if (window.Blob && window.URL) {
                         try {
-                            const blob = new Blob([reportHTML], { 
-                                type: 'text/html;charset=utf-8' 
+                            const blob = new Blob([reportHTML], {
+                                type: 'text/html;charset=utf-8'
                             });
                             console.log('Created blob:', blob);
-                            
+
                             const url = window.URL.createObjectURL(blob);
                             console.log('Created URL:', url);
-                            
+
                             const link = document.createElement('a');
                             link.href = url;
                             link.download = `Member_Archive_Report_${member.member_id || member.id || 'Unknown'}_${new Date().toISOString().split('T')[0]}.html`;
                             link.style.display = 'none';
-                            
+
                             console.log('Download filename:', link.download);
-                            
+
                             document.body.appendChild(link);
-                            
+
                             // Trigger download
                             setTimeout(() => {
                                 link.click();
                                 console.log('Download triggered');
-                                
+
                                 setTimeout(() => {
                                     document.body.removeChild(link);
                                     window.URL.revokeObjectURL(url);
                                     console.log('Cleanup completed');
                                 }, 100);
                             }, 100);
-                            
+
                             // Show success message
                             Swal.fire({
                                 icon: 'success',
@@ -1018,20 +1124,20 @@
                                 timer: 2000,
                                 showConfirmButton: false
                             });
-                            
+
                             return;
                         } catch (blobError) {
                             console.log('Blob method failed, trying alternative:', blobError);
                         }
                     }
-                    
+
                     // Method 2: Fallback - open in new window and let user save
                     const newWindow = window.open('', '_blank');
                     if (newWindow) {
                         newWindow.document.write(reportHTML);
                         newWindow.document.close();
                         newWindow.focus();
-                        
+
                         // Show instructions
                         Swal.fire({
                             icon: 'info',
@@ -1051,7 +1157,7 @@
                     } else {
                         throw new Error('Could not open new window');
                     }
-                    
+
                 } catch (error) {
                     console.error('Download error:', error);
                     Swal.fire({
@@ -1318,14 +1424,14 @@
             function printArchiveReport(member, reason) {
                 // Create a new window for printing
                 const printWindow = window.open('', '_blank', 'width=800,height=600');
-                
+
                 // Generate the report HTML using the shared function
                 const reportHTML = generateArchiveReportHTML(member, reason);
-                
+
                 // Write the HTML to the new window
                 printWindow.document.write(reportHTML);
                 printWindow.document.close();
-                
+
                 // Focus the window and trigger print dialog
                 printWindow.focus();
                 setTimeout(() => {
@@ -1372,55 +1478,55 @@
                                 reason: result.value
                             })
                         })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else if (response.status === 422) {
-                                return response.json().then(data => {
-                                    throw new Error(data.message || 'Validation error occurred');
-                                });
-                            } else {
-                                throw new Error(`Server error: ${response.status}`);
-                            }
-                        })
-                        .then(res => {
-                            if (res.success) {
-                                document.getElementById(`row-${id}`)?.remove();
-                                Swal.fire({ 
-                                    icon: 'success', 
-                                    title: 'Member Archived', 
-                                    html: `
+                            .then(response => {
+                                if (response.ok) {
+                                    return response.json();
+                                } else if (response.status === 422) {
+                                    return response.json().then(data => {
+                                        throw new Error(data.message || 'Validation error occurred');
+                                    });
+                                } else {
+                                    throw new Error(`Server error: ${response.status}`);
+                                }
+                            })
+                            .then(res => {
+                                if (res.success) {
+                                    document.getElementById(`row-${id}`)?.remove();
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Member Archived',
+                                        html: `
                                         <div class="text-start">
                                             <p><strong>Reason:</strong> ${result.value}</p>
                                             <p>The member has been moved to archived status. All financial records have been preserved.</p>
                                         </div>
-                                    `, 
-                                    showConfirmButton: true,
-                                    showCancelButton: true,
-                                    showDenyButton: true,
-                                    confirmButtonText: '📄 Download Report',
-                                    denyButtonText: '🖨️ Print Report',
-                                    cancelButtonText: 'Close',
-                                    confirmButtonColor: '#28a745',
-                                    denyButtonColor: '#007bff',
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    timer: 0
-                                }).then((actionResult) => {
-                                    if (actionResult.isConfirmed) {
-                                        downloadArchiveReport(res.member, result.value);
-                                    } else if (actionResult.isDenied) {
-                                        printArchiveReport(res.member, result.value);
-                                    }
-                                });
-                            } else {
-                                Swal.fire({ icon: 'error', title: 'Delete failed', text: res.message || 'Please try again.' });
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Delete error:', error);
-                            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
-                        });
+                                    `,
+                                        showConfirmButton: true,
+                                        showCancelButton: true,
+                                        showDenyButton: true,
+                                        confirmButtonText: '📄 Download Report',
+                                        denyButtonText: '🖨️ Print Report',
+                                        cancelButtonText: 'Close',
+                                        confirmButtonColor: '#28a745',
+                                        denyButtonColor: '#007bff',
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        timer: 0
+                                    }).then((actionResult) => {
+                                        if (actionResult.isConfirmed) {
+                                            downloadArchiveReport(res.member, result.value);
+                                        } else if (actionResult.isDenied) {
+                                            printArchiveReport(res.member, result.value);
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Delete failed', text: res.message || 'Please try again.' });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Delete error:', error);
+                                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+                            });
                     }
                 });
             }
@@ -1464,7 +1570,7 @@
                 });
 
             function downloadMemberCSV(m) {
-                const headers = ['Full Name','Member ID','Phone','Email','Gender','Date of Birth','NIDA Number','Region','District','Ward','Street','Address','Living with family','Family relationship','Tribe','Other tribe'];
+                const headers = ['Full Name', 'Member ID', 'Phone', 'Email', 'Gender', 'Date of Birth', 'NIDA Number', 'Region', 'District', 'Ward', 'Street', 'Address', 'Living with family', 'Family relationship', 'Tribe', 'Other tribe'];
                 const values = [
                     m.full_name || '',
                     m.member_id || '',
@@ -1496,58 +1602,60 @@
             function printMemberDetails() {
                 const content = document.getElementById('memberDetailsPrint');
                 const w = window.open('', '_blank');
-                const logoUrl = `{{ asset('assets/images/waumini_link_logo.png') }}`;
+                const logoUrl = `{{ asset('assets/images/aict.png') }}`;
                 const printedAt = new Date().toLocaleString();
                 const printedBy = `{{ Auth::user()->name ?? 'User' }}`;
                 const yearNow = new Date().getFullYear();
                 const m = currentDetailsMember || null;
-                const payload = (function(mm){ if(!mm) return ''; return [
-                    'Full Name: ' + (mm.full_name || '-'),
-                    'Member ID: ' + (mm.member_id || '-'),
-                    'Phone: ' + (mm.phone_number || '-'),
-                    'Email: ' + (mm.email || '-'),
-                    'Gender: ' + (mm.gender ? mm.gender.charAt(0).toUpperCase()+mm.gender.slice(1) : '-'),
-                    'Date of Birth: ' + formatDateDisplay(mm.date_of_birth),
-                    'NIDA Number: ' + (mm.nida_number || '-'),
-                    'Region: ' + (mm.region || '-'),
-                    'District: ' + (mm.district || '-'),
-                    'Ward: ' + (mm.ward || '-'),
-                    'Street: ' + (mm.street || '-'),
-                    'Address: ' + (mm.address || '-'),
-                    'Living with family: ' + (mm.living_with_family || '-'),
-                    'Family relationship: ' + (mm.family_relationship || '-'),
-                    'Tribe: ' + ((mm.tribe || '-') + (mm.other_tribe ? (' ('+mm.other_tribe+')') : ''))
-                ].join('\n'); })(m);
+                const payload = (function (mm) {
+                    if (!mm) return ''; return [
+                        'Full Name: ' + (mm.full_name || '-'),
+                        'Member ID: ' + (mm.member_id || '-'),
+                        'Phone: ' + (mm.phone_number || '-'),
+                        'Email: ' + (mm.email || '-'),
+                        'Gender: ' + (mm.gender ? mm.gender.charAt(0).toUpperCase() + mm.gender.slice(1) : '-'),
+                        'Date of Birth: ' + formatDateDisplay(mm.date_of_birth),
+                        'NIDA Number: ' + (mm.nida_number || '-'),
+                        'Region: ' + (mm.region || '-'),
+                        'District: ' + (mm.district || '-'),
+                        'Ward: ' + (mm.ward || '-'),
+                        'Street: ' + (mm.street || '-'),
+                        'Address: ' + (mm.address || '-'),
+                        'Living with family: ' + (mm.living_with_family || '-'),
+                        'Family relationship: ' + (mm.family_relationship || '-'),
+                        'Tribe: ' + ((mm.tribe || '-') + (mm.other_tribe ? (' (' + mm.other_tribe + ')') : ''))
+                    ].join('\n');
+                })(m);
 
                 // Prebuild section HTML using current window's data
-                function row(label, value){ return '<tr><td>' + label + '</td><td><strong>' + (value ? String(value) : '—') + '</strong></td></tr>'; }
+                function row(label, value) { return '<tr><td>' + label + '</td><td><strong>' + (value ? String(value) : '—') + '</strong></td></tr>'; }
                 let sectionsHtml = '';
                 if (m) {
-                    sectionsHtml += '<div class="section-title">Personal</div>'+
-                        '<table class="table"><tbody>'+
-                        row('Full Name', m.full_name)+
-                        row('Member ID', m.member_id)+
-                        row('Phone', m.phone_number)+
-                        row('Email', m.email)+
-                        row('Gender', m.gender ? (m.gender.charAt(0).toUpperCase()+m.gender.slice(1)) : '')+
-                        row('Date of Birth', formatDateDisplay(m.date_of_birth))+
-                        row('NIDA Number', m.nida_number)+
+                    sectionsHtml += '<div class="section-title">Personal</div>' +
+                        '<table class="table"><tbody>' +
+                        row('Full Name', m.full_name) +
+                        row('Member ID', m.member_id) +
+                        row('Phone', m.phone_number) +
+                        row('Email', m.email) +
+                        row('Gender', m.gender ? (m.gender.charAt(0).toUpperCase() + m.gender.slice(1)) : '') +
+                        row('Date of Birth', formatDateDisplay(m.date_of_birth)) +
+                        row('NIDA Number', m.nida_number) +
                         '</tbody></table>';
 
-                    sectionsHtml += '<div class="section-title">Location</div>'+
-                        '<table class="table"><tbody>'+
-                        row('Region', m.region)+
-                        row('District', m.district)+
-                        row('Ward', m.ward)+
-                        row('Street', m.street)+
-                        row('Address', m.address)+
+                    sectionsHtml += '<div class="section-title">Location</div>' +
+                        '<table class="table"><tbody>' +
+                        row('Region', m.region) +
+                        row('District', m.district) +
+                        row('Ward', m.ward) +
+                        row('Street', m.street) +
+                        row('Address', m.address) +
                         '</tbody></table>';
 
-                    sectionsHtml += '<div class="section-title">Family</div>'+
-                        '<table class="table"><tbody>'+
-                        row('Living with family', m.living_with_family)+
-                        row('Family relationship', m.family_relationship)+
-                        row('Tribe', (m.tribe || '') + (m.other_tribe ? (' ('+m.other_tribe+')') : ''))+
+                    sectionsHtml += '<div class="section-title">Family</div>' +
+                        '<table class="table"><tbody>' +
+                        row('Living with family', m.living_with_family) +
+                        row('Family relationship', m.family_relationship) +
+                        row('Tribe', (m.tribe || '') + (m.other_tribe ? (' (' + m.other_tribe + ')') : '')) +
                         '</tbody></table>';
                 }
 
@@ -1585,26 +1693,26 @@
                 w.document.close();
                 w.focus();
                 // After doc open, set QR and wait for load
-                setTimeout(function(){
-                    qrUrlPromise.then(function(url){
+                setTimeout(function () {
+                    qrUrlPromise.then(function (url) {
                         const fallback = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(payload || 'Member');
                         try {
                             const img = w.document.getElementById('printQrImg');
                             if (img) {
-                                img.onload = function(){ setTimeout(function(){ try{ w.print(); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 200); }, 150); };
-                                img.onerror = function(){ setTimeout(function(){ try{ w.print(); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 200); }, 200); };
+                                img.onload = function () { setTimeout(function () { try { w.print(); } catch (e) { } setTimeout(function () { try { w.close(); } catch (e) { } }, 200); }, 150); };
+                                img.onerror = function () { setTimeout(function () { try { w.print(); } catch (e) { } setTimeout(function () { try { w.close(); } catch (e) { } }, 200); }, 200); };
                                 img.src = url || fallback;
                             } else {
-                                setTimeout(function(){ try{ w.print(); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 200); }, 300);
+                                setTimeout(function () { try { w.print(); } catch (e) { } setTimeout(function () { try { w.close(); } catch (e) { } }, 200); }, 300);
                             }
-                        } catch(e){ setTimeout(function(){ try{ w.print(); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 200); }, 300); }
+                        } catch (e) { setTimeout(function () { try { w.print(); } catch (e) { } setTimeout(function () { try { w.close(); } catch (e) { } }, 200); }, 300); }
                     });
                 }, 50);
             }
 
-            function downloadMemberPDF(){
+            function downloadMemberPDF() {
                 const m = currentDetailsMember || null;
-                if (!m) return Swal.fire({ icon:'error', title:'Open details first' });
+                if (!m) return Swal.fire({ icon: 'error', title: 'Open details first' });
                 // Build a hidden container to render into PDF
                 const container = document.createElement('div');
                 container.style.position = 'fixed';
@@ -1612,13 +1720,13 @@
                 container.style.top = '0';
                 container.style.width = '800px';
                 container.innerHTML = '';
-                const logoUrl = `{{ asset('assets/images/waumini_link_logo.png') }}`;
+                const logoUrl = `{{ asset('assets/images/aict.png') }}`;
                 const payload = [
                     'Full Name: ' + (m.full_name || '-'),
                     'Member ID: ' + (m.member_id || '-'),
                     'Phone: ' + (m.phone_number || '-'),
                     'Email: ' + (m.email || '-'),
-                    'Gender: ' + (m.gender ? m.gender.charAt(0).toUpperCase()+m.gender.slice(1) : '-'),
+                    'Gender: ' + (m.gender ? m.gender.charAt(0).toUpperCase() + m.gender.slice(1) : '-'),
                     'Date of Birth: ' + formatDateDisplay(m.date_of_birth),
                     'NIDA Number: ' + (m.nida_number || '-'),
                     'Region: ' + (m.region || '-'),
@@ -1628,58 +1736,58 @@
                     'Address: ' + (m.address || '-'),
                     'Living with family: ' + (m.living_with_family || '-'),
                     'Family relationship: ' + (m.family_relationship || '-'),
-                    'Tribe: ' + ((m.tribe || '-') + (m.other_tribe ? (' ('+m.other_tribe+')') : ''))
+                    'Tribe: ' + ((m.tribe || '-') + (m.other_tribe ? (' (' + m.other_tribe + ')') : ''))
                 ].join('\n');
                 // Generate data URL for QR to avoid CORS issues in PDF
-                getQrDataUrl(payload, 120).then(function(qrDataUrl){
+                getQrDataUrl(payload, 120).then(function (qrDataUrl) {
                     const qrImgSrc = qrDataUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(payload));
-                function row(label, value){ return '<tr><td style="width:220px;color:#6c757d;border-left:4px solid #5b2a86; padding:8px 10px">' + label + '</td><td style="padding:8px 10px"><strong>' + (value ? String(value) : '—') + '</strong></td></tr>'; }
-                let html = '';
-                html += '<div style="border:1px solid #e9ecef;border-radius:10px;padding:14px 16px;margin-bottom:16px;background:linear-gradient(135deg,#f4f6ff 0%,#ffffff 100%)">'+
-                        '<div style="display:flex;align-items:center;justify-content:space-between">'+
-                        '<div style="display:flex;align-items:center;gap:12px">'+
-                        '<img src="'+logoUrl+'" style="height:44px"/><div><h3 style="margin:0;color:#1f2b6c">Member Details</h3>'+ 
-                        '</div></div></div>'+ 
-                        '<div><img src="'+qrImgSrc+'" style="width:120px;height:120px;border:3px solid #5b2a86;border-radius:8px;padding:4px;background:#fff"/></div>'+ 
+                    function row(label, value) { return '<tr><td style="width:220px;color:#6c757d;border-left:4px solid #5b2a86; padding:8px 10px">' + label + '</td><td style="padding:8px 10px"><strong>' + (value ? String(value) : '—') + '</strong></td></tr>'; }
+                    let html = '';
+                    html += '<div style="border:1px solid #e9ecef;border-radius:10px;padding:14px 16px;margin-bottom:16px;background:linear-gradient(135deg,#f4f6ff 0%,#ffffff 100%)">' +
+                        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+                        '<div style="display:flex;align-items:center;gap:12px">' +
+                        '<img src="' + logoUrl + '" style="height:44px"/><div><h3 style="margin:0;color:#1f2b6c">Member Details</h3>' +
+                        '</div></div></div>' +
+                        '<div><img src="' + qrImgSrc + '" style="width:120px;height:120px;border:3px solid #5b2a86;border-radius:8px;padding:4px;background:#fff"/></div>' +
                         '</div></div>';
-                html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Personal</div>';
-                html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>'+
-                        row('Full Name', m.full_name)+row('Member ID', m.member_id)+row('Phone', m.phone_number)+row('Email', m.email)+row('Gender', m.gender ? (m.gender.charAt(0).toUpperCase()+m.gender.slice(1)) : '')+row('Date of Birth', formatDateDisplay(m.date_of_birth))+row('NIDA Number', m.nida_number)+
+                    html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Personal</div>';
+                    html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>' +
+                        row('Full Name', m.full_name) + row('Member ID', m.member_id) + row('Phone', m.phone_number) + row('Email', m.email) + row('Gender', m.gender ? (m.gender.charAt(0).toUpperCase() + m.gender.slice(1)) : '') + row('Date of Birth', formatDateDisplay(m.date_of_birth)) + row('NIDA Number', m.nida_number) +
                         '</tbody></table>';
-                html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Location</div>';
-                html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>'+
-                        row('Region', m.region)+row('District', m.district)+row('Ward', m.ward)+row('Street', m.street)+row('Address', m.address)+
+                    html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Location</div>';
+                    html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>' +
+                        row('Region', m.region) + row('District', m.district) + row('Ward', m.ward) + row('Street', m.street) + row('Address', m.address) +
                         '</tbody></table>';
-                html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Family</div>';
-                html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>'+
-                        row('Living with family', m.living_with_family)+row('Family relationship', m.family_relationship)+row('Tribe', (m.tribe || '') + (m.other_tribe ? (' ('+m.other_tribe+')') : ''))+
+                    html += '<div style="font-size:12px;letter-spacing:1px;color:#6c757d;text-transform:uppercase;margin:14px 0 6px">Family</div>';
+                    html += '<table style="width:100%;border-collapse:separate;border-spacing:0"><tbody>' +
+                        row('Living with family', m.living_with_family) + row('Family relationship', m.family_relationship) + row('Tribe', (m.tribe || '') + (m.other_tribe ? (' (' + m.other_tribe + ')') : '')) +
                         '</tbody></table>';
-                html += '<div style="margin-top:18px;padding-top:10px;border-top:1px dashed #ced4da;font-size:12px;color:#6c757d;text-align:center">Powered by <a href="https://emca.tech/#" target="_blank" style="color:#940000;text-decoration:none">EmCa Technologies</a></div>';
-                container.innerHTML = html;
-                document.body.appendChild(container);
-                // Preload images before generating PDF
-                const imgs = Array.from(container.querySelectorAll('img'));
-                Promise.all(imgs.map(img => new Promise(res => { if (img.complete) return res(); img.onload = () => res(); img.onerror = () => res(); }))).then(() => {
-                // Load html2pdf and generate
-                function generate(){
-                    window.html2pdf().set({ margin:10, filename: (m.member_id || 'member') + '.pdf', image: { type:'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS:true, allowTaint:true }, jsPDF: { unit:'mm', format:'a4', orientation:'portrait' } }).from(container).save().then(()=>{ document.body.removeChild(container); }).catch(()=>{ document.body.removeChild(container); Swal.fire({ icon:'error', title:'PDF failed' }); });
-                }
-                if (!window.html2pdf) {
-                    const s = document.createElement('script');
-                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                    s.onload = generate;
-                    s.onerror = () => { document.body.removeChild(container); Swal.fire({ icon:'error', title:'Failed to load PDF lib' }); };
-                    document.head.appendChild(s);
-                } else {
-                    generate();
-                }
-                });
+                    html += '<div style="margin-top:18px;padding-top:10px;border-top:1px dashed #ced4da;font-size:12px;color:#6c757d;text-align:center">Powered by <a href="https://emca.tech/#" target="_blank" style="color:#940000;text-decoration:none">EmCa Technologies</a></div>';
+                    container.innerHTML = html;
+                    document.body.appendChild(container);
+                    // Preload images before generating PDF
+                    const imgs = Array.from(container.querySelectorAll('img'));
+                    Promise.all(imgs.map(img => new Promise(res => { if (img.complete) return res(); img.onload = () => res(); img.onerror = () => res(); }))).then(() => {
+                        // Load html2pdf and generate
+                        function generate() {
+                            window.html2pdf().set({ margin: 10, filename: (m.member_id || 'member') + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, allowTaint: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => { document.body.removeChild(container); }).catch(() => { document.body.removeChild(container); Swal.fire({ icon: 'error', title: 'PDF failed' }); });
+                        }
+                        if (!window.html2pdf) {
+                            const s = document.createElement('script');
+                            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                            s.onload = generate;
+                            s.onerror = () => { document.body.removeChild(container); Swal.fire({ icon: 'error', title: 'Failed to load PDF lib' }); };
+                            document.head.appendChild(s);
+                        } else {
+                            generate();
+                        }
+                    });
                 });
             }
 
             // Cascading selects for Region -> District -> Ward and Tribe
             let tzLocations = null;
-            let tribeList = ['Chaga','Sukuma','Haya','Nyakyusa','Makonde','Hehe','Other'];
+            let tribeList = ['Chaga', 'Sukuma', 'Haya', 'Nyakyusa', 'Makonde', 'Hehe', 'Other'];
             function ensureLocationsLoaded() {
                 if (tzLocations) return Promise.resolve(tzLocations);
                 return fetch(`{{ asset('data/tanzania-locations.json') }}`)
@@ -1743,7 +1851,7 @@
 
             // Preload QR lib early and accessibility: focus first actionable element when modals open
             ensureQrLib();
-            document.getElementById('memberDetailsModal').addEventListener('shown.bs.modal', function(){
+            document.getElementById('memberDetailsModal').addEventListener('shown.bs.modal', function () {
                 const first = document.getElementById('btnHeaderEditPersonal') || document.getElementById('btnPrintDetails');
                 first && first.focus();
             });
@@ -1751,39 +1859,39 @@
             // Set footer year
             document.getElementById('year').textContent = new Date().getFullYear();
 
-			// QR helper: load once and render
-			let qrLibLoaded = false;
-			function ensureQrLib() {
-				return new Promise((resolve) => {
-					if (qrLibLoaded || window.QRCode) { qrLibLoaded = true; return resolve(); }
-					const s = document.createElement('script');
-					s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-					s.onload = () => { qrLibLoaded = true; resolve(); };
-					document.head.appendChild(s);
-				});
-			}
-			function renderQrToCanvas(canvasId, text, size = 96) {
-				ensureQrLib().then(() => {
-					setTimeout(() => {
-						const c = document.getElementById(canvasId);
-						if (!c || !window.QRCode) return;
-						QRCode.toCanvas(c, text, { width: size, margin: 1 }, function(err) {
-							if (err) {
-								console.error(err);
-								const holder = c.parentElement;
-								if (holder) holder.innerHTML = '<span class="badge bg-warning text-dark">QR unavailable</span>';
-							}
-						});
-					}, 50);
-				});
-			}
+            // QR helper: load once and render
+            let qrLibLoaded = false;
+            function ensureQrLib() {
+                return new Promise((resolve) => {
+                    if (qrLibLoaded || window.QRCode) { qrLibLoaded = true; return resolve(); }
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+                    s.onload = () => { qrLibLoaded = true; resolve(); };
+                    document.head.appendChild(s);
+                });
+            }
+            function renderQrToCanvas(canvasId, text, size = 96) {
+                ensureQrLib().then(() => {
+                    setTimeout(() => {
+                        const c = document.getElementById(canvasId);
+                        if (!c || !window.QRCode) return;
+                        QRCode.toCanvas(c, text, { width: size, margin: 1 }, function (err) {
+                            if (err) {
+                                console.error(err);
+                                const holder = c.parentElement;
+                                if (holder) holder.innerHTML = '<span class="badge bg-warning text-dark">QR unavailable</span>';
+                            }
+                        });
+                    }, 50);
+                });
+            }
 
             // Build a QR data URL for embedding (avoids CORS issues when printing/PDF)
             function getQrDataUrl(text, size = 120) {
                 return new Promise((resolve) => {
                     ensureQrLib().then(() => {
                         if (window.QRCode && QRCode.toDataURL) {
-                            QRCode.toDataURL(text, { width: size, margin: 1 }, function(err, url){
+                            QRCode.toDataURL(text, { width: size, margin: 1 }, function (err, url) {
                                 if (err) { console.error(err); resolve(''); }
                                 else { resolve(url || ''); }
                             });
@@ -1801,5 +1909,6 @@
             window.printMemberDetails = printMemberDetails;
             window.downloadMemberPDF = downloadMemberPDF;
         </script>
-    </body>
+</body>
+
 </html>

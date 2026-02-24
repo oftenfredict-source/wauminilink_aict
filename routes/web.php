@@ -248,6 +248,10 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::get('/members/export/csv', [MemberController::class, 'exportCsv'])->name('members.export.csv');
 
     // PUT and DELETE routes must come before GET routes with parameters
+    Route::get('/members/{member}/complete-registration', [MemberController::class, 'showCompleteRegistration'])
+        ->middleware('permission:members.edit')
+        ->where('member', '[0-9]+')
+        ->name('members.complete_registration');
     Route::put('/members/{member}', [MemberController::class, 'update'])
         ->middleware('permission:members.edit')
         ->where('member', '[0-9]+')
@@ -316,6 +320,9 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
 
     // Children routes
     Route::post('/children', [MemberController::class, 'storeChild'])->name('children.store');
+    Route::post('/children/{child}/promote', [MemberController::class, 'promoteToMember'])
+        ->middleware('permission:members.create')
+        ->name('children.promote');
     Route::delete('/children/{child}', [MemberController::class, 'destroyChild'])->name('children.destroy');
 
     // List all members for debugging

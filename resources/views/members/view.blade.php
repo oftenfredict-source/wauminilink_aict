@@ -1244,12 +1244,13 @@
                                             <tr>
                                                 <th>#</th>
                                                 <th>Name</th>
+                                                <th>Envelope</th>
                                                 <th>Age</th>
                                                 <th>Gender</th>
                                                 <th>Date of Birth</th>
                                                 <th>Parent/Guardian</th>
                                                 <th>Age Group</th>
-                                                <th class="text-end" style="width: 100px;">Actions</th>
+                                                <th class="text-end" style="width: 120px;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1261,7 +1262,24 @@
                                                 <tr>
                                                     <td class="text-muted">{{ $loop->iteration }}</td>
                                                     <td>
-                                                        <strong>{{ $child->full_name }}</strong>
+                                                        <div class="d-flex align-items-center">
+                                                            <strong>{{ $child->full_name }}</strong>
+                                                            @if($child->linked_member_id)
+                                                                <span class="badge bg-primary ms-2" title="Has separate member record">
+                                                                    <i class="fas fa-id-card me-1"></i>Member
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        @if($child->envelope_number)
+                                                            <span class="badge bg-light text-dark border">
+                                                                <i
+                                                                    class="fas fa-envelope me-1 text-primary"></i>{{ $child->envelope_number }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-muted small">None</span>
+                                                        @endif
                                                     </td>
                                                     <td>{{ $age }} years</td>
                                                     <td>
@@ -1276,27 +1294,13 @@
                                                             <a href="javascript:void(0);"
                                                                 onclick="viewDetails({{ $child->member->id }})"
                                                                 class="text-decoration-none text-primary" style="cursor: pointer;">
-                                                                <i class="fas fa-user me-1"></i>{{ $child->member->full_name }}
-                                                                <span class="badge bg-success ms-1"
-                                                                    style="font-size: 0.7em;">Member</span>
+                                                                <i class="fas fa-user-friends me-1"></i>{{ $child->member->full_name }}
                                                             </a>
                                                         @elseif($child->parent_name)
                                                             <div>
                                                                 <i class="fas fa-user-friends me-1 text-warning"></i>
                                                                 <strong>{{ $child->parent_name }}</strong>
-                                                                <span class="badge bg-warning text-dark ms-1"
-                                                                    style="font-size: 0.7em;">Non-Member</span>
                                                             </div>
-                                                            @if($child->parent_phone)
-                                                                <small class="text-muted">
-                                                                    <i class="fas fa-phone me-1"></i>{{ $child->parent_phone }}
-                                                                </small>
-                                                            @endif
-                                                            @if($child->parent_relationship)
-                                                                <br><small class="text-muted">
-                                                                    <i class="fas fa-link me-1"></i>{{ $child->parent_relationship }}
-                                                                </small>
-                                                            @endif
                                                         @else
                                                             <span class="text-muted">—</span>
                                                         @endif
@@ -1305,21 +1309,32 @@
                                                         @if($ageGroup === 'infant')
                                                             <span class="badge bg-secondary">Infant (&lt;3)</span>
                                                         @elseif($ageGroup === 'sunday_school')
-                                                            <span class="badge bg-success">Sunday School (3-12)</span>
-                                                        @elseif($ageGroup === 'teenager')
-                                                            <span class="badge bg-warning text-dark">Teenager (13-20)</span>
+                                                            <span class="badge bg-success">Child (3-12)</span>
                                                         @else
-                                                            <span class="badge bg-dark">Adult (21+)</span>
+                                                            <span class="badge bg-warning text-dark">Youth (13-20)</span>
                                                         @endif
                                                     </td>
                                                     <td class="text-end">
                                                         <div class="d-flex flex-row gap-1 justify-content-end align-items-center"
                                                             style="flex-wrap: nowrap;">
+                                                            @if($child->linked_member_id)
+                                                                <button type="button" class="btn btn-sm btn-primary"
+                                                                    onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $child->linked_member_id }}); } else { alert('Function not available'); }"
+                                                                    title="View Member Record">
+                                                                    <i class="fas fa-user-check"></i>
+                                                                </button>
+                                                            @elseif($age >= 21)
+                                                                <button type="button" class="btn btn-sm btn-warning"
+                                                                    onclick="promoteToMember({{ $child->id }}, '{{ addslashes($child->full_name) }}')"
+                                                                    title="Promote to Full Member">
+                                                                    <i class="fas fa-user-plus"></i>
+                                                                </button>
+                                                            @endif
                                                             @if($child->member)
                                                                 <button type="button" class="btn btn-sm btn-outline-info"
                                                                     onclick="if(typeof window.viewDetails === 'function') { window.viewDetails({{ $child->member->id }}); } else { alert('View details function is not available. Please refresh the page.'); }"
                                                                     title="View Parent Details">
-                                                                    <i class="fas fa-eye"></i>
+                                                                    <i class="fas fa-users"></i>
                                                                 </button>
                                                             @endif
                                                             <button type="button" class="btn btn-sm btn-outline-danger"
@@ -1337,7 +1352,11 @@
                             @else
                                 <div class="text-center py-5">
                                     <i class="fas fa-child fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">No children registered yet.</p>
+                                    <p class="text-muted">No children under 21 registered yet.</p>
+                                    <p class="text-muted small"><i class="fas fa-info-circle me-1"></i>Children aged 21 and
+                                        above appear in the <strong>Permanent</strong> tab with an <span
+                                            class="badge bg-warning text-dark"><i
+                                                class="fas fa-exclamation-triangle me-1"></i>Incomplete</span> badge.</p>
                                 </div>
                             @endif
                         </div>
@@ -2017,15 +2036,15 @@
                 Swal.fire({
                     title: 'Archive Member',
                     html: `
-                                                            <div class="mb-3">
-                                                                <label for="archive-reason" class="form-label">Reason for archiving:</label>
-                                                                <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
-                                                            </div>
-                                                            <div class="alert alert-info">
-                                                                <i class="fas fa-info-circle me-2"></i>
-                                                                <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
-                                                            </div>
-                                                        `,
+                                                                                                        <div class="mb-3">
+                                                                                                            <label for="archive-reason" class="form-label">Reason for archiving:</label>
+                                                                                                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                                                                                                        </div>
+                                                                                                        <div class="alert alert-info">
+                                                                                                            <i class="fas fa-info-circle me-2"></i>
+                                                                                                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                                                                                                        </div>
+                                                                                                    `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Archive Member',
@@ -2809,10 +2828,10 @@
                     };
                     const mapsBtn = (q) => q ? `<a href="#" onclick="return handleAction(()=>window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}','_blank'))" class="btn btn-sm btn-outline-success" title="Open in Maps" aria-label="Open in Maps"><i class="fas fa-map-marked-alt"></i></a>` : '';
                     const row = (icon, label, value, actions = '') => `
-                                                            <tr>
-                                                                <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
-                                                                <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
-                                                            </tr>`;
+                                                                                                        <tr>
+                                                                                                            <td class="text-muted text-nowrap"><i class="${icon} me-2" aria-hidden="true"></i>${label}</td>
+                                                                                                            <td class="fw-semibold">${actionCell(value || '—', actions)}</td>
+                                                                                                        </tr>`;
 
                     // Format date helper (use global if available, otherwise simple format)
                     const formatDateDisplay = (dateStr) => {
@@ -2873,43 +2892,43 @@
                     }
 
                     let html = `<div id="memberDetailsPrint" class="p-2">
-                                                            <div class="d-flex justify-content-center gap-4 mb-3">
-                                                                ${profilePictureUrl ? `
-                                                                <div class="text-center">
-                                                                    <img src="${profilePictureUrl}" alt="Passport Photo" class="img-thumbnail" style="width: 150px; height: 180px; object-fit: cover; border: 2px solid #7a0000; border-radius: 8px;"/>
-                                                                    <div class="text-muted small mt-1">Passport Photo</div>
-                                                                </div>
-                                                                ` : ''}
-                                                                <div class="text-center">
-                                                                    <img id="inlineQrImg" alt="Member details QR" width="120" height="120"/>
-                                                                    <div class="text-muted small mt-1">Scan for details</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="small text-uppercase text-muted mt-2 mb-1">Personal</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${row('fas fa-user', 'Full Name', data.full_name)}
-                                                                ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
-                                                                ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
-                                                                ${row('fas fa-user-tag', 'Member Type', data.member_type)}
-                                                                ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
-                                                                ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
-                                                                ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase() + data.gender.slice(1), (data.gender || '').toLowerCase() === 'male' ? 'primary' : 'danger') : '—')}
-                                                                ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
-                                                                ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
-                                                                ${row('fas fa-briefcase', 'Profession', data.profession)}
-                                                                ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
-                                                            </tbody></table>
-                                                            <div class="small text-uppercase text-muted mt-3 mb-1">Location</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                                                ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                                                ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                                                ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                                                ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address, data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
-                                                            </tbody></table>
-                                                            <div class="small text-uppercase text-muted mt-3 mb-1">Family</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${(() => {
+                                                                                                        <div class="d-flex justify-content-center gap-4 mb-3">
+                                                                                                            ${profilePictureUrl ? `
+                                                                                                            <div class="text-center">
+                                                                                                                <img src="${profilePictureUrl}" alt="Passport Photo" class="img-thumbnail" style="width: 150px; height: 180px; object-fit: cover; border: 2px solid #7a0000; border-radius: 8px;"/>
+                                                                                                                <div class="text-muted small mt-1">Passport Photo</div>
+                                                                                                            </div>
+                                                                                                            ` : ''}
+                                                                                                            <div class="text-center">
+                                                                                                                <img id="inlineQrImg" alt="Member details QR" width="120" height="120"/>
+                                                                                                                <div class="text-muted small mt-1">Scan for details</div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="small text-uppercase text-muted mt-2 mb-1">Personal</div>
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${row('fas fa-user', 'Full Name', data.full_name)}
+                                                                                                            ${row('fas fa-id-badge', 'Member ID', data.member_id, copyBtn(data.member_id, 'Copy ID', 'fas fa-copy'))}
+                                                                                                            ${row('fas fa-id-card', 'Membership Type', data.membership_type)}
+                                                                                                            ${row('fas fa-user-tag', 'Member Type', data.member_type)}
+                                                                                                            ${row('fas fa-phone', 'Phone', data.phone_number, telto(data.phone_number) + copyBtn(data.phone_number, 'Copy phone', 'fas fa-copy'))}
+                                                                                                            ${row('fas fa-envelope', 'Email', data.email, mailto(data.email) + copyBtn(data.email, 'Copy email', 'fas fa-copy'))}
+                                                                                                            ${row('fas fa-venus-mars', 'Gender', data.gender ? badge(data.gender.charAt(0).toUpperCase() + data.gender.slice(1), (data.gender || '').toLowerCase() === 'male' ? 'primary' : 'danger') : '—')}
+                                                                                                            ${row('fas fa-birthday-cake', 'Date of Birth', formatDateDisplay(data.date_of_birth))}
+                                                                                                            ${row('fas fa-graduation-cap', 'Education Level', data.education_level)}
+                                                                                                            ${row('fas fa-briefcase', 'Profession', data.profession)}
+                                                                                                            ${row('fas fa-id-card', 'NIDA Number', data.nida_number)}
+                                                                                                        </tbody></table>
+                                                                                                        <div class="small text-uppercase text-muted mt-3 mb-1">Location</div>
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${row('fas fa-map', 'Region', data.region ? badge(data.region, 'secondary') : '—', mapsBtn([data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                                                                            ${row('fas fa-city', 'District', data.district ? badge(data.district, 'secondary') : '—', mapsBtn([data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                                                                            ${row('fas fa-location-arrow', 'Ward', data.ward ? badge(data.ward, 'secondary') : '—', mapsBtn([data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                                                                            ${row('fas fa-road', 'Street', data.street || '—', mapsBtn([data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                                                                            ${row('fas fa-address-card', 'Address', data.address || '—', mapsBtn([data.address, data.street, data.ward, data.district, data.region, 'Tanzania'].filter(Boolean).join(', ')))}
+                                                                                                        </tbody></table>
+                                                                                                        <div class="small text-uppercase text-muted mt-3 mb-1">Family</div>
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${(() => {
                             const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_phone_number || data.spouse_email;
                             const hasChildren = Array.isArray(data.children) && data.children.length > 0;
                             const inferred = (hasSpouseDetails || hasChildren) ? 'yes' : 'no';
@@ -2918,9 +2937,9 @@
                             const pretty = value === 'yes' ? 'Yes' : (value === 'no' ? 'No' : '—');
                             return row('fas fa-users', 'Living with family', pretty);
                         })()}
-                                                                ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
-                                                                ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
-                                                            </tbody></table>`;
+                                                                                                            ${row('fas fa-user-friends', 'Family relationship', data.family_relationship)}
+                                                                                                            ${row('fas fa-flag', 'Tribe', (data.tribe || '') + (data.other_tribe ? ` (${data.other_tribe})` : ''))}
+                                                                                                        </tbody></table>`;
 
                     // Add spouse section if available
                     const hasSpouseDetails = data.spouse_details || data.main_member_details || data.spouse_full_name || data.spouse_email || data.spouse_phone_number;
@@ -2943,38 +2962,77 @@
                             spouseId = data.spouse_member_id;
                         }
                         html += `
-                                                            <div class="small text-uppercase text-muted mt-3 mb-1">${spouseTitle}</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
-                                                                ${row('fas fa-user', spouseTitle + ' Name', spouseData.full_name || data.spouse_full_name)}
-                                                                ${row('fas fa-church', spouseTitle + ' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
-                                                                ${row('fas fa-id-badge', spouseTitle + ' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : 'Not a church member')}
-                                                                ${row('fas fa-birthday-cake', spouseTitle + ' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
-                                                                ${row('fas fa-graduation-cap', spouseTitle + ' Education', spouseData.education_level || data.spouse_education_level)}
-                                                                ${row('fas fa-briefcase', spouseTitle + ' Profession', spouseData.profession || data.spouse_profession)}
-                                                                ${row('fas fa-id-card', spouseTitle + ' NIDA', spouseData.nida_number || data.spouse_nida_number)}
-                                                                ${row('fas fa-envelope', spouseTitle + ' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
-                                                                ${row('fas fa-phone', spouseTitle + ' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
-                                                                ${row('fas fa-flag', spouseTitle + ' Tribe', spouseTribe)}
-                                                            </tbody></table>`;
+                                                                                                        <div class="small text-uppercase text-muted mt-3 mb-1">${spouseTitle}</div>
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${row('fas fa-heart', 'Marital Status', (data.marital_status ? data.marital_status.charAt(0).toUpperCase() + data.marital_status.slice(1) : '—'))}
+                                                                                                            ${row('fas fa-user', spouseTitle + ' Name', spouseData.full_name || data.spouse_full_name)}
+                                                                                                            ${row('fas fa-church', spouseTitle + ' Church Member', data.spouse_church_member ? (data.spouse_church_member === 'yes' ? 'Yes' : 'No') : '—')}
+                                                                                                            ${row('fas fa-id-badge', spouseTitle + ' Member Status', spouseId ? `<a href="/members/view?id=${spouseId}" class="text-primary">View as Member</a>` : (data.spouse_church_member === 'yes' ? '<span class="text-warning"><i class="fas fa-clock me-1"></i>Registration Pending</span>' : 'Not a church member'))}
+                                                                                                            ${row('fas fa-birthday-cake', spouseTitle + ' DOB', formatDateDisplay(spouseData.date_of_birth || data.spouse_date_of_birth))}
+                                                                                                            ${row('fas fa-graduation-cap', spouseTitle + ' Education', spouseData.education_level || data.spouse_education_level)}
+                                                                                                            ${row('fas fa-briefcase', spouseTitle + ' Profession', spouseData.profession || data.spouse_profession)}
+                                                                                                            ${row('fas fa-id-card', spouseTitle + ' NIDA', spouseData.nida_number || data.spouse_nida_number)}
+                                                                                                            ${row('fas fa-envelope', spouseTitle + ' Email', spouseData.email || data.spouse_email, (spouseData.email || data.spouse_email) ? (mailto(spouseData.email || data.spouse_email) + copyBtn(spouseData.email || data.spouse_email, 'Copy email', 'fas fa-copy')) : '')}
+                                                                                                            ${row('fas fa-phone', spouseTitle + ' Phone', spouseData.phone_number || data.spouse_phone_number, (spouseData.phone_number || data.spouse_phone_number) ? (telto(spouseData.phone_number || data.spouse_phone_number) + copyBtn(spouseData.phone_number || data.spouse_phone_number, 'Copy phone', 'fas fa-copy')) : '')}
+                                                                                                            ${row('fas fa-flag', spouseTitle + ' Tribe', spouseTribe)}
+                                                                                                        </tbody></table>`;
                     }
 
                     // Guardian section
                     if ((data.membership_type === 'temporary' || (data.membership_type === 'permanent' && data.member_type === 'independent')) && (data.guardian_name || data.guardian_phone || data.guardian_relationship)) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Guardian</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
-                                                                ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
-                                                                ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
-                                                            </tbody></table>`;
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${row('fas fa-user-shield', 'Guardian Name', data.guardian_name)}
+                                                                                                            ${row('fas fa-phone-square', 'Guardian Phone', data.guardian_phone)}
+                                                                                                            ${row('fas fa-users-cog', 'Relationship', data.guardian_relationship)}
+                                                                                                        </tbody></table>`;
                     }
 
                     // Children section
                     if (data.membership_type === 'permanent' && (data.member_type === 'father' || data.member_type === 'mother') && Array.isArray(data.children) && data.children.length > 0) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Children</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><thead><tr><th>Name</th><th>Gender</th><th>Date of Birth</th></tr></thead><tbody>`;
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><thead><tr><th>Name</th><th>Envelope</th><th>Age</th><th>Actions</th></tr></thead><tbody>`;
                         data.children.forEach(child => {
-                            html += `<tr><td>${child.full_name || '-'}</td><td>${child.gender || '-'}</td><td>${formatDateDisplay(child.date_of_birth)}</td></tr>`;
+                            // Calculate age
+                            let childAge = '—';
+                            if (child.date_of_birth) {
+                                const birth = new Date(child.date_of_birth);
+                                const now = new Date();
+                                childAge = now.getFullYear() - birth.getFullYear();
+                                const m = now.getMonth() - birth.getMonth();
+                                if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+                                    childAge--;
+                                }
+                                childAge = childAge + ' yrs';
+                            }
+
+                            let memberLink = '<span class="text-muted small">N/A</span>';
+                            if (child.linked_member_id) {
+                                memberLink = `
+                                                                <button type="button" class="btn btn-sm btn-primary" onclick="window.viewDetails(${child.linked_member_id})" title="View Member Record">
+                                                                    <i class="fas fa-user-check"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="window.openEdit && window.openEdit(${child.linked_member_id})" title="Complete Registration">
+                                                                    <i class="fas fa-clipboard-check"></i>
+                                                                </button>`;
+                            } else {
+                                // Extract numeric age from childAge string (e.g., "22 yrs")
+                                const ageMatch = childAge.match(/^(\d+)/);
+                                const numericAge = ageMatch ? parseInt(ageMatch[1]) : 0;
+                                if (numericAge >= 21) {
+                                    memberLink = `
+                                                                    <button type="button" class="btn btn-sm btn-warning" onclick="promoteToMember(${child.id}, '${(child.full_name || '').replace(/'/g, "\\'")}')" title="Promote to Full Member">
+                                                                        <i class="fas fa-user-plus"></i>
+                                                                    </button>`;
+                                }
+                            }
+
+                            html += `<tr>
+                                                                <td><strong>${child.full_name || '-'}</strong></td>
+                                                                <td>${child.envelope_number ? `<span class="badge bg-light text-dark border">${child.envelope_number}</span>` : '<span class="text-muted small">None</span>'}</td>
+                                                                <td>${childAge}</td>
+                                                                <td class="text-center">${memberLink}</td>
+                                                            </tr>`;
                         });
                         html += `</tbody></table>`;
                     }
@@ -2982,10 +3040,10 @@
                     // Archive info
                     if (isArchived) {
                         html += `<div class="small text-uppercase text-muted mt-3 mb-1">Archive Info</div>
-                                                            <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
-                                                                ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
-                                                                ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
-                                                            </tbody></table>`;
+                                                                                                        <table class="table table-bordered table-striped align-middle interactive-table"><tbody>
+                                                                                                            ${row('fas fa-archive', 'Reason for Archiving', archiveReason || 'Not specified')}
+                                                                                                            ${row('fas fa-calendar-times', 'Archived Date', m.archived_at ? formatDateDisplay(m.archived_at) : '—')}
+                                                                                                        </tbody></table>`;
                     }
                     html += `</div>`;
 
@@ -3073,10 +3131,10 @@
                     const memberDetailsBody = document.getElementById('memberDetailsBody');
                     if (memberDetailsBody) {
                         memberDetailsBody.innerHTML = `
-                                                                <div class="text-danger">Failed to load member details. ${err && err.message ? '(' + err.message + ')' : ''}</div>
-                                                                <div class="mt-2">
-                                                                    <button class="btn btn-sm btn-outline-primary" onclick="window.viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
-                                                                </div>`;
+                                                                                                            <div class="text-danger">Failed to load member details. ${err && err.message ? '(' + err.message + ')' : ''}</div>
+                                                                                                            <div class="mt-2">
+                                                                                                                <button class="btn btn-sm btn-outline-primary" onclick="window.viewDetails(${id})"><i class="fas fa-redo me-1"></i>Retry</button>
+                                                                                                            </div>`;
                     }
                     const detailsModalEl = document.getElementById('memberDetailsModal');
                     if (detailsModalEl) {
@@ -3096,6 +3154,65 @@
             var modalEl = document.getElementById('archiveMemberModal');
             var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.show();
+        }
+
+        function promoteToMember(childId, childName) {
+            Swal.fire({
+                title: 'Promote to Member?',
+                text: `Are you sure you want to promote ${childName} to a full independent member? This will create a separate member record linked to this child record.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#7a0000',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Promote',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Promoting...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/children/${childId}/promote`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Promoted!',
+                                    text: data.message,
+                                    showConfirmButton: true
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Promotion Failed',
+                                    text: data.message || 'An unexpected error occurred.'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to process the request. Please check your connection and try again.'
+                            });
+                        });
+                }
+            });
         }
 
         // Attach submit handler only once
@@ -3836,14 +3953,14 @@
                         icon: 'info',
                         title: 'Report Opened',
                         html: `
-                                                                    <p>The report has been opened in a new window.</p>
-                                                                    <p><strong>To save the file:</strong></p>
-                                                                    <ol class="text-start">
-                                                                        <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
-                                                                        <li>Choose a location to save the file</li>
-                                                                        <li>The file will be saved as an HTML file</li>
-                                                                    </ol>
-                                                                `,
+                                                                                                                <p>The report has been opened in a new window.</p>
+                                                                                                                <p><strong>To save the file:</strong></p>
+                                                                                                                <ol class="text-start">
+                                                                                                                    <li>Press <kbd>Ctrl+S</kbd> (Windows) or <kbd>Cmd+S</kbd> (Mac)</li>
+                                                                                                                    <li>Choose a location to save the file</li>
+                                                                                                                    <li>The file will be saved as an HTML file</li>
+                                                                                                                </ol>
+                                                                                                            `,
                         showConfirmButton: true,
                         confirmButtonText: 'Got it!'
                     });
@@ -3857,14 +3974,14 @@
                     icon: 'error',
                     title: 'Download Failed',
                     html: `
-                                                                <p>There was an error downloading the report.</p>
-                                                                <p><strong>Alternative options:</strong></p>
-                                                                <ul class="text-start">
-                                                                    <li>Use the "Print Report" option and save as PDF</li>
-                                                                    <li>Copy the report content manually</li>
-                                                                    <li>Try using a different browser</li>
-                                                                </ul>
-                                                            `,
+                                                                                                            <p>There was an error downloading the report.</p>
+                                                                                                            <p><strong>Alternative options:</strong></p>
+                                                                                                            <ul class="text-start">
+                                                                                                                <li>Use the "Print Report" option and save as PDF</li>
+                                                                                                                <li>Copy the report content manually</li>
+                                                                                                                <li>Try using a different browser</li>
+                                                                                                            </ul>
+                                                                                                        `,
                     showConfirmButton: true
                 });
             }
@@ -3872,246 +3989,246 @@
 
         function generateArchiveReportHTML(member, reason) {
             return `
-                                                        <!DOCTYPE html>
-                                                        <html lang="en">
-                                                        <head>
-                                                            <meta charset="UTF-8">
-                                                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                                            <title>Member Archive Report - ${member.full_name}</title>
-                                                            <style>
-                                                                * {
-                                                                    margin: 0;
-                                                                    padding: 0;
-                                                                    box-sizing: border-box;
-                                                                }
+                                                                                                    <!DOCTYPE html>
+                                                                                                    <html lang="en">
+                                                                                                    <head>
+                                                                                                        <meta charset="UTF-8">
+                                                                                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                                                        <title>Member Archive Report - ${member.full_name}</title>
+                                                                                                        <style>
+                                                                                                            * {
+                                                                                                                margin: 0;
+                                                                                                                padding: 0;
+                                                                                                                box-sizing: border-box;
+                                                                                                            }
 
-                                                                body {
-                                                                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                                                                    background: #f8f9fa;
-                                                                    padding: 20px;
-                                                                    line-height: 1.6;
-                                                                }
+                                                                                                            body {
+                                                                                                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                                                                                                background: #f8f9fa;
+                                                                                                                padding: 20px;
+                                                                                                                line-height: 1.6;
+                                                                                                            }
 
-                                                                .report-container {
-                                                                    max-width: 600px;
-                                                                    margin: 0 auto;
-                                                                    background: white;
-                                                                    border-radius: 15px;
-                                                                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                                                                    overflow: hidden;
-                                                                }
+                                                                                                            .report-container {
+                                                                                                                max-width: 600px;
+                                                                                                                margin: 0 auto;
+                                                                                                                background: white;
+                                                                                                                border-radius: 15px;
+                                                                                                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                                                                                                overflow: hidden;
+                                                                                                            }
 
-                                                                .report-header {
-                                                                    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-                                                                    color: white;
-                                                                    padding: 25px;
-                                                                    text-align: center;
-                                                                }
+                                                                                                            .report-header {
+                                                                                                                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                                                                                                color: white;
+                                                                                                                padding: 25px;
+                                                                                                                text-align: center;
+                                                                                                            }
 
-                                                                .report-header h1 {
-                                                                    font-size: 24px;
-                                                                    margin-bottom: 10px;
-                                                                    font-weight: 600;
-                                                                }
+                                                                                                            .report-header h1 {
+                                                                                                                font-size: 24px;
+                                                                                                                margin-bottom: 10px;
+                                                                                                                font-weight: 600;
+                                                                                                            }
 
-                                                                .report-header .subtitle {
-                                                                    font-size: 14px;
-                                                                    opacity: 0.9;
-                                                                }
+                                                                                                            .report-header .subtitle {
+                                                                                                                font-size: 14px;
+                                                                                                                opacity: 0.9;
+                                                                                                            }
 
-                                                                .report-body {
-                                                                    padding: 30px;
-                                                                }
+                                                                                                            .report-body {
+                                                                                                                padding: 30px;
+                                                                                                            }
 
-                                                                .member-info {
-                                                                    background: #f8f9fa;
-                                                                    border-radius: 10px;
-                                                                    padding: 20px;
-                                                                    margin-bottom: 25px;
-                                                                }
+                                                                                                            .member-info {
+                                                                                                                background: #f8f9fa;
+                                                                                                                border-radius: 10px;
+                                                                                                                padding: 20px;
+                                                                                                                margin-bottom: 25px;
+                                                                                                            }
 
-                                                                .member-info h3 {
-                                                                    color: #495057;
-                                                                    margin-bottom: 15px;
-                                                                    font-size: 18px;
-                                                                    border-bottom: 2px solid #dee2e6;
-                                                                    padding-bottom: 10px;
-                                                                }
+                                                                                                            .member-info h3 {
+                                                                                                                color: #495057;
+                                                                                                                margin-bottom: 15px;
+                                                                                                                font-size: 18px;
+                                                                                                                border-bottom: 2px solid #dee2e6;
+                                                                                                                padding-bottom: 10px;
+                                                                                                            }
 
-                                                                .info-grid {
-                                                                    display: grid;
-                                                                    grid-template-columns: 1fr 1fr;
-                                                                    gap: 15px;
-                                                                }
+                                                                                                            .info-grid {
+                                                                                                                display: grid;
+                                                                                                                grid-template-columns: 1fr 1fr;
+                                                                                                                gap: 15px;
+                                                                                                            }
 
-                                                                .info-item {
-                                                                    display: flex;
-                                                                    flex-direction: column;
-                                                                }
+                                                                                                            .info-item {
+                                                                                                                display: flex;
+                                                                                                                flex-direction: column;
+                                                                                                            }
 
-                                                                .info-label {
-                                                                    font-weight: 600;
-                                                                    color: #6c757d;
-                                                                    font-size: 12px;
-                                                                    text-transform: uppercase;
-                                                                    letter-spacing: 0.5px;
-                                                                    margin-bottom: 5px;
-                                                                }
+                                                                                                            .info-label {
+                                                                                                                font-weight: 600;
+                                                                                                                color: #6c757d;
+                                                                                                                font-size: 12px;
+                                                                                                                text-transform: uppercase;
+                                                                                                                letter-spacing: 0.5px;
+                                                                                                                margin-bottom: 5px;
+                                                                                                            }
 
-                                                                .info-value {
-                                                                    color: #212529;
-                                                                    font-size: 14px;
-                                                                    font-weight: 500;
-                                                                }
+                                                                                                            .info-value {
+                                                                                                                color: #212529;
+                                                                                                                font-size: 14px;
+                                                                                                                font-weight: 500;
+                                                                                                            }
 
-                                                                .archive-reason {
-                                                                    background: #fff3cd;
-                                                                    border: 1px solid #ffeaa7;
-                                                                    border-radius: 10px;
-                                                                    padding: 20px;
-                                                                    margin-bottom: 25px;
-                                                                }
+                                                                                                            .archive-reason {
+                                                                                                                background: #fff3cd;
+                                                                                                                border: 1px solid #ffeaa7;
+                                                                                                                border-radius: 10px;
+                                                                                                                padding: 20px;
+                                                                                                                margin-bottom: 25px;
+                                                                                                            }
 
-                                                                .archive-reason h3 {
-                                                                    color: #856404;
-                                                                    margin-bottom: 15px;
-                                                                    font-size: 18px;
-                                                                    display: flex;
-                                                                    align-items: center;
-                                                                }
+                                                                                                            .archive-reason h3 {
+                                                                                                                color: #856404;
+                                                                                                                margin-bottom: 15px;
+                                                                                                                font-size: 18px;
+                                                                                                                display: flex;
+                                                                                                                align-items: center;
+                                                                                                            }
 
-                                                                .archive-reason h3::before {
-                                                                    content: "📋";
-                                                                    margin-right: 10px;
-                                                                }
+                                                                                                            .archive-reason h3::before {
+                                                                                                                content: "📋";
+                                                                                                                margin-right: 10px;
+                                                                                                            }
 
-                                                                .reason-text {
-                                                                    color: #856404;
-                                                                    font-size: 14px;
-                                                                    line-height: 1.6;
-                                                                    background: white;
-                                                                    padding: 15px;
-                                                                    border-radius: 8px;
-                                                                    border-left: 4px solid #ffc107;
-                                                                }
+                                                                                                            .reason-text {
+                                                                                                                color: #856404;
+                                                                                                                font-size: 14px;
+                                                                                                                line-height: 1.6;
+                                                                                                                background: white;
+                                                                                                                padding: 15px;
+                                                                                                                border-radius: 8px;
+                                                                                                                border-left: 4px solid #ffc107;
+                                                                                                            }
 
-                                                                .financial-note {
-                                                                    background: #d1ecf1;
-                                                                    border: 1px solid #bee5eb;
-                                                                    border-radius: 10px;
-                                                                    padding: 20px;
-                                                                    text-align: center;
-                                                                }
+                                                                                                            .financial-note {
+                                                                                                                background: #d1ecf1;
+                                                                                                                border: 1px solid #bee5eb;
+                                                                                                                border-radius: 10px;
+                                                                                                                padding: 20px;
+                                                                                                                text-align: center;
+                                                                                                            }
 
-                                                                .financial-note h4 {
-                                                                    color: #0c5460;
-                                                                    margin-bottom: 10px;
-                                                                    font-size: 16px;
-                                                                }
+                                                                                                            .financial-note h4 {
+                                                                                                                color: #0c5460;
+                                                                                                                margin-bottom: 10px;
+                                                                                                                font-size: 16px;
+                                                                                                            }
 
-                                                                .financial-note p {
-                                                                    color: #0c5460;
-                                                                    font-size: 14px;
-                                                                    margin: 0;
-                                                                }
+                                                                                                            .financial-note p {
+                                                                                                                color: #0c5460;
+                                                                                                                font-size: 14px;
+                                                                                                                margin: 0;
+                                                                                                            }
 
-                                                                .report-footer {
-                                                                    background: #f8f9fa;
-                                                                    padding: 20px;
-                                                                    text-align: center;
-                                                                    border-top: 1px solid #dee2e6;
-                                                                }
+                                                                                                            .report-footer {
+                                                                                                                background: #f8f9fa;
+                                                                                                                padding: 20px;
+                                                                                                                text-align: center;
+                                                                                                                border-top: 1px solid #dee2e6;
+                                                                                                            }
 
-                                                                .report-footer p {
-                                                                    color: #6c757d;
-                                                                    font-size: 12px;
-                                                                    margin: 0;
-                                                                }
+                                                                                                            .report-footer p {
+                                                                                                                color: #6c757d;
+                                                                                                                font-size: 12px;
+                                                                                                                margin: 0;
+                                                                                                            }
 
-                                                                .date-time {
-                                                                    color: #6c757d;
-                                                                    font-size: 12px;
-                                                                    margin-top: 10px;
-                                                                }
+                                                                                                            .date-time {
+                                                                                                                color: #6c757d;
+                                                                                                                font-size: 12px;
+                                                                                                                margin-top: 10px;
+                                                                                                            }
 
-                                                                @media print {
-                                                                    body {
-                                                                        background: white;
-                                                                        padding: 0;
-                                                                    }
+                                                                                                            @media print {
+                                                                                                                body {
+                                                                                                                    background: white;
+                                                                                                                    padding: 0;
+                                                                                                                }
 
-                                                                    .report-container {
-                                                                        box-shadow: none;
-                                                                        border-radius: 0;
-                                                                    }
-                                                                }
-                                                            </style>
-                                                        </head>
-                                                        <body>
-                                                            <div class="report-container">
-                                                                <div class="report-header">
-                                                                    <h1>📦 Member Archive Report</h1>
-                                                                    <p class="subtitle">Member has been moved to archived status</p>
-                                                                </div>
+                                                                                                                .report-container {
+                                                                                                                    box-shadow: none;
+                                                                                                                    border-radius: 0;
+                                                                                                                }
+                                                                                                            }
+                                                                                                        </style>
+                                                                                                    </head>
+                                                                                                    <body>
+                                                                                                        <div class="report-container">
+                                                                                                            <div class="report-header">
+                                                                                                                <h1>📦 Member Archive Report</h1>
+                                                                                                                <p class="subtitle">Member has been moved to archived status</p>
+                                                                                                            </div>
 
-                                                                <div class="report-body">
-                                                                    <div class="member-info">
-                                                                        <h3>👤 Member Information</h3>
-                                                                        <div class="info-grid">
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Full Name</span>
-                                                                                <span class="info-value">${member.full_name || 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Member ID</span>
-                                                                                <span class="info-value">${member.member_id || 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Phone Number</span>
-                                                                                <span class="info-value">${member.phone_number || 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Email</span>
-                                                                                <span class="info-value">${member.email || 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Gender</span>
-                                                                                <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Membership Type</span>
-                                                                                <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Date of Birth</span>
-                                                                                <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
-                                                                            </div>
-                                                                            <div class="info-item">
-                                                                                <span class="info-label">Registration Date</span>
-                                                                                <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                                                                            <div class="report-body">
+                                                                                                                <div class="member-info">
+                                                                                                                    <h3>👤 Member Information</h3>
+                                                                                                                    <div class="info-grid">
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Full Name</span>
+                                                                                                                            <span class="info-value">${member.full_name || 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Member ID</span>
+                                                                                                                            <span class="info-value">${member.member_id || 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Phone Number</span>
+                                                                                                                            <span class="info-value">${member.phone_number || 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Email</span>
+                                                                                                                            <span class="info-value">${member.email || 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Gender</span>
+                                                                                                                            <span class="info-value">${member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Membership Type</span>
+                                                                                                                            <span class="info-value">${member.membership_type ? member.membership_type.charAt(0).toUpperCase() + member.membership_type.slice(1) : 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Date of Birth</span>
+                                                                                                                            <span class="info-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="info-item">
+                                                                                                                            <span class="info-label">Registration Date</span>
+                                                                                                                            <span class="info-value">${member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}</span>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
 
-                                                                    <div class="archive-reason">
-                                                                        <h3>Archive Reason</h3>
-                                                                        <div class="reason-text">${reason}</div>
-                                                                    </div>
+                                                                                                                <div class="archive-reason">
+                                                                                                                    <h3>Archive Reason</h3>
+                                                                                                                    <div class="reason-text">${reason}</div>
+                                                                                                                </div>
 
-                                                                    <div class="financial-note">
-                                                                        <h4>💰 Financial Records Preserved</h4>
-                                                                        <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
-                                                                    </div>
-                                                                </div>
+                                                                                                                <div class="financial-note">
+                                                                                                                    <h4>💰 Financial Records Preserved</h4>
+                                                                                                                    <p>All financial records including tithes, offerings, donations, and pledges have been preserved and remain intact in the system.</p>
+                                                                                                                </div>
+                                                                                                            </div>
 
-                                                                <div class="report-footer">
-                                                                    <p><strong>Waumini Link Church Management System</strong></p>
-                                                                    <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
-                                                                </div>
-                                                            </div>
-                                                        </body>
-                                                        </html>
-                                                    `;
+                                                                                                            <div class="report-footer">
+                                                                                                                <p><strong>Waumini Link Church Management System</strong></p>
+                                                                                                                <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </body>
+                                                                                                    </html>
+                                                                                                `;
         }
 
         function printArchiveReport(member, reason) {
@@ -4140,15 +4257,15 @@
         Swal.fire({
             title: 'Archive Member',
             html: `
-                                                            <div class="mb-3">
-                                                                <label for="archive-reason" class="form-label">Reason for archiving${displayName}:</label>
-                                                                <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
-                                                            </div>
-                                                            <div class="alert alert-info">
-                                                                <i class="fas fa-info-circle me-2"></i>
-                                                                <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
-                                                            </div>
-                                                        `,
+                                                                                                        <div class="mb-3">
+                                                                                                            <label for="archive-reason" class="form-label">Reason for archiving${displayName}:</label>
+                                                                                                            <textarea id="archive-reason" class="form-control" rows="3" placeholder="Please provide a reason for archiving this member..." required></textarea>
+                                                                                                        </div>
+                                                                                                        <div class="alert alert-info">
+                                                                                                            <i class="fas fa-info-circle me-2"></i>
+                                                                                                            <strong>Note:</strong> The member will be moved to archived status and all their financial records will be preserved.
+                                                                                                        </div>
+                                                                                                    `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Archive Member',
@@ -4260,11 +4377,11 @@
                                 icon: 'success',
                                 title: 'Member Archived',
                                 html: `
-                                                                                    <div class="text-start">
-                                                                                        <p><strong>Reason:</strong> ${result.value}</p>
-                                                                                        <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
-                                                                                    </div>
-                                                                                `,
+                                                                                                                                <div class="text-start">
+                                                                                                                                    <p><strong>Reason:</strong> ${result.value}</p>
+                                                                                                                                    <p>The member has been moved to archived status. All financial records (tithes, offerings, donations, pledges) have been preserved and remain intact.</p>
+                                                                                                                                </div>
+                                                                                                                            `,
                                 showConfirmButton: true,
                                 showCancelButton: true,
                                 showDenyButton: true,
@@ -4308,7 +4425,7 @@
                     });
             }
         });
-                                                        })
+                                                                                                    })
 
         // Simple client-side, real-time filtering
         function filterTable() {
@@ -4381,7 +4498,7 @@
         function printMemberDetails() {
             const content = document.getElementById('memberDetailsPrint');
             const w = window.open('', '_blank');
-            const logoUrl = `{{ asset('assets/images/waumini_link_logo.png') }}`;
+            const logoUrl = `{{ asset('assets/images/aict.png') }}`;
             const printedAt = new Date().toLocaleString();
             const printedBy = `{{ Auth::user()->name ?? 'User' }}`;
             const yearNow = new Date().getFullYear();
@@ -4463,24 +4580,24 @@
             w.document.write('<div class="print-shell">');
             // Header
             w.document.write(`<div class="header">
-                                                         <div class="header-top">
-                                                             <div class="brand">
-                                                                 <img src="${logoUrl}" style="height:48px"/>
-                                                                 <div>
-                                                                     <h2 class="mb-0">Member Details</h2>
-                                                                 </div>
-                                                             </div>
-                                                             <div class="qr-wrap"><img id="printQrImg" class="qr" src="" alt="QR"/></div>
-                                                         </div>
-                                                     </div>`);
+                                                                                                     <div class="header-top">
+                                                                                                         <div class="brand">
+                                                                                                             <img src="${logoUrl}" style="height:48px"/>
+                                                                                                             <div>
+                                                                                                                 <h2 class="mb-0">Member Details</h2>
+                                                                                                             </div>
+                                                                                                         </div>
+                                                                                                         <div class="qr-wrap"><img id="printQrImg" class="qr" src="" alt="QR"/></div>
+                                                                                                     </div>
+                                                                                                 </div>`);
 
             // Sections (prebuilt)
             w.document.write(sectionsHtml);
 
             // Footer
             w.document.write(`<div class="footer">
-                                                        Printed on ${printedAt} by ${printedBy} • © ${yearNow} Waumini Link • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
-                                                    </div>`);
+                                                                                                    Printed on ${printedAt} by ${printedBy} • © ${yearNow} Waumini Link • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
+                                                                                                </div>`);
 
             w.document.write('</div>');
             // Ensure QR loads before printing
@@ -4517,7 +4634,7 @@
             container.style.top = '0';
             container.style.width = '800px';
             container.innerHTML = '';
-            const logoUrl = `{{ asset('assets/images/waumini_link_logo.png') }}`;
+            const logoUrl = `{{ asset('assets/images/aict.png') }}`;
             const payload = [
                 'Full Name: ' + (m.full_name || '-'),
                 'Member ID: ' + (m.member_id || '-'),
@@ -5013,25 +5130,25 @@
                     }
                 };
                 return `
-                                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
-                                                                <div class="notification-item-content">
-                                                                    <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
-                                                                    <div class="notification-details">
-                                                                        <div class="notification-title">${event.title}</div>
-                                                                        <div class="notification-meta">
-                                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
-                                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
-                                                                        </div>
-                                                                        <div class="notification-info">
-                                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
-                                                                            ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
-                                                                        </div>
-                                                                        <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
-                                                                    </div>
-                                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                </div>
-                                                            </div>
-                                                        `;
+                                                                                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
+                                                                                                            <div class="notification-item-content">
+                                                                                                                <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
+                                                                                                                <div class="notification-details">
+                                                                                                                    <div class="notification-title">${event.title}</div>
+                                                                                                                    <div class="notification-meta">
+                                                                                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
+                                                                                                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                                                                                                    </div>
+                                                                                                                    <div class="notification-info">
+                                                                                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
+                                                                                                                        ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
+                                                                                                                    </div>
+                                                                                                                    <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
+                                                                                                                </div>
+                                                                                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
             }).join('');
         }
 
@@ -5068,25 +5185,25 @@
                     }
                 };
                 return `
-                                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
-                                                                <div class="notification-item-content">
-                                                                    <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
-                                                                    <div class="notification-details">
-                                                                        <div class="notification-title">${celebration.title}</div>
-                                                                        <div class="notification-meta">
-                                                                            <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
-                                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
-                                                                        </div>
-                                                                        <div class="notification-info">
-                                                                            <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
-                                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
-                                                                        </div>
-                                                                        <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
-                                                                    </div>
-                                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                </div>
-                                                            </div>
-                                                        `;
+                                                                                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
+                                                                                                            <div class="notification-item-content">
+                                                                                                                <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
+                                                                                                                <div class="notification-details">
+                                                                                                                    <div class="notification-title">${celebration.title}</div>
+                                                                                                                    <div class="notification-meta">
+                                                                                                                        <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
+                                                                                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                                                                                                    </div>
+                                                                                                                    <div class="notification-info">
+                                                                                                                        <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
+                                                                                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
+                                                                                                                    </div>
+                                                                                                                    <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
+                                                                                                                </div>
+                                                                                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
             }).join('');
         }
 
@@ -5123,26 +5240,26 @@
                     }
                 };
                 return `
-                                                            <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
-                                                                <div class="notification-item-content">
-                                                                    <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
-                                                                    <div class="notification-details">
-                                                                        <div class="notification-title">${service.title}</div>
-                                                                        <div class="notification-meta">
-                                                                            <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
-                                                                            <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
-                                                                        </div>
-                                                                        <div class="notification-info">
-                                                                            <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
-                                                                            ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
-                                                                        </div>
-                                                                        ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
-                                                                        <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
-                                                                    </div>
-                                                                    <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                </div>
-                                                            </div>
-                                                        `;
+                                                                                                        <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
+                                                                                                            <div class="notification-item-content">
+                                                                                                                <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
+                                                                                                                <div class="notification-details">
+                                                                                                                    <div class="notification-title">${service.title}</div>
+                                                                                                                    <div class="notification-meta">
+                                                                                                                        <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
+                                                                                                                        <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                                                                                                    </div>
+                                                                                                                    <div class="notification-info">
+                                                                                                                        <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
+                                                                                                                        ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
+                                                                                                                    </div>
+                                                                                                                    ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
+                                                                                                                    <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
+                                                                                                                </div>
+                                                                                                                <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
             }).join('');
         }
 
@@ -5154,27 +5271,27 @@
                 modal.id = 'eventDetailsModal';
                 modal.className = 'modal fade';
                 modal.innerHTML = `
-                                                            <div class="modal-dialog modal-lg">
-                                                                <div class="modal-content">
-                                                                    <div class="modal-header bg-light">
-                                                                        <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
-                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                    </div>
-                                                                    <div class="modal-body p-4" id="eventDetailsBody">
-                                                                        <div class="text-center">
-                                                                            <div class="spinner-border" role="status">
-                                                                                <span class="visually-hidden">Loading...</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="modal-footer bg-light">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                            <i class="fas fa-times me-2"></i>Close
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        `;
+                                                                                                        <div class="modal-dialog modal-lg">
+                                                                                                            <div class="modal-content">
+                                                                                                                <div class="modal-header bg-light">
+                                                                                                                    <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
+                                                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                                                </div>
+                                                                                                                <div class="modal-body p-4" id="eventDetailsBody">
+                                                                                                                    <div class="text-center">
+                                                                                                                        <div class="spinner-border" role="status">
+                                                                                                                            <span class="visually-hidden">Loading...</span>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div class="modal-footer bg-light">
+                                                                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                                                                        <i class="fas fa-times me-2"></i>Close
+                                                                                                                    </button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
                 document.body.appendChild(modal);
             }
             const bsModal = new bootstrap.Modal(modal);
@@ -5193,13 +5310,13 @@
             };
             modalTitle.textContent = titles[type] || 'Details';
             modalBody.innerHTML = `
-                                                        <div class="text-center py-4">
-                                                            <div class="spinner-border text-primary" role="status">
-                                                                <span class="visually-hidden">Loading...</span>
-                                                            </div>
-                                                            <p class="mt-2 text-muted">Loading details...</p>
-                                                        </div>
-                                                    `;
+                                                                                                    <div class="text-center py-4">
+                                                                                                        <div class="spinner-border text-primary" role="status">
+                                                                                                            <span class="visually-hidden">Loading...</span>
+                                                                                                        </div>
+                                                                                                        <p class="mt-2 text-muted">Loading details...</p>
+                                                                                                    </div>
+                                                                                                `;
             setTimeout(() => {
                 let eventData = null;
                 if (window.currentNotificationData) {
@@ -5251,82 +5368,82 @@
                         timeDisplay = eventData.time ? formatTime(eventData.time) : 'TBD';
                     }
                     modalBody.innerHTML = `
-                                                                <div class="text-center mb-4">
-                                                                    <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                                        <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
-                                                                    </div>
-                                                                    <h3 class="text-dark mb-2">${eventData.title}</h3>
-                                                                    <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
-                                                                </div>
-                                                                <div class="row g-3">
-                                                                    <div class="col-md-6">
-                                                                        <div class="card h-100 border-0 shadow-sm">
-                                                                            <div class="card-body text-center">
-                                                                                <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
-                                                                                <h6 class="card-title">Date</h6>
-                                                                                <p class="card-text text-muted">${eventDate}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="card h-100 border-0 shadow-sm">
-                                                                            <div class="card-body text-center">
-                                                                                <i class="fas fa-clock text-success fa-2x mb-3"></i>
-                                                                                <h6 class="card-title">Time</h6>
-                                                                                <p class="card-text text-muted">${timeDisplay}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="card h-100 border-0 shadow-sm">
-                                                                            <div class="card-body text-center">
-                                                                                <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
-                                                                                <h6 class="card-title">Venue</h6>
-                                                                                <p class="card-text text-muted">${eventData.venue}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="card h-100 border-0 shadow-sm">
-                                                                            <div class="card-body text-center">
-                                                                                <i class="fas fa-user text-info fa-2x mb-3"></i>
-                                                                                <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
-                                                                                <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    ${eventData.theme ? `
-                                                                    <div class="col-12">
-                                                                        <div class="card border-0 shadow-sm">
-                                                                            <div class="card-body text-center">
-                                                                                <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
-                                                                                <h6 class="card-title">Theme</h6>
-                                                                                <p class="card-text text-muted">${eventData.theme}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    ` : ''}
-                                                                    <div class="col-12">
-                                                                        <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <i class="fas fa-info-circle fa-2x me-3"></i>
-                                                                                <div>
-                                                                                    <h6 class="mb-1">Time Remaining</h6>
-                                                                                    <p class="mb-0">
-                                                                                        ${eventData.hours_remaining !== null ?
+                                                                                                            <div class="text-center mb-4">
+                                                                                                                <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                                                                                                                    <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                                                                                                </div>
+                                                                                                                <h3 class="text-dark mb-2">${eventData.title}</h3>
+                                                                                                                <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
+                                                                                                            </div>
+                                                                                                            <div class="row g-3">
+                                                                                                                <div class="col-md-6">
+                                                                                                                    <div class="card h-100 border-0 shadow-sm">
+                                                                                                                        <div class="card-body text-center">
+                                                                                                                            <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
+                                                                                                                            <h6 class="card-title">Date</h6>
+                                                                                                                            <p class="card-text text-muted">${eventDate}</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-6">
+                                                                                                                    <div class="card h-100 border-0 shadow-sm">
+                                                                                                                        <div class="card-body text-center">
+                                                                                                                            <i class="fas fa-clock text-success fa-2x mb-3"></i>
+                                                                                                                            <h6 class="card-title">Time</h6>
+                                                                                                                            <p class="card-text text-muted">${timeDisplay}</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-6">
+                                                                                                                    <div class="card h-100 border-0 shadow-sm">
+                                                                                                                        <div class="card-body text-center">
+                                                                                                                            <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
+                                                                                                                            <h6 class="card-title">Venue</h6>
+                                                                                                                            <p class="card-text text-muted">${eventData.venue}</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-6">
+                                                                                                                    <div class="card h-100 border-0 shadow-sm">
+                                                                                                                        <div class="card-body text-center">
+                                                                                                                            <i class="fas fa-user text-info fa-2x mb-3"></i>
+                                                                                                                            <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
+                                                                                                                            <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                ${eventData.theme ? `
+                                                                                                                <div class="col-12">
+                                                                                                                    <div class="card border-0 shadow-sm">
+                                                                                                                        <div class="card-body text-center">
+                                                                                                                            <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
+                                                                                                                            <h6 class="card-title">Theme</h6>
+                                                                                                                            <p class="card-text text-muted">${eventData.theme}</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                ` : ''}
+                                                                                                                <div class="col-12">
+                                                                                                                    <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
+                                                                                                                        <div class="d-flex align-items-center">
+                                                                                                                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                                                                                                                            <div>
+                                                                                                                                <h6 class="mb-1">Time Remaining</h6>
+                                                                                                                                <p class="mb-0">
+                                                                                                                                    ${eventData.hours_remaining !== null ?
                             `${eventData.hours_remaining} hours left` :
                             `${eventData.days_remaining} days left`}
-                                                                                    </p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            `;
+                                                                                                                                </p>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        `;
                 } else {
                     modalBody.innerHTML = `
-                                                                <div class="text-center py-4 text-muted">Details not found.</div>
-                                                            `;
+                                                                                                            <div class="text-center py-4 text-muted">Details not found.</div>
+                                                                                                        `;
                 }
             }, 50);
         }

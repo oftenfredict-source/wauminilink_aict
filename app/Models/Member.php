@@ -172,8 +172,8 @@ class Member extends Model
         // Format: AICT-2025-0001
         $memberId = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
-        // Final check for uniqueness (just in case of race conditions)
-        while (self::where('member_id', $memberId)->exists()) {
+        // Final check for uniqueness (both in members table and users table email)
+        while (self::where('member_id', $memberId)->exists() || \App\Models\User::where('email', $memberId)->exists()) {
             $sequence++;
             $memberId = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
         }

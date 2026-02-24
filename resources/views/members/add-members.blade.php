@@ -1014,13 +1014,13 @@
                         <div id="childrenSection" class="border rounded-3 p-4 mb-4 bg-white shadow-sm"
                             style="display:none;">
                             <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h6 class="mb-0 text-primary fw-bold"><i class="fas fa-children me-2"></i>Children</h6>
-                                <small class="text-muted">Under {{ config('membership.child_max_age', 21) }}
-                                    years</small>
+                                <h6 class="mb-0 text-primary fw-bold"><i class="fas fa-users-cog me-2"></i>Family Members /
+                                    Dependents</h6>
+                                <small class="text-muted">Including children, parents, or other relatives</small>
                             </div>
                             <div class="mb-2">
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="addChildBtn"><i
-                                        class="fas fa-plus me-1"></i>Add Child</button>
+                                        class="fas fa-plus me-1"></i>Add Member</button>
                             </div>
                             <div id="childrenContainer"></div>
                         </div>
@@ -1509,40 +1509,53 @@
                     const row = document.createElement('div');
                     row.className = 'row g-3 mb-2 align-items-end child-row';
                     row.innerHTML = `
-                                                                                                <div class="col-md-3">
-                                                                                                    <label class="form-label">Full Name</label>
-                                                                                                    <input type="text" class="form-control child-fullname" name="children[${idx}][full_name]" required>
-                                                                                                </div>
-                                                                                                <div class="col-md-2">
-                                                                                                    <label class="form-label">Gender</label>
-                                                                                                    <select class="form-select child-gender" name="children[${idx}][gender]" required>
-                                                                                                        <option value=""></option>
-                                                                                                        <option value="male">Male</option>
-                                                                                                        <option value="female">Female</option>
-                                                                                                    </select>
-                                                                                                </div>
-                                                                                                <div class="col-md-3">
-                                                                                                    <label class="form-label">Date of Birth</label>
-                                                                                                    <div class="input-group">
-                                                                                                        <input type="date" class="form-control child-dob" name="children[${idx}][date_of_birth]" required>
-                                                                                                        <span class="input-group-text child-age" style="min-width:60px;display:none;"></span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="col-md-2">
-                                                                                                    <label class="form-label">Church Member</label>
-                                                                                                    <select class="form-select child-church-member" name="children[${idx}][is_church_member]" onchange="toggleChildEnvelope(this, ${idx})">
-                                                                                                        <option value="no">No</option>
-                                                                                                        <option value="yes">Yes</option>
-                                                                                                    </select>
-                                                                                                </div>
-                                                                                                <div class="col-md-2" id="childEnvelopeWrapper_${idx}" style="display:none;">
-                                                                                                    <label class="form-label">Envelope #</label>
-                                                                                                    <input type="text" class="form-control child-envelope" name="children[${idx}][envelope_number]">
-                                                                                                </div>
-                                                                                                <div class="col-md-1 text-end">
-                                                                                                    <button type="button" class="btn btn-danger btn-sm remove-child-btn" title="Remove Child"><i class="fas fa-trash"></i></button>
-                                                                                                </div>
-                                                                                            `;
+                                                                                                                <div class="col-md-3">
+                                                                                                                    <label class="form-label">Full Name</label>
+                                                                                                                    <input type="text" class="form-control child-fullname" name="children[${idx}][full_name]" required>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-2">
+                                                                                                                    <label class="form-label">Relationship</label>
+                                                                                                                    <select class="form-select child-relationship" name="children[${idx}][relationship]" required>
+                                                                                                                        <option value="Son/Daughter">Son/Daughter</option>
+                                                                                                                        <option value="Father">Father</option>
+                                                                                                                        <option value="Mother">Mother</option>
+                                                                                                                        <option value="Brother">Brother</option>
+                                                                                                                        <option value="Sister">Sister</option>
+                                                                                                                        <option value="Grandparent">Grandparent</option>
+                                                                                                                        <option value="Relative">Relative</option>
+                                                                                                                        <option value="Other">Other</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-2">
+                                                                                                                    <label class="form-label">Gender</label>
+                                                                                                                    <select class="form-select child-gender" name="children[${idx}][gender]" required>
+                                                                                                                        <option value=""></option>
+                                                                                                                        <option value="male">Male</option>
+                                                                                                                        <option value="female">Female</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                                <div class="col-md-2">
+                                                                                                                    <label class="form-label">Date of Birth</label>
+                                                                                                                    <div class="input-group">
+                                                                                                                        <input type="date" class="form-control child-dob" name="children[${idx}][date_of_birth]" required>
+                                                                                                                        <span class="input-group-text child-age" style="min-width:40px;display:none;padding:2px 5px;font-size:0.8rem;"></span>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                 <div class="col-md-2">
+                                                                                                                     <label class="form-label">Church Member</label>
+                                                                                                                     <select class="form-select child-church-member" name="children[${idx}][is_church_member]" onchange="toggleChildEnvelope(this, ${idx})">
+                                                                                                                         <option value="no">No</option>
+                                                                                                                         <option value="yes">Yes</option>
+                                                                                                                     </select>
+                                                                                                                 </div>
+                                                                                                                <div class="col-md-2" id="childEnvelopeWrapper_${idx}" style="display:none;">
+                                                                                                                    <label class="form-label">Envelope #</label>
+                                                                                                                    <input type="text" class="form-control child-envelope" name="children[${idx}][envelope_number]">
+                                                                                                                </div>
+                                                                                                                <div class="col-md-1 text-end">
+                                                                                                                    <button type="button" class="btn btn-danger btn-sm remove-child-btn" title="Remove Member"><i class="fas fa-trash"></i></button>
+                                                                                                            </div>
+                                                                                                                       `;
                     childrenContainer.appendChild(row);
                     childCount++;
                     renderChildren();
@@ -1552,8 +1565,9 @@
                         childCount--;
                         // Re-index names for children
                         Array.from(childrenContainer.querySelectorAll('.child-row')).forEach((r, i) => {
-                            r.querySelector('.form-label').textContent = `Child ${i + 1} Full Name`;
+                            r.querySelector('.form-label').textContent = `Full Name`;
                             r.querySelector('.child-fullname').setAttribute('name', `children[${i}][full_name]`);
+                            r.querySelector('.child-relationship').setAttribute('name', `children[${i}][relationship]`);
                             r.querySelector('.child-gender').setAttribute('name', `children[${i}][gender]`);
                             r.querySelector('.child-dob').setAttribute('name', `children[${i}][date_of_birth]`);
                         });
@@ -1581,7 +1595,8 @@
                     const row = select.closest('.child-row');
                     const dobInput = row ? row.querySelector('.child-dob') : null;
 
-                    // Only require envelope for children aged 21+
+                    // Envelope is required for ALL children marked as church members
+                    // BUT for children 21+, it's mandatory as they will become full members
                     let isAdult = false;
                     if (dobInput && dobInput.value) {
                         const dob = new Date(dobInput.value);
@@ -1592,15 +1607,21 @@
                         isAdult = age >= 21;
                     }
 
-                    if (select.value === 'yes' && isAdult) {
+                    if (select.value === 'yes') {
                         wrapper.style.display = 'block';
-                        wrapper.querySelector('input').setAttribute('required', 'required');
+                        // Only require envelope for children aged 21+
+                        if (isAdult) {
+                            wrapper.querySelector('input').setAttribute('required', 'required');
+                        } else {
+                            wrapper.querySelector('input').removeAttribute('required');
+                        }
                     } else {
                         wrapper.style.display = 'none';
                         wrapper.querySelector('input').removeAttribute('required');
                         wrapper.querySelector('input').value = '';
                     }
-                };
+                }
+                    ;
 
 
                 function updateVisibility() {
@@ -1676,7 +1697,7 @@
 
                     // Children visible for permanent father/mother only
                     if (membership === 'permanent') {
-                        if (type === 'father' || type === 'mother') {
+                        if (type === 'father' || type === 'mother' || type === 'independent') {
                             childrenSection.style.display = '';
                         } else {
                             childrenSection.style.display = 'none';
@@ -1924,15 +1945,15 @@
                 summaryStep.id = 'step5';
                 summaryStep.style.display = 'none';
                 summaryStep.innerHTML = `
-                                                                                            <div class="card p-4 mb-4">
-                                                                                                <h5 class="mb-3 text-primary fw-bold"><i class="fas fa-eye me-2"></i>Review Information</h5>
-                                                                                                <div id="summaryContent"></div>
-                                                                                                <div class="d-flex justify-content-between mt-4">
-                                                                                                    <button type="button" class="btn btn-outline-secondary btn-lg px-4 shadow-sm prev-step" id="prevStep5"><i class="fas fa-arrow-left me-1"></i>Back</button>
-                                                                                                    <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm"><i class="fas fa-save me-2"></i>Save Member</button>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        `;
+                                                                                                            <div class="card p-4 mb-4">
+                                                                                                                <h5 class="mb-3 text-primary fw-bold"><i class="fas fa-eye me-2"></i>Review Information</h5>
+                                                                                                                <div id="summaryContent"></div>
+                                                                                                                <div class="d-flex justify-content-between mt-4">
+                                                                                                                    <button type="button" class="btn btn-outline-secondary btn-lg px-4 shadow-sm prev-step" id="prevStep5"><i class="fas fa-arrow-left me-1"></i>Back</button>
+                                                                                                                    <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm"><i class="fas fa-save me-2"></i>Save Member</button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        `;
                 document.getElementById('addMemberForm').appendChild(summaryStep);
 
                 // Verify step 5 was created
@@ -2528,25 +2549,25 @@
                     }
                 };
                 return `
-                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
-                                                                                        <div class="notification-item-content">
-                                                                                            <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
-                                                                                            <div class="notification-details">
-                                                                                                <div class="notification-title">${event.title}</div>
-                                                                                                <div class="notification-meta">
-                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
-                                                                                                    <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                                                                                <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${event.id}, 'event')">
+                                                                                                    <div class="notification-item-content">
+                                                                                                        <div class="notification-icon bg-primary"><i class="fas fa-calendar-alt"></i></div>
+                                                                                                        <div class="notification-details">
+                                                                                                            <div class="notification-title">${event.title}</div>
+                                                                                                            <div class="notification-meta">
+                                                                                                                <span class="meta-item"><i class="fas fa-calendar"></i>${eventDate}</span>
+                                                                                                                <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(event.time)}</span>
+                                                                                                            </div>
+                                                                                                            <div class="notification-info">
+                                                                                                                <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
+                                                                                                                ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
+                                                                                                            </div>
+                                                                                                            <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
+                                                                                                        </div>
+                                                                                                        <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                    </div>
                                                                                                 </div>
-                                                                                                <div class="notification-info">
-                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${event.venue}</span>
-                                                                                                    ${event.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${event.speaker}</span>` : ''}
-                                                                                                </div>
-                                                                                                <div class="notification-badge"><span class="time-badge bg-primary">${timeText}</span></div>
-                                                                                            </div>
-                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                `;
+                                                                                            `;
             }).join('');
         }
 
@@ -2582,25 +2603,25 @@
                     }
                 };
                 return `
-                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
-                                                                                        <div class="notification-item-content">
-                                                                                            <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
-                                                                                            <div class="notification-details">
-                                                                                                <div class="notification-title">${celebration.title}</div>
-                                                                                                <div class="notification-meta">
-                                                                                                    <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
-                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                                                                                <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${celebration.id}, 'celebration')">
+                                                                                                    <div class="notification-item-content">
+                                                                                                        <div class="notification-icon bg-warning"><i class="fas fa-birthday-cake"></i></div>
+                                                                                                        <div class="notification-details">
+                                                                                                            <div class="notification-title">${celebration.title}</div>
+                                                                                                            <div class="notification-meta">
+                                                                                                                <span class="meta-item"><i class="fas fa-user"></i>${celebration.celebrant}</span>
+                                                                                                                <span class="meta-item"><i class="fas fa-calendar"></i>${celebrationDate}</span>
+                                                                                                            </div>
+                                                                                                            <div class="notification-info">
+                                                                                                                <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
+                                                                                                                <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
+                                                                                                            </div>
+                                                                                                            <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
+                                                                                                        </div>
+                                                                                                        <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                    </div>
                                                                                                 </div>
-                                                                                                <div class="notification-info">
-                                                                                                    <span class="info-item"><i class="fas fa-clock"></i>${formatTime(celebration.time)}</span>
-                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${celebration.venue}</span>
-                                                                                                </div>
-                                                                                                <div class="notification-badge"><span class="time-badge bg-warning">${timeText}</span></div>
-                                                                                            </div>
-                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                `;
+                                                                                            `;
             }).join('');
         }
 
@@ -2636,26 +2657,26 @@
                     }
                 };
                 return `
-                                                                                    <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
-                                                                                        <div class="notification-item-content">
-                                                                                            <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
-                                                                                            <div class="notification-details">
-                                                                                                <div class="notification-title">${service.title}</div>
-                                                                                                <div class="notification-meta">
-                                                                                                    <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
-                                                                                                    <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                                                                                <div class="notification-item" style="animation-delay: ${index * 0.1}s;" onclick="showEventDetails(${service.id}, 'service')">
+                                                                                                    <div class="notification-item-content">
+                                                                                                        <div class="notification-icon bg-success"><i class="fas fa-church"></i></div>
+                                                                                                        <div class="notification-details">
+                                                                                                            <div class="notification-title">${service.title}</div>
+                                                                                                            <div class="notification-meta">
+                                                                                                                <span class="meta-item"><i class="fas fa-calendar"></i>${serviceDate}</span>
+                                                                                                                <span class="meta-item"><i class="fas fa-clock"></i>${formatTime(service.time)}</span>
+                                                                                                            </div>
+                                                                                                            <div class="notification-info">
+                                                                                                                <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
+                                                                                                                ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
+                                                                                                            </div>
+                                                                                                            ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
+                                                                                                            <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
+                                                                                                        </div>
+                                                                                                        <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
+                                                                                                    </div>
                                                                                                 </div>
-                                                                                                <div class="notification-info">
-                                                                                                    <span class="info-item"><i class="fas fa-map-marker-alt"></i>${service.venue}</span>
-                                                                                                    ${service.speaker ? `<span class="info-item"><i class="fas fa-user"></i>${service.speaker}</span>` : ''}
-                                                                                                </div>
-                                                                                                ${service.theme ? `<div class="notification-theme"><i class="fas fa-quote-left"></i>${service.theme}</div>` : ''}
-                                                                                                <div class="notification-badge"><span class="time-badge bg-success">${timeText}</span></div>
-                                                                                            </div>
-                                                                                            <div class="notification-arrow"><i class="fas fa-chevron-right"></i></div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                `;
+                                                                                            `;
             }).join('');
         }
 
@@ -2670,27 +2691,27 @@
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.appendChild(modal);
                 modal.innerHTML = `
-                                                                                    <div class="modal-dialog modal-lg">
-                                                                                        <div class="modal-content">
-                                                                                            <div class="modal-header bg-light">
-                                                                                                <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
-                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                                            </div>
-                                                                                            <div class="modal-body p-4" id="eventDetailsBody">
-                                                                                                <div class="text-center">
-                                                                                                    <div class="spinner-border" role="status">
-                                                                                                        <span class="visually-hidden">Loading...</span>
+                                                                                                <div class="modal-dialog modal-lg">
+                                                                                                    <div class="modal-content">
+                                                                                                        <div class="modal-header bg-light">
+                                                                                                            <h5 class="modal-title" id="eventDetailsTitle">Event Details</h5>
+                                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                                        </div>
+                                                                                                        <div class="modal-body p-4" id="eventDetailsBody">
+                                                                                                            <div class="text-center">
+                                                                                                                <div class="spinner-border" role="status">
+                                                                                                                    <span class="visually-hidden">Loading...</span>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="modal-footer bg-light">
+                                                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                                                                <i class="fas fa-times me-2"></i>Close
+                                                                                                            </button>
+                                                                                                        </div>
                                                                                                     </div>
                                                                                                 </div>
-                                                                                            </div>
-                                                                                            <div class="modal-footer bg-light">
-                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                                                    <i class="fas fa-times me-2"></i>Close
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                `;
+                                                                                            `;
                 document.body.appendChild(modal);
             }
             const bsModal = new bootstrap.Modal(modal);
@@ -2708,13 +2729,13 @@
             };
             modalTitle.textContent = titles[type] || 'Details';
             modalBody.innerHTML = `
-                                                                                <div class="text-center py-4">
-                                                                                    <div class="spinner-border text-primary" role="status">
-                                                                                        <span class="visually-hidden">Loading...</span>
-                                                                                    </div>
-                                                                                    <p class="mt-2 text-muted">Loading details...</p>
-                                                                                </div>
-                                                                            `;
+                                                                                            <div class="text-center py-4">
+                                                                                                <div class="spinner-border text-primary" role="status">
+                                                                                                    <span class="visually-hidden">Loading...</span>
+                                                                                                </div>
+                                                                                                <p class="mt-2 text-muted">Loading details...</p>
+                                                                                            </div>
+                                                                                        `;
             setTimeout(() => {
                 let eventData = null;
                 if (window.currentNotificationData) {
@@ -2766,82 +2787,82 @@
                         timeDisplay = eventData.time ? formatTime(eventData.time) : 'TBD';
                     }
                     modalBody.innerHTML = `
-                                                                                        <div class="text-center mb-4">
-                                                                                            <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                                                                <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
-                                                                                            </div>
-                                                                                            <h3 class="text-dark mb-2">${eventData.title}</h3>
-                                                                                            <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
-                                                                                        </div>
-                                                                                        <div class="row g-3">
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="card h-100 border-0 shadow-sm">
-                                                                                                    <div class="card-body text-center">
-                                                                                                        <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
-                                                                                                        <h6 class="card-title">Date</h6>
-                                                                                                        <p class="card-text text-muted">${eventDate}</p>
+                                                                                                    <div class="text-center mb-4">
+                                                                                                        <div class="bg-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                                                                                                            <i class="fas fa-${type === 'event' ? 'calendar-alt' : type === 'celebration' ? 'birthday-cake' : 'church'} fa-3x"></i>
+                                                                                                        </div>
+                                                                                                        <h3 class="text-dark mb-2">${eventData.title}</h3>
+                                                                                                        <p class="text-muted">${type.charAt(0).toUpperCase() + type.slice(1)} Information</p>
                                                                                                     </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="card h-100 border-0 shadow-sm">
-                                                                                                    <div class="card-body text-center">
-                                                                                                        <i class="fas fa-clock text-success fa-2x mb-3"></i>
-                                                                                                        <h6 class="card-title">Time</h6>
-                                                                                                        <p class="card-text text-muted">${timeDisplay}</p>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="card h-100 border-0 shadow-sm">
-                                                                                                    <div class="card-body text-center">
-                                                                                                        <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
-                                                                                                        <h6 class="card-title">Venue</h6>
-                                                                                                        <p class="card-text text-muted">${eventData.venue}</p>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="card h-100 border-0 shadow-sm">
-                                                                                                    <div class="card-body text-center">
-                                                                                                        <i class="fas fa-user text-info fa-2x mb-3"></i>
-                                                                                                        <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
-                                                                                                        <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            ${eventData.theme ? `
-                                                                                            <div class="col-12">
-                                                                                                <div class="card border-0 shadow-sm">
-                                                                                                    <div class="card-body text-center">
-                                                                                                        <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
-                                                                                                        <h6 class="card-title">Theme</h6>
-                                                                                                        <p class="card-text text-muted">${eventData.theme}</p>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            ` : ''}
-                                                                                            <div class="col-12">
-                                                                                                <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
-                                                                                                    <div class="d-flex align-items-center">
-                                                                                                        <i class="fas fa-info-circle fa-2x me-3"></i>
-                                                                                                        <div>
-                                                                                                            <h6 class="mb-1">Time Remaining</h6>
-                                                                                                            <p class="mb-0">
-                                                                                                                ${eventData.hours_remaining !== null ?
+                                                                                                    <div class="row g-3">
+                                                                                                        <div class="col-md-6">
+                                                                                                            <div class="card h-100 border-0 shadow-sm">
+                                                                                                                <div class="card-body text-center">
+                                                                                                                    <i class="fas fa-calendar text-primary fa-2x mb-3"></i>
+                                                                                                                    <h6 class="card-title">Date</h6>
+                                                                                                                    <p class="card-text text-muted">${eventDate}</p>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="col-md-6">
+                                                                                                            <div class="card h-100 border-0 shadow-sm">
+                                                                                                                <div class="card-body text-center">
+                                                                                                                    <i class="fas fa-clock text-success fa-2x mb-3"></i>
+                                                                                                                    <h6 class="card-title">Time</h6>
+                                                                                                                    <p class="card-text text-muted">${timeDisplay}</p>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="col-md-6">
+                                                                                                            <div class="card h-100 border-0 shadow-sm">
+                                                                                                                <div class="card-body text-center">
+                                                                                                                    <i class="fas fa-map-marker-alt text-danger fa-2x mb-3"></i>
+                                                                                                                    <h6 class="card-title">Venue</h6>
+                                                                                                                    <p class="card-text text-muted">${eventData.venue}</p>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="col-md-6">
+                                                                                                            <div class="card h-100 border-0 shadow-sm">
+                                                                                                                <div class="card-body text-center">
+                                                                                                                    <i class="fas fa-user text-info fa-2x mb-3"></i>
+                                                                                                                    <h6 class="card-title">${type === 'celebration' ? 'Celebrant' : (type === 'service' ? 'Preacher' : 'Speaker')}</h6>
+                                                                                                                    <p class="card-text text-muted">${eventData.speaker || eventData.celebrant || 'TBD'}</p>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        ${eventData.theme ? `
+                                                                                                        <div class="col-12">
+                                                                                                            <div class="card border-0 shadow-sm">
+                                                                                                                <div class="card-body text-center">
+                                                                                                                    <i class="fas fa-quote-left text-warning fa-2x mb-3"></i>
+                                                                                                                    <h6 class="card-title">Theme</h6>
+                                                                                                                    <p class="card-text text-muted">${eventData.theme}</p>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        ` : ''}
+                                                                                                        <div class="col-12">
+                                                                                                            <div class="alert alert-${type === 'event' ? 'primary' : type === 'celebration' ? 'warning' : 'success'} border-0">
+                                                                                                                <div class="d-flex align-items-center">
+                                                                                                                    <i class="fas fa-info-circle fa-2x me-3"></i>
+                                                                                                                    <div>
+                                                                                                                        <h6 class="mb-1">Time Remaining</h6>
+                                                                                                                        <p class="mb-0">
+                                                                                                                            ${eventData.hours_remaining !== null ?
                             `${eventData.hours_remaining} hours left` :
                             `${eventData.days_remaining} days left`}
-                                                                                                            </p>
+                                                                                                                        </p>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
                                                                                                         </div>
                                                                                                     </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    `;
+                                                                                                `;
                 } else {
                     modalBody.innerHTML = `
-                                                                                        <div class="text-center py-4 text-muted">Details not found.</div>
-                                                                                    `;
+                                                                                                    <div class="text-center py-4 text-muted">Details not found.</div>
+                                                                                                `;
                 }
             }, 50);
         }
