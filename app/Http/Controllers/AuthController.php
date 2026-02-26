@@ -19,7 +19,7 @@ use App\Services\SettingsService;
 
 class AuthController extends Controller
 {
-    
+
     // Show login form
     public function showLogin()
     {
@@ -42,7 +42,7 @@ class AuthController extends Controller
                 }
             }
         }
-        
+
         // Prevent caching of login page
         return response()->view('login')
             ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
@@ -73,8 +73,10 @@ class AuthController extends Controller
             }
         } catch (\Illuminate\Database\QueryException $e) {
             // Database connection error
-            if (strpos($e->getMessage(), 'Connection refused') !== false || 
-                strpos($e->getMessage(), 'No connection could be made') !== false) {
+            if (
+                strpos($e->getMessage(), 'Connection refused') !== false ||
+                strpos($e->getMessage(), 'No connection could be made') !== false
+            ) {
                 return back()->withErrors([
                     'email' => 'Database connection failed. Please ensure MySQL is running in XAMPP.',
                 ])->withInput($request->only('email'));
@@ -97,7 +99,7 @@ class AuthController extends Controller
             // Get fresh data from database to ensure we have the latest block status
             // Use fresh() to bypass model cache and get latest from database
             $freshUser = \App\Models\User::find($user->id);
-            
+
             if ($freshUser && $freshUser->login_blocked_until) {
                 // Compare in UTC (how it's stored in database)
                 // Get the raw timestamp value from database to avoid timezone conversion issues
@@ -105,13 +107,13 @@ class AuthController extends Controller
                 $rawBlockedUntil = DB::table('users')
                     ->where('id', $freshUser->id)
                     ->value('login_blocked_until');
-                
+
                 if ($rawBlockedUntil) {
                     // Parse the raw database value - it's stored as UTC timestamp
                     // Use createFromFormat with UTC timezone to avoid conversion
                     $blockedUntil = Carbon::createFromFormat('Y-m-d H:i:s', $rawBlockedUntil, 'UTC');
                     $now = Carbon::now('UTC');
-                    
+
                     // If block has expired, clear it
                     if ($blockedUntil->lte($now)) {
                         $freshUser->update(['login_blocked_until' => null]);
@@ -123,7 +125,7 @@ class AuthController extends Controller
                         $blockedUntilDisplay = $blockedUntil->copy()->setTimezone($tanzaniaTimezone);
                         $unblockTime = $blockedUntilDisplay->format('F j, Y \a\t g:i A');
                         $message = "Your account is temporarily blocked from logging in. Please try again on {$unblockTime}.";
-                        
+
                         $this->logFailedLogin($request, $emailOrMemberId, 'Account is temporarily blocked');
                         return back()->withErrors([
                             'email' => $message,
@@ -142,23 +144,23 @@ class AuthController extends Controller
         try {
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
-                
+
                 // Check if OTP is enabled from settings
                 $otpEnabled = SettingsService::get('enable_otp', false);
                 if ($otpEnabled) {
                     // Generate and send OTP instead of logging in directly
                     $otp = $this->generateAndSendOtp($user, $emailOrMemberId, $request);
-                    
+
                     if ($otp) {
                         // Store user ID in session temporarily for OTP verification
                         $request->session()->put('otp_user_id', $user->id);
                         $request->session()->put('otp_email', $emailOrMemberId);
                         // Reset resend attempts counter for new OTP session
                         $request->session()->put('otp_resend_attempts', 0);
-                        
+
                         // Logout the user (they'll be logged in after OTP verification)
                         Auth::logout();
-                        
+
                         // Redirect to OTP verification page
                         return redirect()->route('login.otp.verify')
                             ->with('info', 'An OTP has been sent to your phone number. Please enter it to complete login.');
@@ -169,7 +171,7 @@ class AuthController extends Controller
                             'user_id' => $user->id,
                             'email' => $emailOrMemberId
                         ]);
-                        
+
                         return back()->withErrors([
                             'email' => 'Unable to send OTP. Please contact administrator or try again later.',
                         ])->withInput($request->only('email'));
@@ -177,7 +179,7 @@ class AuthController extends Controller
                 } else {
                     // OTP is disabled - proceed with direct login
                     $request->session()->regenerate();
-                    
+
                     // Update the session record with user_id
                     try {
                         $sessionId = $request->session()->getId();
@@ -194,7 +196,7 @@ class AuthController extends Controller
                     } catch (\Exception $e) {
                         // Silently continue if session table doesn't exist
                     }
-                    
+
                     // Log login activity
                     try {
                         \App\Models\ActivityLog::create([
@@ -209,7 +211,7 @@ class AuthController extends Controller
                     } catch (\Exception $e) {
                         // Silently continue if table doesn't exist
                     }
-                    
+
                     // Redirect based on role - but members and leaders go to member dashboard first
                     if ($user->role === 'admin') {
                         return redirect()->route('admin.dashboard')
@@ -239,8 +241,10 @@ class AuthController extends Controller
             }
         } catch (\Illuminate\Database\QueryException $e) {
             // Database connection error during authentication
-            if (strpos($e->getMessage(), 'Connection refused') !== false || 
-                strpos($e->getMessage(), 'No connection could be made') !== false) {
+            if (
+                strpos($e->getMessage(), 'Connection refused') !== false ||
+                strpos($e->getMessage(), 'No connection could be made') !== false
+            ) {
                 return back()->withErrors([
                     'email' => 'Database connection failed. Please ensure MySQL is running in XAMPP.',
                 ])->withInput($request->only('email'));
@@ -264,7 +268,7 @@ class AuthController extends Controller
     {
         try {
             $deviceInfo = DeviceInfoService::getDeviceInfo($request);
-            
+
             FailedLoginAttempt::create([
                 'email' => $email,
                 'ip_address' => $deviceInfo['ip_address'],
@@ -288,14 +292,14 @@ class AuthController extends Controller
     private function generateAndSendOtp(User $user, string $email, Request $request): ?LoginOtp
     {
         $otp = null;
-        
+
         try {
             // Generate 6-digit OTP
             $otpCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            
-            // OTP expires in 2 minutes
-            $expiresAt = now()->addMinutes(2);
-            
+
+            // OTP expires in 5 minutes
+            $expiresAt = now()->addMinutes(5);
+
             // Invalidate any existing unused OTPs for this user
             try {
                 LoginOtp::where('user_id', $user->id)
@@ -308,7 +312,7 @@ class AuthController extends Controller
                 ]);
                 // Continue even if invalidation fails
             }
-            
+
             // Create new OTP - this is critical, must succeed
             try {
                 $otp = LoginOtp::create([
@@ -331,7 +335,7 @@ class AuthController extends Controller
                 // If OTP creation fails, we cannot proceed
                 return null;
             }
-            
+
             // Get phone number from user or member - wrap in try-catch to prevent exceptions
             $phoneNumber = null;
             try {
@@ -358,7 +362,7 @@ class AuthController extends Controller
                 ]);
                 // Continue without phone number
             }
-            
+
             // Send OTP via SMS - this is optional, OTP should still be returned even if SMS fails
             if (!empty($phoneNumber)) {
                 try {
@@ -366,14 +370,14 @@ class AuthController extends Controller
                     if ($smsEnabled) {
                         $smsService = app(SmsService::class);
                         $churchName = SettingsService::get('church_name', 'Waumini Church');
-                        
+
                         $message = "Shalom {$user->name}, nambari yako ya kuthibitisha kuingia kwenye {$churchName} ni: {$otpCode}\n\n";
                         $message .= "Nambari hii inaisha muda wa dakika 5. Usishirikishe na mtu yeyote.\n\n";
                         $message .= "Mungu akubariki!";
-                        
+
                         $smsResult = $smsService->sendDebug($phoneNumber, $message);
                         $smsSent = $smsResult['ok'] ?? false;
-                        
+
                         if ($smsSent) {
                             \Log::info('Login OTP sent successfully', [
                                 'user_id' => $user->id,
@@ -412,10 +416,10 @@ class AuthController extends Controller
                     'has_member_id' => !empty($user->member_id)
                 ]);
             }
-            
+
             // Always return OTP if it was created successfully, even if SMS failed
             return $otp;
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to generate OTP: ' . $e->getMessage(), [
                 'user_id' => $user->id ?? null,
@@ -423,7 +427,7 @@ class AuthController extends Controller
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Only return null if OTP was never created
             // If OTP exists, return it even if there were other errors
             return $otp;
@@ -440,17 +444,17 @@ class AuthController extends Controller
             return redirect()->route('login')
                 ->with('error', 'Please login first to receive an OTP.');
         }
-        
+
         $userId = $request->session()->get('otp_user_id');
         $email = $request->session()->get('otp_email');
-        
+
         // Get the latest unused OTP for this user
         $otp = LoginOtp::where('user_id', $userId)
             ->where('is_used', false)
             ->where('expires_at', '>', now())
             ->latest()
             ->first();
-        
+
         if (!$otp) {
             // If no valid OTP, still show the page but allow resend
             // User can resend once even if expired
@@ -459,7 +463,7 @@ class AuthController extends Controller
                 'otp_expires_at' => null, // No valid OTP, but allow resend
             ]);
         }
-        
+
         return view('login-otp', [
             'email' => $email,
             'otp_expires_at' => $otp->expires_at,
@@ -474,63 +478,63 @@ class AuthController extends Controller
         $request->validate([
             'otp' => ['required', 'string', 'size:6'],
         ]);
-        
+
         // Check if user has pending OTP verification
         if (!$request->session()->has('otp_user_id')) {
             return back()->withErrors(['otp' => 'Session expired. Please login again.']);
         }
-        
+
         $userId = $request->session()->get('otp_user_id');
         $email = $request->session()->get('otp_email');
         $otpCode = $request->input('otp');
-        
+
         // Find the latest unused OTP for this user
         $otp = LoginOtp::where('user_id', $userId)
             ->where('is_used', false)
             ->where('expires_at', '>', now())
             ->latest()
             ->first();
-        
+
         if (!$otp) {
             return back()->withErrors(['otp' => 'No valid OTP found. Please login again.']);
         }
-        
+
         // Check if OTP is expired
         if ($otp->isExpired()) {
             $otp->incrementAttempts();
             return back()->withErrors(['otp' => 'OTP has expired. Please login again to receive a new OTP.']);
         }
-        
+
         // Check if too many attempts (max 5 attempts)
         if ($otp->attempts >= 5) {
             return back()->withErrors(['otp' => 'Too many failed attempts. Please login again to receive a new OTP.']);
         }
-        
+
         // Verify OTP code
         if ($otp->otp_code !== $otpCode) {
             $otp->incrementAttempts();
             $remainingAttempts = 5 - $otp->attempts;
-            
+
             if ($remainingAttempts <= 0) {
                 return back()->withErrors(['otp' => 'Invalid OTP. Maximum attempts reached. Please login again.']);
             }
-            
+
             return back()->withErrors(['otp' => "Invalid OTP. You have {$remainingAttempts} attempt(s) remaining."]);
         }
-        
+
         // OTP is valid - mark as used and complete login
         $otp->markAsUsed();
-        
+
         // Get user and login
         $user = User::findOrFail($userId);
-        
+
         // Login the user
         Auth::login($user, $request->has('remember'));
         $request->session()->regenerate();
-        
+
         // Clear OTP session data including resend attempts
         $request->session()->forget(['otp_user_id', 'otp_email', 'otp_resend_attempts']);
-        
+
         // Update the session record with user_id
         try {
             $sessionId = $request->session()->getId();
@@ -547,7 +551,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             // Silently continue if session table doesn't exist
         }
-        
+
         // Log login activity
         try {
             \App\Models\ActivityLog::create([
@@ -562,7 +566,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             // Silently continue if table doesn't exist
         }
-        
+
         // Redirect based on role - but members and leaders go to member dashboard first
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')
@@ -600,32 +604,32 @@ class AuthController extends Controller
             return redirect()->route('login')
                 ->with('error', 'Session expired. Please login again.');
         }
-        
+
         $userId = $request->session()->get('otp_user_id');
         $email = $request->session()->get('otp_email');
-        
+
         // Track resend attempts - allow first resend even if expired, block second
         $resendAttempts = $request->session()->get('otp_resend_attempts', 0);
-        
+
         // If this is the second resend attempt, redirect to login
         if ($resendAttempts >= 1) {
             // Clear OTP session data
             $request->session()->forget('otp_user_id');
             $request->session()->forget('otp_email');
             $request->session()->forget('otp_resend_attempts');
-            
+
             return redirect()->route('login')
                 ->with('error', 'Session expired. Please login again.');
         }
-        
+
         // Increment resend attempts counter
         $request->session()->put('otp_resend_attempts', $resendAttempts + 1);
-        
+
         $user = User::findOrFail($userId);
-        
+
         // Generate and send new OTP (allow even if previous OTP expired)
         $otp = $this->generateAndSendOtp($user, $email, $request);
-        
+
         if ($otp) {
             // Reset resend attempts on successful send (optional - allows unlimited resends if successful)
             // Or keep the counter to limit to 2 total attempts
@@ -685,7 +689,7 @@ class AuthController extends Controller
                 }
             }
         }
-        
+
         return view('forgot-password');
     }
 
@@ -697,10 +701,10 @@ class AuthController extends Controller
         ]);
 
         $emailOrMemberId = $request->input('email');
-        
+
         // Find user by email or member_id
         $user = User::where('email', $emailOrMemberId)->first();
-        
+
         if (!$user) {
             // Don't reveal if user exists for security
             return back()->with('status', 'If that email address exists in our system, we will send a password reset link.');
@@ -708,7 +712,7 @@ class AuthController extends Controller
 
         // Generate password reset token
         $token = Str::random(64);
-        
+
         // Store token in password_reset_tokens table
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $user->email],
@@ -722,7 +726,7 @@ class AuthController extends Controller
         $smsSent = false;
         $smsError = null;
         $phoneNumber = null;
-        
+
         // Get phone number from user or member
         if (!empty($user->phone_number)) {
             $phoneNumber = $user->phone_number;
@@ -730,7 +734,7 @@ class AuthController extends Controller
             // Fallback to member's phone number if user doesn't have one
             $phoneNumber = $user->member->phone_number ?? null;
         }
-        
+
         if (!empty($phoneNumber)) {
             try {
                 $smsEnabled = SettingsService::get('enable_sms_notifications', false);
@@ -745,22 +749,22 @@ class AuthController extends Controller
                     $smsService = app(SmsService::class);
                     $resetUrl = url('/reset-password/' . $token);
                     $churchName = SettingsService::get('church_name', 'Waumini Church');
-                    
+
                     $message = "Shalom {$user->name}, umepokea ombi la kubadilisha nenosiri la akaunti yako ya {$churchName}.\n\n";
                     $message .= "Bofya kiungo hiki kubadilisha nenosiri:\n{$resetUrl}\n\n";
                     $message .= "Kiungo hiki kitakwisha muda wa saa 1. Usishirikishe kiungo hiki na mtu yeyote.\n\n";
                     $message .= "Mungu akubariki!";
-                    
+
                     \Log::info('Attempting to send password reset SMS', [
                         'user_id' => $user->id,
                         'email' => $user->email,
                         'phone' => $phoneNumber,
                         'reset_url' => $resetUrl
                     ]);
-                    
+
                     $smsResult = $smsService->sendDebug($phoneNumber, $message);
                     $smsSent = $smsResult['ok'] ?? false;
-                    
+
                     if ($smsSent) {
                         \Log::info('Password reset SMS sent successfully', [
                             'user_id' => $user->id,
@@ -816,7 +820,7 @@ class AuthController extends Controller
         } else {
             // Build error message
             $errorMessage = 'Password reset link generated. ';
-            
+
             if (empty($phoneNumber)) {
                 $errorMessage .= 'No phone number is registered for your account. ';
             } elseif ($smsError === 'SMS notifications are disabled in system settings') {
@@ -824,9 +828,9 @@ class AuthController extends Controller
             } else {
                 $errorMessage .= 'SMS could not be sent. ';
             }
-            
+
             $errorMessage .= 'Please contact the administrator or use the reset link below.';
-            
+
             // Show reset link for development/testing (remove in production or make it admin-only)
             return back()->with([
                 'status' => $errorMessage,
@@ -859,7 +863,7 @@ class AuthController extends Controller
                 }
             }
         }
-        
+
         return view('reset-password', ['token' => $token]);
     }
 
@@ -878,7 +882,7 @@ class AuthController extends Controller
 
         // Find user
         $user = User::where('email', $emailOrMemberId)->first();
-        
+
         if (!$user) {
             return back()->withErrors(['email' => 'We could not find a user with that email address.']);
         }
