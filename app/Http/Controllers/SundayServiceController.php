@@ -16,10 +16,10 @@ class SundayServiceController extends Controller
 
         if ($request->filled('search')) {
             $s = $request->string('search');
-            $query->where(function($q) use ($s) {
+            $query->where(function ($q) use ($s) {
                 $q->where('theme', 'like', "%{$s}%")
-                  ->orWhere('preacher', 'like', "%{$s}%")
-                  ->orWhere('venue', 'like', "%{$s}%");
+                    ->orWhere('preacher', 'like', "%{$s}%")
+                    ->orWhere('venue', 'like', "%{$s}%");
             });
         }
 
@@ -45,7 +45,7 @@ class SundayServiceController extends Controller
     {
         try {
             \Log::info('Sunday Service Store Request:', $request->all());
-            
+
             $validated = $request->validate([
                 'service_date' => 'required|date',
                 'service_type' => 'required|string|max:255',
@@ -76,10 +76,8 @@ class SundayServiceController extends Controller
                 'offerings_amount.min' => 'Offerings amount cannot be negative.',
             ]);
 
-            // Set status based on whether attendance/offerings are provided
-            $validated['status'] = ($request->has('attendance_count') || $request->has('offerings_amount')) 
-                ? 'completed' 
-                : 'scheduled';
+            // Set status to completed once attendance is recorded
+            $validated['status'] = $request->has('attendance_count') ? 'completed' : 'scheduled';
 
             \Log::info('Validated data:', $validated);
 
@@ -87,7 +85,7 @@ class SundayServiceController extends Controller
             $existingService = SundayService::where('service_date', $validated['service_date'])
                 ->where('service_type', $validated['service_type'])
                 ->first();
-            
+
             if ($existingService) {
                 return response()->json([
                     'success' => false,
@@ -172,7 +170,7 @@ class SundayServiceController extends Controller
             'start_time' => $request->input('start_time') === '' ? null : $request->input('start_time'),
             'end_time' => $request->input('end_time') === '' ? null : $request->input('end_time'),
         ]);
-        
+
         $validated = $request->validate([
             'service_date' => 'sometimes|required|date',
             'service_type' => 'sometimes|required|string|max:255',
@@ -192,21 +190,19 @@ class SundayServiceController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // Update status based on whether attendance/offerings are provided
-        $validated['status'] = ($request->has('attendance_count') || $request->has('offerings_amount')) 
-            ? 'completed' 
-            : 'scheduled';
+        // Set status to completed once attendance is recorded
+        $validated['status'] = $request->has('attendance_count') ? 'completed' : 'scheduled';
 
         // Check for duplicate service_date + service_type combination (excluding current service)
         if ($request->has('service_date') || $request->has('service_type')) {
             $serviceDate = $validated['service_date'] ?? $sundayService->service_date;
             $serviceType = $validated['service_type'] ?? $sundayService->service_type;
-            
+
             $existingService = SundayService::where('service_date', $serviceDate)
                 ->where('service_type', $serviceType)
                 ->where('id', '!=', $sundayService->id)
                 ->first();
-            
+
             if ($existingService) {
                 return response()->json([
                     'success' => false,
@@ -217,11 +213,11 @@ class SundayServiceController extends Controller
         }
 
         // Check if coordinator is being changed
-        $coordinatorChanged = $request->has('coordinator_id') && 
-                             $sundayService->coordinator_id != $request->coordinator_id;
+        $coordinatorChanged = $request->has('coordinator_id') &&
+            $sundayService->coordinator_id != $request->coordinator_id;
 
         $sundayService->update($validated);
-        
+
         // Refresh relationships to ensure updated data is available
         $sundayService->refresh();
         $sundayService->load(['coordinator', 'churchElder']);
@@ -269,7 +265,7 @@ class SundayServiceController extends Controller
         }
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'message' => 'Sunday service updated successfully' . ($request->has('offerings_amount') && $validated['offerings_amount'] > 0 ? ' and offering sent for pastor approval' : ''),
             'service' => $sundayService
         ]);
@@ -288,23 +284,23 @@ class SundayServiceController extends Controller
     {
         try {
             $search = $request->input('search', '');
-            
+
             $query = Member::query();
-            
+
             // If search term provided, filter by name or member_id
             if (!empty($search)) {
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('full_name', 'like', "%{$search}%")
-                      ->orWhere('member_id', 'like', "%{$search}%");
+                        ->orWhere('member_id', 'like', "%{$search}%");
                 });
             }
-            
+
             $coordinators = $query->orderBy('full_name')
                 ->limit(100) // Limit results for performance
                 ->get(['id', 'full_name', 'member_id']);
 
             $totalCount = Member::count();
-            
+
             \Log::info('Coordinators Query Result', [
                 'count' => $coordinators->count(),
                 'total' => $totalCount,
@@ -313,7 +309,7 @@ class SundayServiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'coordinators' => $coordinators->map(function($member) {
+                'coordinators' => $coordinators->map(function ($member) {
                     return [
                         'id' => $member->id,
                         'full_name' => $member->full_name ?? 'Unknown',
@@ -329,7 +325,7 @@ class SundayServiceController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -350,36 +346,36 @@ class SundayServiceController extends Controller
             // Get current date for comparison
             $today = now()->toDateString();
             $search = $request->input('search', '');
-            
+
             // Query for active church elders from Leaders model
             $query = \App\Models\Leader::with('member')
                 ->where('position', 'elder')
                 ->where('is_active', true)
-                ->where(function($query) use ($today) {
+                ->where(function ($query) use ($today) {
                     $query->whereNull('end_date')
-                          ->orWhere('end_date', '>=', $today);
+                        ->orWhere('end_date', '>=', $today);
                 })
                 ->where('appointment_date', '<=', $today)
                 ->whereHas('member'); // Only get leaders that have associated members
-            
+
             // Apply search filter if provided
             if (!empty($search)) {
-                $query->whereHas('member', function($q) use ($search) {
-                    $q->where(function($subQ) use ($search) {
+                $query->whereHas('member', function ($q) use ($search) {
+                    $q->where(function ($subQ) use ($search) {
                         $subQ->where('full_name', 'like', "%{$search}%")
-                             ->orWhere('member_id', 'like', "%{$search}%");
+                            ->orWhere('member_id', 'like', "%{$search}%");
                     });
                 });
             }
-            
+
             $leaders = $query->get();
-            
+
             $churchElders = $leaders
-                ->filter(function($leader) {
+                ->filter(function ($leader) {
                     // Only include leaders that have a valid member
                     return $leader->member !== null;
                 })
-                ->map(function($leader) {
+                ->map(function ($leader) {
                     return [
                         'id' => $leader->member->id,
                         'full_name' => $leader->member->full_name,
@@ -409,7 +405,7 @@ class SundayServiceController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -426,15 +422,15 @@ class SundayServiceController extends Controller
     {
         $today = now()->toDateString();
         $preachers = collect();
-        
+
         // Get pastors from Users model
-        $userPastors = \App\Models\User::where(function($query) {
-                $query->where('role', 'pastor')
-                      ->orWhere('can_approve_finances', true);
-            })
+        $userPastors = \App\Models\User::where(function ($query) {
+            $query->where('role', 'pastor')
+                ->orWhere('can_approve_finances', true);
+        })
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
-        
+
         // Add user pastors to collection
         foreach ($userPastors as $user) {
             $preachers->push([
@@ -445,19 +441,19 @@ class SundayServiceController extends Controller
                 'type' => 'user'
             ]);
         }
-        
+
         // Get pastors from Leaders model (members with pastor position)
         $leaderPastors = \App\Models\Leader::with('member')
             ->whereIn('position', ['pastor', 'assistant_pastor'])
             ->where('is_active', true)
-            ->where(function($query) use ($today) {
+            ->where(function ($query) use ($today) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', $today);
+                    ->orWhere('end_date', '>=', $today);
             })
             ->where('appointment_date', '<=', $today)
             ->whereHas('member')
             ->get()
-            ->map(function($leader) {
+            ->map(function ($leader) {
                 return [
                     'id' => 'leader_' . $leader->member->id,
                     'name' => $leader->member->full_name,
@@ -467,7 +463,7 @@ class SundayServiceController extends Controller
                     'type' => 'leader'
                 ];
             });
-        
+
         // Merge and remove duplicates (by name)
         $allPreachers = $preachers->merge($leaderPastors)
             ->unique('name')
@@ -497,9 +493,9 @@ class SundayServiceController extends Controller
         ]);
 
         $date = $request->date;
-        
+
         \Log::info('Checking weekly assignment for date', ['date' => $date]);
-        
+
         // Find active weekly assignment for elder position that covers this date
         $assignment = WeeklyAssignment::with(['leader.member'])
             ->where('position', 'elder')
@@ -517,18 +513,18 @@ class SundayServiceController extends Controller
 
         if ($assignment && $assignment->leader && $assignment->leader->member) {
             $member = $assignment->leader->member;
-            
+
             // Verify the member is actually an active church elder
             $today = now()->toDateString();
             $isActiveElder = Member::where('id', $member->id)
-                ->whereHas('leadershipPositions', function($query) use ($today) {
+                ->whereHas('leadershipPositions', function ($query) use ($today) {
                     $query->where('position', 'elder')
-                          ->where('is_active', true)
-                          ->where(function($q) use ($today) {
-                              $q->whereNull('end_date')
-                                 ->orWhere('end_date', '>=', $today);
-                          })
-                          ->where('appointment_date', '<=', $today);
+                        ->where('is_active', true)
+                        ->where(function ($q) use ($today) {
+                            $q->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $today);
+                        })
+                        ->where('appointment_date', '<=', $today);
                 })->exists();
 
             \Log::info('Member elder status', [
@@ -571,9 +567,9 @@ class SundayServiceController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
-        $callback = function() use ($services) {
+        $callback = function () use ($services) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Service Date','Service Type','Theme','Preacher','Coordinator','Church Elder','Start Time','End Time','Venue','Attendance','Offerings','Scripture Readings','Choir','Announcements','Notes']);
+            fputcsv($handle, ['Service Date', 'Service Type', 'Theme', 'Preacher', 'Coordinator', 'Church Elder', 'Start Time', 'End Time', 'Venue', 'Attendance', 'Offerings', 'Scripture Readings', 'Choir', 'Announcements', 'Notes']);
             foreach ($services as $s) {
                 fputcsv($handle, [
                     optional($s->service_date)->format('Y-m-d'),
@@ -676,11 +672,11 @@ class SundayServiceController extends Controller
                 $dayName = $dayNames[$service->service_date->format('l')] ?? $service->service_date->format('l');
                 $serviceDate = $service->service_date->format('d/m/Y');
                 $dateWithDay = $serviceDate . ' / ' . $dayName;
-                
+
                 // Custom coordinator message as requested
                 $coordinatorName = $service->coordinator->full_name;
                 $coordinatorMessage = "Shalom {$coordinatorName}, tunakujulisha kuwa umepangwa kuratibu ibada ya {$dateWithDay}. Tafadhali jiandae ipasavyo na thibitisha kupokea ujumbe huu. Mungu akutie nguvu katika utumishi wako.";
-                
+
                 $coordinatorResp = app(\App\Services\SmsService::class)->sendDebug($service->coordinator->phone_number, $coordinatorMessage);
                 \Log::info('Service coordinator SMS sent', [
                     'coordinator_id' => $service->coordinator_id,
@@ -714,7 +710,7 @@ class SundayServiceController extends Controller
             $serviceDate = $service->service_date->format('d/m/Y');
             // Handle start_time as string (HH:MM format) or DateTime
             $serviceTime = $service->start_time ? (is_string($service->start_time) ? $service->start_time : $service->start_time->format('H:i')) : 'TBA';
-            
+
             // Notify Coordinator using the dedicated method
             $this->sendCoordinatorSms($service);
 
@@ -722,7 +718,7 @@ class SundayServiceController extends Controller
             if ($service->church_elder_id && $service->churchElder) {
                 $coordinatorName = $service->coordinator ? $service->coordinator->full_name : 'TBA';
                 $elderMessage = "Taarifa ya Huduma:\n{$service->service_type} imepangwa tarehe {$serviceDate}\nMratibu: {$coordinatorName}\nMada: {$service->theme}\nMuda: {$serviceTime}\n\nTafadhali pata msaada wa kusimamia huduma hii.\n- {$churchName}";
-                
+
                 $elderResp = app(\App\Services\SmsService::class)->sendDebug($service->churchElder->phone_number, $elderMessage);
                 \Log::info('Service church elder SMS sent', [
                     'elder_id' => $service->church_elder_id,
@@ -747,7 +743,7 @@ class SundayServiceController extends Controller
     {
         try {
             $smsService = app(\App\Services\SmsService::class);
-            
+
             // Format date and day in Swahili
             $dayNames = [
                 'Monday' => 'Jumatatu',
@@ -761,35 +757,35 @@ class SundayServiceController extends Controller
             $dayName = $dayNames[$service->service_date->format('l')] ?? $service->service_date->format('l');
             $serviceDate = $service->service_date->format('d/m/Y');
             $dateWithDay = $serviceDate . ' (' . $dayName . ')';
-            
+
             // Format time - handle as string (HH:MM format) or DateTime
             $serviceTime = $service->start_time ? (is_string($service->start_time) ? $service->start_time : $service->start_time->format('H:i')) : 'TBA';
-            
+
             // Get all active members with phone numbers
             $members = Member::where('membership_type', 'permanent')
                 ->whereNotNull('phone_number')
                 ->where('phone_number', '!=', '')
                 ->get();
-            
+
             $sentCount = 0;
             $failedCount = 0;
-            
+
             foreach ($members as $member) {
                 try {
                     // Format date for message (without day name in parentheses)
                     $formattedDate = $service->service_date->format('d/m/Y');
-                    
+
                     // Format time
                     $formattedTime = $serviceTime !== 'TBA' ? $serviceTime : 'TBA';
-                    
+
                     // Build personalized message using the specified template
                     $message = "Shalom {$member->full_name}, ibada yetu ya {$formattedDate} saa {$formattedTime} inakaribia.\n";
                     $message .= "Jitayarishe kuonana na Bwana kwa sifa, maombi na neno lenye nguvu.\n";
                     $message .= "Usikose, Mungu ana jambo maalum kwa ajili yako.";
-                    
+
                     // Send SMS
                     $result = $smsService->send($member->phone_number, $message);
-                    
+
                     if ($result) {
                         $sentCount++;
                     } else {
@@ -800,10 +796,10 @@ class SundayServiceController extends Controller
                             'phone' => $member->phone_number
                         ]);
                     }
-                    
+
                     // Small delay to avoid overwhelming the SMS service
                     usleep(100000); // 0.1 second delay
-                    
+
                 } catch (\Exception $e) {
                     $failedCount++;
                     \Log::error('Error sending service notification to member', [
@@ -812,7 +808,7 @@ class SundayServiceController extends Controller
                     ]);
                 }
             }
-            
+
             \Log::info('Service notification SMS sent to members', [
                 'service_id' => $service->id,
                 'service_date' => $service->service_date->format('Y-m-d'),
@@ -820,7 +816,7 @@ class SundayServiceController extends Controller
                 'sent_count' => $sentCount,
                 'failed_count' => $failedCount
             ]);
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to send service notifications to members: ' . $e->getMessage());
         }

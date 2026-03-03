@@ -494,7 +494,7 @@
                                                     <strong>Children's Ministry Attendance:</strong>
                                                     <p class="mb-0 mt-2">
                                                         <strong>Recording attendance for Main Service</strong><br>
-                                                        Only teenagers ages <strong>13-17</strong> (Children's Ministry) should be
+                                                        Only teenagers ages <strong>13-21</strong> (Children's Ministry) should be
                                                         recorded here.
                                                     </p>
                                                 </div>
@@ -1857,11 +1857,11 @@
                     }
 
                     resultDiv.innerHTML = `<div class="alert ${alertClass}">
-                    ${icon} <strong>${result.success ? 'Success' : 'Error'}</strong><br>
-                    ${message}
-                    ${result.enroll_id ? `<br><small>Main Member Enroll ID: <strong>${result.enroll_id}</strong> (Use this ID on the device to enroll fingerprint)</small>` : ''}
-                    ${result.registered_count ? `<br><small>Total registered: <strong>${result.registered_count}</strong> person(s)</small>` : ''}
-                </div>`;
+                        ${icon} <strong>${result.success ? 'Success' : 'Error'}</strong><br>
+                        ${message}
+                        ${result.enroll_id ? `<br><small>Main Member Enroll ID: <strong>${result.enroll_id}</strong> (Use this ID on the device to enroll fingerprint)</small>` : ''}
+                        ${result.registered_count ? `<br><small>Total registered: <strong>${result.registered_count}</strong> person(s)</small>` : ''}
+                    </div>`;
                 }
 
                 if (result.success) {
@@ -1878,9 +1878,9 @@
                 if (resultDiv) {
                     resultDiv.style.display = 'block';
                     resultDiv.innerHTML = `<div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> <strong>Error</strong><br>
-                    ${error.message}
-                </div>`;
+                        <i class="fas fa-exclamation-circle"></i> <strong>Error</strong><br>
+                        ${error.message}
+                    </div>`;
                 }
             } finally {
                 showBiometricTestLoading(false);

@@ -40,7 +40,7 @@ class ChildTransitionNotification extends Notification
     {
         return (new \Illuminate\Notifications\Messages\MailMessage)
             ->subject('Child Transition to Independent Member')
-            ->line("{$this->child->full_name} has reached the age of 21 and has been transitioned to an independent member.")
+            ->line("{$this->child->full_name} has reached the age of 22 and has been transitioned to an independent member.")
             ->line("New Member ID: {$this->member->member_id}")
             ->action('View Member Profile', url("/members/{$this->member->id}"))
             ->line('Please complete the registration by assigning an envelope number and updating any other necessary details.');

@@ -797,11 +797,11 @@ class MemberController extends Controller
                                     }
                                 }
 
-                                // Register teenager children (13-17)
+                                // Register teenager children (13-21)
                                 $member->load('children');
                                 $allChildren = $member->children()->whereNotNull('date_of_birth')->get();
                                 $teenagers = $allChildren->filter(function ($child) {
-                                    return $child->shouldAttendMainService(); // Only teenagers (13-17)
+                                    return $child->shouldAttendMainService(); // Only teenagers (13-21)
                                 });
 
                                 \Log::info("Found {$teenagers->count()} teenagers to register");

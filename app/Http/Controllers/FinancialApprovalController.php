@@ -88,23 +88,66 @@ class FinancialApprovalController extends Controller
 
         // Get expenses that have sufficient funds or have additional funding provided
         // Show all pending expenses, not just today's
-        $pendingExpenses = Expense::with(['budget', 'approver'])
+        $pendingExpenses = Expense::with(['budget.offeringAllocations', 'approver'])
             ->where('approval_status', 'pending')
-            ->where(function ($query) {
-                $query->whereNull('budget_id') // Non-budget expenses are always fundable
-                    ->orWhere('approval_notes', 'LIKE', '%additional funding%') // Include expenses with additional funding
-                    ->orWhere('approval_notes', 'LIKE', '%Fund allocation with additional funding%') // Include expenses with additional funding
-                    ->orWhereHas('budget', function ($budgetQuery) {
-                        // Only include budget expenses that have sufficient allocated funds
-                        $budgetQuery->whereRaw('
-                              (SELECT COALESCE(SUM(allocated_amount - used_amount), 0) 
-                               FROM budget_offering_allocations 
-                               WHERE budget_id = budgets.id) >= expenses.amount
-                          ');
-                    });
-            })
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // Pre-calculate aggregated general fund income for efficiency
+        $generalIncome = (float) \App\Models\Tithe::where('approval_status', 'approved')->sum('amount') +
+            (float) \App\Models\Offering::where('approval_status', 'approved')->sum('amount') +
+            (float) \App\Models\Donation::where('approval_status', 'approved')->sum('amount') +
+            (float) \App\Models\AnnualFee::where('approval_status', 'approved')->sum('amount');
+
+        // Get total committed (spent + pending) for all general budgets
+        $generalBudgets = Budget::where(function ($query) {
+            $query->where('primary_offering_type', 'general')
+                ->orWhereNull('primary_offering_type');
+        })->where('status', 'active')->get();
+
+        $totalGeneralSpent = (float) $generalBudgets->sum('spent_amount');
+        $allGeneralBudgetIds = $generalBudgets->pluck('id')->toArray();
+
+        $totalGeneralPending = (float) Expense::whereIn('budget_id', $allGeneralBudgetIds)
+            ->where('status', '!=', 'paid')
+            ->whereIn('approval_status', ['pending', 'approved'])
+            ->sum('amount');
+
+        $availableGeneralLiquidity = $generalIncome - $totalGeneralSpent - $totalGeneralPending;
+
+        // Check fund availability for each expense
+        $pendingExpenses->each(function ($expense) use ($availableGeneralLiquidity) {
+            if (!$expense->budget_id) {
+                $expense->is_fundable = true;
+                return;
+            }
+
+            // Check for additional funding in notes
+            if (
+                strpos($expense->approval_notes, 'additional funding') !== false ||
+                strpos($expense->approval_notes, 'Fund allocation with additional funding') !== false
+            ) {
+                $expense->is_fundable = true;
+                return;
+            }
+
+            $primaryOfferingType = $expense->budget->primary_offering_type;
+            $isGeneral = (!$primaryOfferingType || $primaryOfferingType === 'general');
+
+            if ($isGeneral) {
+                // For general budgets, check against church-wide liquidity
+                $expense->is_fundable = $availableGeneralLiquidity >= 0;
+                $expense->available_fund_amount = $availableGeneralLiquidity;
+            } else {
+                // For specific fund types, check allocated funds
+                $remainingAllocated = $expense->budget->offeringAllocations->sum(function ($allocation) {
+                    return $allocation->allocated_amount - $allocation->used_amount;
+                });
+
+                $expense->is_fundable = $remainingAllocated >= $expense->amount;
+                $expense->available_fund_amount = $remainingAllocated;
+            }
+        });
 
         $pendingBudgets = Budget::with(['approver'])
             ->where('approval_status', 'pending')
@@ -680,7 +723,7 @@ class FinancialApprovalController extends Controller
      */
     public function viewDetails($type, $id)
     {
-        $this->checkApprovalPermission();
+        $this->checkViewPermission();
 
         // Handle pledge payments separately
         if ($type === 'pledge_payment') {
@@ -689,13 +732,20 @@ class FinancialApprovalController extends Controller
         } else {
             $model = $this->getModel($type);
 
-            // Only load member relationship for models that have it
+            // Only load relationships for models that have them
             $query = $model->newQuery();
+            $relationships = ['approver'];
+
             if (in_array($type, ['tithe', 'offering', 'pledge', 'donation', 'annual_fee'])) {
-                $query->with(['member', 'child', 'approver']);
-            } else {
-                $query->with('approver');
+                $relationships[] = 'member';
+                if ($type === 'annual_fee') {
+                    $relationships[] = 'child';
+                }
+            } elseif ($type === 'expense') {
+                $relationships[] = 'budget';
             }
+
+            $query->with($relationships);
             $record = $query->findOrFail($id);
 
             // Get the appropriate date field based on record type
@@ -711,8 +761,8 @@ class FinancialApprovalController extends Controller
             'type' => ucfirst($type === 'pledge_payment' ? 'Pledge Payment' : $type),
             'amount' => ($type === 'budget' ? ($record->total_budget ?? 0) : ($record->amount ?? 0)),
             'date' => $recordDate ? (is_string($recordDate) ? $recordDate : (is_object($recordDate) && method_exists($recordDate, 'format') ? $recordDate->format('M d, Y') : $recordDate)) : null,
-            'member_name' => ($type === 'pledge_payment' ? ($record->pledge->member->full_name ?? null) : ($record->member->full_name ?? $record->child->full_name ?? null)),
-            'child_name' => $record->child->full_name ?? null,
+            'member_name' => ($type === 'pledge_payment' ? ($record->pledge?->member?->full_name ?? null) : ($record->member?->full_name ?? $record->child?->full_name ?? null)),
+            'child_name' => $record->child?->full_name ?? null,
             'year' => $record->year ?? null,
             'donor_name' => $record->donor_name ?? null,
             'recorded_by' => ($type === 'budget' ? ($this->getRecordedByForBudget($record) ?? 'System') : ($record->recorded_by ?? 'System')),
@@ -736,7 +786,6 @@ class FinancialApprovalController extends Controller
             $data['donation_type'] = $record->donation_type ?? null;
             $data['payment_method'] = $record->payment_method ?? null;
             $data['reference_number'] = $record->reference_number ?? null;
-            $data['purpose'] = $record->purpose ?? null;
         } elseif ($type === 'expense') {
             $data['description'] = $record->description ?? null;
             $data['vendor'] = $record->vendor ?? null;

@@ -724,6 +724,16 @@
                         <div class="col-md-3 col-12">
                             <div class="card h-100">
                                 <div class="card-body text-center">
+                                    <i class="fas fa-file-invoice-dollar fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">General Report</h5>
+                                    <p class="card-text">Taarifa ya Mapato na Matumizi (Bajeti vs Halisi).</p>
+                                    <a href="{{ route('reports.general') }}" class="btn btn-primary">View Report</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-12">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
                                     <i class="fas fa-calendar-week fa-3x text-info mb-3"></i>
                                     <h5 class="card-title">Weekly Financial Report</h5>
                                     <p class="card-text">Comprehensive weekly financial report with all income and expenses.

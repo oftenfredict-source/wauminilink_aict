@@ -157,7 +157,7 @@ class SettingsService
     public static function getMembershipSettings()
     {
         return [
-            'child_max_age' => self::get('child_max_age', 21),
+            'child_max_age' => self::get('child_max_age', 22),
             'age_reference' => self::get('age_reference', 'today'),
             'auto_generate_member_id' => self::get('auto_generate_member_id', true),
             'member_id_prefix' => self::get('member_id_prefix', 'WM'),

@@ -52,6 +52,12 @@
             <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
             Leadership
           </a>
+          @if(Auth::user()->isAdmin() || Auth::user()->isPastor() || Auth::user()->isSecretary())
+            <a class="nav-link" href="{{ route('departments.index') }}">
+              <div class="sb-nav-link-icon"><i class="fas fa-layer-group"></i></div>
+              Departments
+            </a>
+          @endif
           <div class="sb-sidenav-menu-heading">Settings</div>
           <a class="nav-link" href="{{ route('settings.index') }}">
             <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>

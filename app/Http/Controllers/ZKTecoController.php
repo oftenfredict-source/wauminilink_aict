@@ -417,7 +417,7 @@ class ZKTecoController extends Controller
                 }
             }
                 
-            // STEP 3: Register teenager children (13-17) who should attend main service
+            // STEP 3: Register teenager children (13-21) who should attend main service
             Log::info("=== STEP 3: Checking for Teenager Children ===");
             
             // Reload children relationship to ensure we have latest data
@@ -428,7 +428,7 @@ class ZKTecoController extends Controller
             $teenagers = $allChildren->filter(function($child) {
                 $isTeenager = $child->shouldAttendMainService();
                 Log::info("Child {$child->full_name} (age: {$child->getAge()}) - is teenager: " . ($isTeenager ? 'YES ✅' : 'NO ❌'));
-                return $isTeenager; // Only teenagers (13-17)
+                return $isTeenager; // Only teenagers (13-21)
             });
             
             Log::info("Found {$teenagers->count()} teenagers to register");

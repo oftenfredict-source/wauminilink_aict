@@ -115,23 +115,54 @@
                         <label class="form-label fw-bold">Target Audience <span class="text-danger">*</span></label>
                         <div class="card border-light bg-light">
                             <div class="card-body">
-                                <div class="d-flex gap-4 mb-3">
+                                <div class="d-flex gap-4 mb-3 flex-wrap">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="target_type" id="target_all" value="all" 
+                                        <input class="form-check-input" type="radio" name="target_type" id="target_all" value="all"
                                             {{ old('target_type', 'all') == 'all' ? 'checked' : '' }} onchange="toggleTargeting()">
-                                        <label class="form-check-label" for="target_all">
-                                            All Members
+                                        <label class="form-check-label fw-semibold" for="target_all">
+                                            <i class="fas fa-globe me-1 text-success"></i> All Members
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="target_type" id="target_specific" value="specific" 
+                                        <input class="form-check-input" type="radio" name="target_type" id="target_department" value="department"
+                                            {{ old('target_type') == 'department' ? 'checked' : '' }} onchange="toggleTargeting()">
+                                        <label class="form-check-label fw-semibold" for="target_department">
+                                            <i class="fas fa-layer-group me-1 text-primary"></i> By Department
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="target_type" id="target_specific" value="specific"
                                             {{ old('target_type') == 'specific' ? 'checked' : '' }} onchange="toggleTargeting()">
-                                        <label class="form-check-label" for="target_specific">
-                                            Specific Members
+                                        <label class="form-check-label fw-semibold" for="target_specific">
+                                            <i class="fas fa-user-check me-1 text-warning"></i> Specific Members
                                         </label>
                                     </div>
                                 </div>
 
+                                {{-- DEPARTMENT PICKER --}}
+                                <div id="department_container" style="display: {{ old('target_type') == 'department' ? 'block' : 'none' }};">
+                                    <div class="mb-3">
+                                        <label for="department_id" class="form-label fw-bold">Select Department</label>
+                                        <select class="form-select" id="department_id" name="department_id" onchange="showDepartmentMembers()">
+                                            <option value="">-- Choose a department --</option>
+                                            @foreach($departments as $dept)
+                                                <option value="{{ $dept->id }}"
+                                                    data-members="{{ $dept->members->pluck('full_name', 'id')->toJson() }}"
+                                                    {{ old('department_id') == $dept->id ? 'selected' : '' }}>
+                                                    {{ $dept->name }} ({{ $dept->members->count() }} member{{ $dept->members->count() != 1 ? 's' : '' }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Only active departments with assigned members are shown.</small>
+                                    </div>
+                                    {{-- Preview of department members --}}
+                                    <div id="dept_members_preview" class="border rounded bg-white p-3" style="display:none; max-height: 200px; overflow-y: auto;">
+                                        <p class="text-muted small mb-2 fw-bold"><i class="fas fa-users me-1"></i>Members who will receive this announcement:</p>
+                                        <div id="dept_members_list" class="d-flex flex-wrap gap-1"></div>
+                                    </div>
+                                </div>
+
+                                {{-- SPECIFIC MEMBERS PICKER --}}
                                 <div id="specific_members_container" style="display: {{ old('target_type') == 'specific' ? 'block' : 'none' }};">
                                     <div class="mb-2">
                                         <input type="text" id="member_search" class="form-control mb-2" placeholder="Search members by name or ID..." onkeyup="filterMemberSelection()">
@@ -141,7 +172,7 @@
                                             @foreach($members as $member)
                                                 <div class="col-md-6 col-lg-4 member-selection-item" data-name="{{ strtolower($member->full_name) }}" data-id="{{ strtolower($member->member_id) }}">
                                                     <div class="form-check border rounded p-2 px-4 h-100">
-                                                        <input class="form-check-input" type="checkbox" name="target_member_ids[]" 
+                                                        <input class="form-check-input" type="checkbox" name="target_member_ids[]"
                                                             value="{{ $member->id }}" id="member_{{ $member->id }}"
                                                             {{ is_array(old('target_member_ids')) && in_array($member->id, old('target_member_ids')) ? 'checked' : '' }}>
                                                         <label class="form-check-label d-block cursor-pointer" for="member_{{ $member->id }}">
@@ -162,6 +193,7 @@
                             </div>
                         </div>
                     </div>
+
 
                     <div class="col-12">
                         <div class="card border-info">
@@ -198,33 +230,53 @@
 
 <script>
 function toggleTargeting() {
-    const container = document.getElementById('specific_members_container');
+    const isDept     = document.getElementById('target_department').checked;
     const isSpecific = document.getElementById('target_specific').checked;
-    container.style.display = isSpecific ? 'block' : 'none';
+
+    document.getElementById('department_container').style.display    = isDept     ? 'block' : 'none';
+    document.getElementById('specific_members_container').style.display = isSpecific ? 'block' : 'none';
+
+    if (isDept) showDepartmentMembers();
     updateSelectionCount();
+}
+
+function showDepartmentMembers() {
+    const select  = document.getElementById('department_id');
+    const option  = select.selectedOptions[0];
+    const preview = document.getElementById('dept_members_preview');
+    const list    = document.getElementById('dept_members_list');
+
+    if (!option || !option.value) {
+        preview.style.display = 'none';
+        return;
+    }
+
+    const members = JSON.parse(option.dataset.members || '{}');
+    const names   = Object.values(members);
+
+    if (names.length === 0) {
+        list.innerHTML = '<span class="text-muted fst-italic">No members assigned to this department.</span>';
+    } else {
+        list.innerHTML = names.map(n =>
+            `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">${n}</span>`
+        ).join('');
+    }
+    preview.style.display = 'block';
 }
 
 function filterMemberSelection() {
     const searchTerm = document.getElementById('member_search').value.toLowerCase();
-    const items = document.querySelectorAll('.member-selection-item');
-    
-    items.forEach(item => {
-        const name = item.dataset.name;
-        const id = item.dataset.id;
-        if (name.includes(searchTerm) || id.includes(searchTerm)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
+    document.querySelectorAll('.member-selection-item').forEach(item => {
+        const match = item.dataset.name.includes(searchTerm) || item.dataset.id.includes(searchTerm);
+        item.style.display = match ? 'block' : 'none';
     });
 }
 
 function selectVisibleMembers(select) {
-    const items = document.querySelectorAll('.member-selection-item');
-    items.forEach(item => {
+    document.querySelectorAll('.member-selection-item').forEach(item => {
         if (item.style.display !== 'none') {
-            const checkbox = item.querySelector('.form-check-input');
-            if (checkbox) checkbox.checked = select;
+            const cb = item.querySelector('.form-check-input');
+            if (cb) cb.checked = select;
         }
     });
     updateSelectionCount();
@@ -236,10 +288,15 @@ function updateSelectionCount() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('input[name="target_member_ids[]"]').forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectionCount);
+    document.querySelectorAll('input[name="target_member_ids[]"]').forEach(cb => {
+        cb.addEventListener('change', updateSelectionCount);
     });
     updateSelectionCount();
+
+    // If department was pre-selected (e.g. old() after validation fail), show preview
+    if (document.getElementById('target_department').checked) {
+        showDepartmentMembers();
+    }
 });
 </script>
 @endsection

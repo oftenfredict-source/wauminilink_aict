@@ -26,7 +26,7 @@ class AttendanceController extends Controller
     {
         $serviceType = $request->get('service_type', 'sunday_service');
         $serviceId = $request->get('service_id');
-        
+
         // Get available services based on type
         // Show all Sunday Services for both Main Service and Children Service attendance
         // The service_type filter in attendance determines which children appear, not which services
@@ -36,7 +36,7 @@ class AttendanceController extends Controller
         } else {
             $services = SpecialEvent::orderBy('event_date', 'desc')->get();
         }
-        
+
         // Get selected service
         $selectedService = null;
         if ($serviceId) {
@@ -46,12 +46,12 @@ class AttendanceController extends Controller
                 $selectedService = SpecialEvent::find($serviceId);
             }
         }
-        
+
         // Get all members
         $members = Member::orderBy('full_name')->get();
-        
+
         // Get children based on attendance service type (not the service's own type)
-        // For main service attendance: show only teenagers (13-17)
+        // For main service attendance: show only teenagers (13-21)
         // For children service attendance: show only Sunday School children (3-12)
         $children = Child::with('member')
             ->get()
@@ -59,46 +59,46 @@ class AttendanceController extends Controller
                 if (!$child->shouldRecordAttendance()) {
                     return false; // Skip infants and adults
                 }
-                
+
                 // Filter based on the attendance service type selected, not the service's own type
                 if ($serviceType === 'sunday_service') {
-                    // Main service attendance: show only teenagers (13-17)
+                    // Main service attendance: show only teenagers (13-21)
                     return $child->shouldAttendMainService();
                 } elseif ($serviceType === 'children_service') {
                     // Children service attendance: show only Sunday School children (3-12)
                     return $child->shouldAttendSundaySchool();
                 }
-                
+
                 // Default: show all children who should record attendance (3-17)
                 return $child->shouldRecordAttendance();
             })
             ->sortBy('full_name')
             ->values();
-        
+
         // Get attendance records for selected service
         $attendanceRecords = collect();
         $childAttendanceRecords = collect();
         $existingOfferingAmount = null;
-        
+
         if ($selectedService) {
             $attendanceRecords = ServiceAttendance::forService($serviceType, $serviceId)
                 ->membersOnly()
                 ->with('member')
                 ->get()
                 ->keyBy('member_id');
-            
+
             $childAttendanceRecords = ServiceAttendance::forService($serviceType, $serviceId)
                 ->childrenOnly()
                 ->with('child')
                 ->get()
                 ->keyBy('child_id');
-            
+
             // Get existing offering amount for children service
             if ($serviceType === 'children_service') {
                 $existingOffering = Offering::where('service_id', $serviceId)
                     ->where('service_type', 'children_service')
                     ->first();
-                
+
                 if ($existingOffering) {
                     $existingOfferingAmount = $existingOffering->amount;
                 } elseif (isset($selectedService->offerings_amount) && $selectedService->offerings_amount > 0) {
@@ -106,20 +106,20 @@ class AttendanceController extends Controller
                 }
             }
         }
-        
+
         return view('attendance.index', compact(
-            'serviceType', 
-            'serviceId', 
-            'services', 
-            'selectedService', 
-            'members', 
+            'serviceType',
+            'serviceId',
+            'services',
+            'selectedService',
+            'members',
             'children',
             'attendanceRecords',
             'childAttendanceRecords',
             'existingOfferingAmount'
         ));
     }
-    
+
     /**
      * Store attendance records
      */
@@ -143,22 +143,22 @@ class AttendanceController extends Controller
             'children_offering_amount.numeric' => 'Offering amount must be a valid number.',
             'children_offering_amount.min' => 'Offering amount cannot be negative.',
         ]);
-        
+
         // Ensure at least one member or child is provided
         $memberIds = $request->member_ids ?? [];
         $childIds = $request->child_ids ?? [];
-        
+
         if (empty($memberIds) && empty($childIds)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please select at least one member or child to record attendance.'
             ], 422);
         }
-        
+
         // Get the service to check start time
         $serviceType = $request->service_type;
         $serviceId = $request->service_id;
-        
+
         if ($serviceType === 'sunday_service' || $serviceType === 'children_service') {
             $service = SundayService::findOrFail($serviceId);
             $serviceDate = $service->service_date;
@@ -168,7 +168,7 @@ class AttendanceController extends Controller
             $serviceDate = $service->event_date;
             $startTime = $service->start_time;
         }
-        
+
         // Check if service has a start time
         if ($startTime) {
             try {
@@ -185,16 +185,16 @@ class AttendanceController extends Controller
                         $timeString = $startTime . ':00';
                     }
                 }
-                
+
                 $serviceStartDateTime = \Carbon\Carbon::parse($serviceDate->format('Y-m-d') . ' ' . $timeString);
-                
+
                 // Check if current time is before service start time
                 $now = now();
                 if ($now->lt($serviceStartDateTime)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Attendance cannot be recorded before the service start time. Service starts at ' . 
-                            $serviceStartDateTime->format('d/m/Y h:i A') . '. Current time is ' . 
+                        'message' => 'Attendance cannot be recorded before the service start time. Service starts at ' .
+                            $serviceStartDateTime->format('d/m/Y h:i A') . '. Current time is ' .
                             $now->format('d/m/Y h:i A') . '.'
                     ], 422);
                 }
@@ -208,16 +208,16 @@ class AttendanceController extends Controller
                 ]);
             }
         }
-        
+
         try {
             DB::beginTransaction();
-            
+
             $notes = $request->notes;
             $recordedBy = auth()->user()->name ?? 'System';
-            
+
             // Remove existing attendance records for this service
             ServiceAttendance::forService($serviceType, $serviceId)->delete();
-            
+
             // Create new attendance records for members
             $attendanceData = [];
             foreach ($memberIds as $memberId) {
@@ -233,22 +233,22 @@ class AttendanceController extends Controller
                     'updated_at' => now(),
                 ];
             }
-            
+
             // Create new attendance records for children
             foreach ($childIds as $childId) {
                 $child = Child::find($childId);
                 if (!$child) {
                     continue;
                 }
-                
+
                 // Validate that child should record attendance (ages 3-17)
                 if (!$child->shouldRecordAttendance()) {
                     continue; // Skip infants (< 3) and adults (18+)
                 }
-                
+
                 // Validate age-based service routing based on attendance service type
                 if ($serviceType === 'sunday_service') {
-                    // Main service attendance: only teenagers (13-17) should be recorded
+                    // Main service attendance: only teenagers (13-21) should be recorded
                     if (!$child->shouldAttendMainService()) {
                         continue; // Skip children who should attend Sunday School
                     }
@@ -258,7 +258,7 @@ class AttendanceController extends Controller
                         continue; // Skip teenagers who should attend main service
                     }
                 }
-                
+
                 $attendanceData[] = [
                     'service_type' => $serviceType,
                     'service_id' => $serviceId,
@@ -271,46 +271,47 @@ class AttendanceController extends Controller
                     'updated_at' => now(),
                 ];
             }
-            
+
             if (!empty($attendanceData)) {
                 ServiceAttendance::insert($attendanceData);
             }
-            
+
             // Update service attendance count (members + children + guests)
             $attendanceCount = count($attendanceData);
             $guestsCount = 0;
-            
+
             if ($serviceType === 'sunday_service' || $serviceType === 'children_service') {
                 // Get guests count for main service
                 if ($serviceType === 'sunday_service') {
                     $guestsCount = $request->filled('guests_count') ? (int) $request->guests_count : 0;
                 }
-                
+
                 // Total attendance includes members, children, and guests
                 $totalAttendance = $attendanceCount + $guestsCount;
-                
+
                 $updateData = [
                     'attendance_count' => $attendanceCount, // Members + children only
-                    'guests_count' => $guestsCount
+                    'guests_count' => $guestsCount,
+                    'status' => 'completed', // Mark service as completed once attendance is recorded
                 ];
-                
+
                 // If children service offering is provided, update the service offerings_amount
                 if ($serviceType === 'children_service' && $request->filled('children_offering_amount') && $request->children_offering_amount > 0) {
                     $updateData['offerings_amount'] = $request->children_offering_amount;
                 }
-                
+
                 SundayService::where('id', $serviceId)->update($updateData);
             } else {
                 SpecialEvent::where('id', $serviceId)->update(['attendance_count' => $attendanceCount]);
             }
-            
+
             // Create offering record for children service if offering amount is provided
             if ($serviceType === 'children_service' && $request->filled('children_offering_amount') && $request->children_offering_amount > 0) {
                 // Check if there's already an offering record for this service
                 $existingOffering = Offering::where('service_id', $serviceId)
                     ->where('service_type', 'children_service')
                     ->first();
-                
+
                 if ($existingOffering) {
                     // Update existing offering
                     $existingOffering->update([
@@ -335,19 +336,19 @@ class AttendanceController extends Controller
                         'approval_status' => 'pending',
                         'is_verified' => false
                     ]);
-                    
+
                     // Send notification to pastors about pending offering
                     $this->sendFinancialApprovalNotification('offering', $offering);
                 }
             }
-            
+
             DB::commit();
-            
+
             $memberCount = count($memberIds);
             $childCount = count($childIds);
             $guestsCount = ($serviceType === 'sunday_service' && $request->filled('guests_count')) ? (int) $request->guests_count : 0;
             $totalAttendance = $attendanceCount + $guestsCount;
-            
+
             $message = "Attendance recorded successfully for ";
             $parts = [];
             if ($memberCount > 0) {
@@ -360,7 +361,7 @@ class AttendanceController extends Controller
                 $parts[] = "{$guestsCount} guest(s)";
             }
             $message .= implode(', ', $parts);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -370,28 +371,28 @@ class AttendanceController extends Controller
                 'member_count' => $memberCount,
                 'child_count' => $childCount
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to record attendance: ' . $e->getMessage()
             ], 500);
         }
     }
-    
+
     /**
      * Get attendance history for a member
      */
     public function memberHistory(Request $request, $memberId)
     {
         $member = Member::findOrFail($memberId);
-        
+
         $query = ServiceAttendance::byMember($memberId)
             ->with(['sundayService', 'specialEvent'])
             ->orderBy('attended_at', 'desc');
-            
+
         // Filter by date range
         if ($request->filled('from')) {
             $query->whereDate('attended_at', '>=', $request->date('from'));
@@ -399,29 +400,29 @@ class AttendanceController extends Controller
         if ($request->filled('to')) {
             $query->whereDate('attended_at', '<=', $request->date('to'));
         }
-        
+
         // Filter by service type
         if ($request->filled('service_type')) {
             $query->where('service_type', $request->service_type);
         }
-        
+
         $attendances = $query->paginate(20);
         $attendances->appends($request->query());
-        
+
         // Calculate statistics
         $totalAttendances = ServiceAttendance::byMember($memberId)->count();
         $sundayAttendances = ServiceAttendance::byMember($memberId)->sundayServices()->count();
         $specialEventAttendances = ServiceAttendance::byMember($memberId)->specialEvents()->count();
-        
+
         return view('attendance.member-history', compact(
-            'member', 
-            'attendances', 
-            'totalAttendances', 
-            'sundayAttendances', 
+            'member',
+            'attendances',
+            'totalAttendances',
+            'sundayAttendances',
             'specialEventAttendances'
         ));
     }
-    
+
     /**
      * Get service attendance report
      */
@@ -432,37 +433,37 @@ class AttendanceController extends Controller
         } else {
             $service = SpecialEvent::findOrFail($serviceId);
         }
-        
+
         $attendances = ServiceAttendance::forService($serviceType, $serviceId)
             ->with(['member', 'child'])
             ->orderBy('attended_at', 'desc')
             ->get();
-            
+
         // Get member and child statistics
         $totalMembers = Member::count();
-        $totalChildren = Child::whereHas('member', function($query) {
+        $totalChildren = Child::whereHas('member', function ($query) {
             // Only count children who should record attendance (ages 3-17)
-        })->get()->filter(function($child) {
+        })->get()->filter(function ($child) {
             return $child->shouldRecordAttendance();
         })->count();
-        
-        $attendedMembers = $attendances->filter(function($att) {
+
+        $attendedMembers = $attendances->filter(function ($att) {
             return $att->isMemberAttendance();
         })->count();
-        $attendedChildren = $attendances->filter(function($att) {
+        $attendedChildren = $attendances->filter(function ($att) {
             return $att->isChildAttendance();
         })->count();
-        
+
         // Get guests count for main service
         $guestsCount = 0;
         if (($serviceType === 'sunday_service' || $serviceType === 'children_service') && isset($service->guests_count)) {
             $guestsCount = $service->guests_count ?? 0;
         }
-        
+
         $totalAttendees = $attendedMembers + $attendedChildren + $guestsCount;
         $totalPotentialAttendees = $totalMembers + $totalChildren;
         $attendancePercentage = $totalPotentialAttendees > 0 ? round(($totalAttendees / $totalPotentialAttendees) * 100, 2) : 0;
-        
+
         // Get attendance by gender (members and children)
         $attendanceByGender = collect();
         foreach ($attendances as $attendance) {
@@ -476,16 +477,16 @@ class AttendanceController extends Controller
                 $attendanceByGender->push($gender);
             }
         }
-        $attendanceByGender = $attendanceByGender->groupBy(function($item) {
+        $attendanceByGender = $attendanceByGender->groupBy(function ($item) {
             return $item;
         })->map(function ($group) {
             return $group->count();
         });
-            
+
         return view('attendance.service-report', compact(
-            'service', 
-            'serviceType', 
-            'attendances', 
+            'service',
+            'serviceType',
+            'attendances',
             'totalMembers',
             'totalChildren',
             'attendedMembers',
@@ -493,18 +494,18 @@ class AttendanceController extends Controller
             'guestsCount',
             'totalAttendees',
             'totalPotentialAttendees',
-            'attendancePercentage', 
+            'attendancePercentage',
             'attendanceByGender'
         ));
     }
-    
+
     /**
      * Get overall attendance statistics
      */
     public function statistics(Request $request)
     {
         $query = ServiceAttendance::query();
-        
+
         // Filter by date range
         if ($request->filled('from')) {
             $query->whereDate('attended_at', '>=', $request->date('from'));
@@ -512,24 +513,24 @@ class AttendanceController extends Controller
         if ($request->filled('to')) {
             $query->whereDate('attended_at', '<=', $request->date('to'));
         }
-        
+
         // Filter by service type (from service_type_only or service_type)
         $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
         if ($serviceType) {
             $query->where('service_type', $serviceType);
         }
-        
+
         // Filter by specific service/event
         if ($request->filled('service_id') && $serviceType) {
             $query->where('service_id', $request->service_id)
-                  ->where('service_type', $serviceType);
+                ->where('service_type', $serviceType);
         }
-        
+
         // Get basic statistics
         $totalAttendances = $query->count();
         $sundayAttendances = (clone $query)->sundayServices()->count();
         $specialEventAttendances = (clone $query)->specialEvents()->count();
-        
+
         // Get distinct Sunday services that have attendance records (for displaying dates)
         // Apply the same filters as the main query
         $sundayServicesQuery = (clone $query)->sundayServices();
@@ -537,17 +538,17 @@ class AttendanceController extends Controller
             ->select('service_id')
             ->distinct()
             ->pluck('service_id')
-            ->map(function($serviceId) {
+            ->map(function ($serviceId) {
                 return SundayService::find($serviceId);
             })
             ->filter()
             ->sortByDesc('service_date')
             ->values();
-        
+
         // Get attendance by category (adult members vs children)
         $adultMemberAttendances = (clone $query)->membersOnly()->count();
         $childrenAttendances = (clone $query)->childrenOnly()->count();
-        
+
         // Get total guests count from sunday services (respecting all filters)
         $guestsQuery = SundayService::query();
         if ($request->filled('from')) {
@@ -562,37 +563,37 @@ class AttendanceController extends Controller
             $guestsQuery->where('id', $request->service_id);
         }
         $totalGuests = $guestsQuery->sum('guests_count');
-        
+
         // Get attendance by gender for members (optimized query)
         $maleMemberAttendances = (clone $query)
             ->whereNotNull('service_attendances.member_id')
             ->join('members', 'service_attendances.member_id', '=', 'members.id')
             ->where('members.gender', 'male')
             ->count();
-        
+
         $femaleMemberAttendances = (clone $query)
             ->whereNotNull('service_attendances.member_id')
             ->join('members', 'service_attendances.member_id', '=', 'members.id')
             ->where('members.gender', 'female')
             ->count();
-        
+
         // Get attendance by gender for children (optimized query)
         $maleChildAttendances = (clone $query)
             ->whereNotNull('service_attendances.child_id')
             ->join('children', 'service_attendances.child_id', '=', 'children.id')
             ->where('children.gender', 'male')
             ->count();
-        
+
         $femaleChildAttendances = (clone $query)
             ->whereNotNull('service_attendances.child_id')
             ->join('children', 'service_attendances.child_id', '=', 'children.id')
             ->where('children.gender', 'female')
             ->count();
-        
+
         // Get most regular attendees (members and children) - apply all filters
         $mostRegularMemberQuery = ServiceAttendance::select('member_id', DB::raw('COUNT(*) as attendance_count'))
             ->whereNotNull('member_id');
-        
+
         if ($request->filled('from')) {
             $mostRegularMemberQuery->whereDate('attended_at', '>=', $request->date('from'));
         }
@@ -605,15 +606,15 @@ class AttendanceController extends Controller
         }
         if ($request->filled('service_id') && $serviceType) {
             $mostRegularMemberQuery->where('service_id', $request->service_id)
-                                   ->where('service_type', $serviceType);
+                ->where('service_type', $serviceType);
         }
-        
+
         $mostRegularMemberAttendees = $mostRegularMemberQuery
             ->groupBy('member_id')
             ->orderBy('attendance_count', 'desc')
             ->limit(10)
             ->get()
-            ->map(function($att) {
+            ->map(function ($att) {
                 $member = Member::find($att->member_id);
                 return [
                     'type' => 'member',
@@ -623,10 +624,10 @@ class AttendanceController extends Controller
                     'attendance_count' => $att->attendance_count
                 ];
             });
-        
+
         $mostRegularChildQuery = ServiceAttendance::select('child_id', DB::raw('COUNT(*) as attendance_count'))
             ->whereNotNull('child_id');
-        
+
         if ($request->filled('from')) {
             $mostRegularChildQuery->whereDate('attended_at', '>=', $request->date('from'));
         }
@@ -639,15 +640,15 @@ class AttendanceController extends Controller
         }
         if ($request->filled('service_id') && $serviceType) {
             $mostRegularChildQuery->where('service_id', $request->service_id)
-                                  ->where('service_type', $serviceType);
+                ->where('service_type', $serviceType);
         }
-        
+
         $mostRegularChildAttendees = $mostRegularChildQuery
             ->groupBy('child_id')
             ->orderBy('attendance_count', 'desc')
             ->limit(10)
             ->get()
-            ->map(function($att) {
+            ->map(function ($att) {
                 $child = Child::find($att->child_id);
                 return [
                     'type' => 'child',
@@ -657,20 +658,20 @@ class AttendanceController extends Controller
                     'attendance_count' => $att->attendance_count
                 ];
             });
-        
+
         // Combine and sort by attendance count
         $mostRegularAttendees = $mostRegularMemberAttendees->concat($mostRegularChildAttendees)
             ->sortByDesc('attendance_count')
             ->take(10)
             ->values();
-            
+
         // Get attendance trends by month - apply all filters
         $monthlyTrendsQuery = ServiceAttendance::select(
-                DB::raw('YEAR(attended_at) as year'),
-                DB::raw('MONTH(attended_at) as month'),
-                DB::raw('COUNT(*) as attendance_count')
-            );
-        
+            DB::raw('YEAR(attended_at) as year'),
+            DB::raw('MONTH(attended_at) as month'),
+            DB::raw('COUNT(*) as attendance_count')
+        );
+
         if ($request->filled('from')) {
             $monthlyTrendsQuery->whereDate('attended_at', '>=', $request->date('from'));
         }
@@ -683,25 +684,25 @@ class AttendanceController extends Controller
         }
         if ($request->filled('service_id') && $serviceType) {
             $monthlyTrendsQuery->where('service_id', $request->service_id)
-                               ->where('service_type', $serviceType);
+                ->where('service_type', $serviceType);
         }
-        
+
         $monthlyTrends = $monthlyTrendsQuery
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->limit(12)
             ->get();
-        
+
         // Get services and events for filter dropdowns
         $sundayServices = SundayService::orderBy('service_date', 'desc')->get();
         $specialEvents = SpecialEvent::orderBy('event_date', 'desc')->get();
-        
+
         // Get selected service/event for display
         $selectedService = null;
         $selectedEvent = null;
         $serviceType = $request->input('service_type_only') ?: $request->input('service_type');
-        
+
         if ($request->filled('service_id') && $serviceType) {
             if ($serviceType === 'sunday_service') {
                 $selectedService = SundayService::find($request->service_id);
@@ -709,10 +710,10 @@ class AttendanceController extends Controller
                 $selectedEvent = SpecialEvent::find($request->service_id);
             }
         }
-            
+
         return view('attendance.statistics', compact(
             'totalAttendances',
-            'sundayAttendances', 
+            'sundayAttendances',
             'specialEventAttendances',
             'adultMemberAttendances',
             'childrenAttendances',
@@ -731,14 +732,14 @@ class AttendanceController extends Controller
             'sundayServicesWithAttendance'
         ));
     }
-    
+
     /**
      * Clear all attendance records
      */
     public function clearAll(Request $request)
     {
         $user = auth()->user();
-        
+
         // Only allow Administrator, Pastor, and Secretary to clear attendance
         // Treasurers are NOT allowed to clear attendance
         if (!$user || (!$user->isAdmin() && !$user->isPastor() && !$user->isSecretary())) {
@@ -747,13 +748,13 @@ class AttendanceController extends Controller
                 'role' => $user?->role,
                 'ip' => $request->ip()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Only Administrators, Pastors, and Secretaries can clear attendance records.'
             ], 403);
         }
-        
+
         // Log the request for debugging
         Log::info('Clear all attendance request received', [
             'user' => $user->id,
@@ -761,16 +762,16 @@ class AttendanceController extends Controller
             'url' => $request->fullUrl(),
             'method' => $request->method()
         ]);
-        
+
         try {
             // Get count from service_attendances table
             $count = ServiceAttendance::count();
-            
+
             Log::info("Clear all attendance - Found {$count} records in service_attendances table", [
                 'user_id' => $user->id,
                 'user_role' => $user->role
             ]);
-            
+
             if ($count === 0) {
                 return response()->json([
                     'success' => false,
@@ -807,14 +808,14 @@ class AttendanceController extends Controller
     {
         try {
             $dryRun = $request->get('dry_run', false);
-            
+
             // Run the attendance notification command
             $exitCode = Artisan::call('attendance:check-notifications', [
                 '--dry-run' => $dryRun
             ]);
-            
+
             $output = Artisan::output();
-            
+
             if ($exitCode === 0) {
                 return response()->json([
                     'success' => true,
@@ -828,7 +829,7 @@ class AttendanceController extends Controller
                     'output' => $output
                 ], 500);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -836,7 +837,7 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get members who have missed 4+ consecutive weeks
      */
@@ -846,16 +847,16 @@ class AttendanceController extends Controller
             ->whereNotNull('phone_number')
             ->where('phone_number', '!=', '')
             ->get();
-            
+
         $membersWithMissedAttendance = [];
-        
+
         foreach ($members as $member) {
             if ($this->hasMissedFourConsecutiveWeeks($member)) {
                 $lastAttendance = ServiceAttendance::where('member_id', $member->id)
                     ->where('service_type', 'sunday_service')
                     ->orderBy('attended_at', 'desc')
                     ->first();
-                    
+
                 $membersWithMissedAttendance[] = [
                     'id' => $member->id,
                     'name' => $member->full_name,
@@ -866,7 +867,7 @@ class AttendanceController extends Controller
                 ];
             }
         }
-        
+
         return response()->json([
             'success' => true,
             'members' => $membersWithMissedAttendance,
@@ -897,26 +898,26 @@ class AttendanceController extends Controller
             $ip = config('zkteco.ip', '192.168.100.108');
             $port = config('zkteco.port', 4370);
             $password = config('zkteco.password', 0);
-            
+
             Log::info("Starting biometric sync for date: {$date}", [
                 'ip' => $ip,
                 'port' => $port,
                 'service_id' => $service->id
             ]);
-            
+
             $zkteco = new ZKTecoService($ip, $port, $password);
-            
+
             if (!$zkteco->connect()) {
                 Log::error("Failed to connect to biometric device", [
                     'ip' => $ip,
                     'port' => $port,
                     'date' => $date
                 ]);
-            return response()->json([
-                'success' => false,
+                return response()->json([
+                    'success' => false,
                     'message' => 'Failed to connect to biometric device. Please check device connection and settings.',
-            ], 500);
-        }
+                ], 500);
+            }
 
             Log::info("Successfully connected to biometric device");
 
@@ -925,7 +926,7 @@ class AttendanceController extends Controller
             try {
                 $deviceUsers = $zkteco->getUsers();
                 Log::info("Retrieved " . count($deviceUsers) . " users from device (enrolled members)");
-                
+
                 if (count($deviceUsers) > 0) {
                     Log::info("Sample device user: " . json_encode($deviceUsers[0]));
                 }
@@ -938,27 +939,27 @@ class AttendanceController extends Controller
             try {
                 $attendanceRecords = $zkteco->getAttendances();
                 Log::info("Retrieved " . count($attendanceRecords) . " total attendance records from device");
-                
+
                 if (count($attendanceRecords) > 0) {
                     // Log first 3 records with full structure for debugging
                     Log::info("=== ATTENDANCE RECORDS FROM DEVICE ===");
                     for ($i = 0; $i < min(3, count($attendanceRecords)); $i++) {
                         Log::info("Record #{$i}: " . json_encode($attendanceRecords[$i], JSON_PRETTY_PRINT));
                         Log::info("Record #{$i} keys: " . implode(', ', array_keys($attendanceRecords[$i])));
-                        
+
                         // Show what we extract
                         $eid = $attendanceRecords[$i]['user_id'] ?? $attendanceRecords[$i]['pin'] ?? $attendanceRecords[$i]['id'] ?? $attendanceRecords[$i]['uid'] ?? null;
                         $ts = $attendanceRecords[$i]['record_time'] ?? $attendanceRecords[$i]['timestamp'] ?? $attendanceRecords[$i]['time'] ?? null;
                         Log::info("Record #{$i} extracted - enroll_id: {$eid}, timestamp: " . var_export($ts, true));
                     }
-                    
+
                     // Log all enroll IDs found in attendance records for debugging
                     // CRITICAL: Use user_id first (not uid) - uid is just sequential record number
                     $foundEnrollIds = [];
                     foreach ($attendanceRecords as $rec) {
                         $eid = $rec['user_id'] ?? $rec['pin'] ?? $rec['id'] ?? $rec['uid'] ?? null;
                         if ($eid) {
-                            $foundEnrollIds[] = (string)$eid;
+                            $foundEnrollIds[] = (string) $eid;
                         }
                     }
                     Log::info("Enroll IDs found in attendance records (using user_id field): " . implode(', ', array_unique($foundEnrollIds)));
@@ -970,15 +971,15 @@ class AttendanceController extends Controller
                 $zkteco->disconnect();
                 throw $e;
             }
-            
+
             $zkteco->disconnect();
-            
+
             // Create a set of enroll IDs that have fingerprints enrolled on device
             $enrolledEnrollIds = [];
             foreach ($deviceUsers as $deviceUser) {
                 $enrollId = $deviceUser['uid'] ?? $deviceUser['id'] ?? $deviceUser['userid'] ?? null;
                 if ($enrollId) {
-                    $enrolledEnrollIds[(string)$enrollId] = true;
+                    $enrolledEnrollIds[(string) $enrollId] = true;
                 }
             }
             Log::info("Members with fingerprints enrolled on device: " . count($enrolledEnrollIds));
@@ -988,7 +989,7 @@ class AttendanceController extends Controller
             if (empty($attendanceRecords)) {
                 $enrolledCount = count($enrolledEnrollIds);
                 $message = "No attendance records found on device at all.";
-                
+
                 if ($enrolledCount > 0) {
                     $enrolledIds = array_keys($enrolledEnrollIds);
                     $message = "⚠️ NO ATTENDANCE RECORDS FOUND";
@@ -1016,7 +1017,7 @@ class AttendanceController extends Controller
                     $message .= " No members are registered on the device yet.";
                 }
 
-            return response()->json([
+                return response()->json([
                     'success' => true,
                     'message' => $message,
                     'inserted' => 0,
@@ -1030,25 +1031,25 @@ class AttendanceController extends Controller
                     ]
                 ]);
             }
-            
+
             // Log how many records match the date and show all dates found
             $recordsForDate = 0;
             $allDatesFound = [];
             $allEnrollIdsInRecords = [];
-            
+
             foreach ($attendanceRecords as $rec) {
                 // CRITICAL: Use user_id first (not uid) - uid is just sequential record number
                 $eid = $rec['user_id'] ?? $rec['pin'] ?? $rec['id'] ?? $rec['uid'] ?? null;
                 if ($eid) {
-                    $allEnrollIdsInRecords[] = (string)$eid;
+                    $allEnrollIdsInRecords[] = (string) $eid;
                 }
-                
+
                 // CRITICAL: Use record_time first - this is the primary timestamp field from ZKTeco
                 $timestamp = $rec['record_time'] ?? $rec['timestamp'] ?? $rec['time'] ?? $rec['punch_time'] ?? $rec['datetime'] ?? null;
                 if ($timestamp) {
                     try {
                         if (is_numeric($timestamp)) {
-                            $recDate = date('Y-m-d', (int)$timestamp);
+                            $recDate = date('Y-m-d', (int) $timestamp);
                         } elseif (is_string($timestamp)) {
                             $recDate = date('Y-m-d', strtotime($timestamp));
                         } else {
@@ -1063,10 +1064,10 @@ class AttendanceController extends Controller
                     }
                 }
             }
-            
+
             $uniqueDates = array_unique($allDatesFound);
             $uniqueEnrollIds = array_unique($allEnrollIdsInRecords);
-            
+
             Log::info("Attendance records analysis", [
                 'total_records_on_device' => count($attendanceRecords),
                 'records_matching_service_date' => $recordsForDate,
@@ -1078,9 +1079,9 @@ class AttendanceController extends Controller
                 'enrolled_members_on_device' => array_keys($enrolledEnrollIds)
             ]);
 
-        $insertedCount = 0;
-        $syncedMemberIds = []; // Track which member IDs were synced
-        $syncedChildIds = []; // Track which child IDs were synced (teenagers)
+            $insertedCount = 0;
+            $syncedMemberIds = []; // Track which member IDs were synced
+            $syncedChildIds = []; // Track which child IDs were synced (teenagers)
 
             foreach ($attendanceRecords as $index => $record) {
                 try {
@@ -1089,18 +1090,18 @@ class AttendanceController extends Controller
                     //   - user_id = actual user's enroll ID (1, 1, 1, 4, 4, 2...) - USE THIS!
                     //   - pin = alternative field for enroll ID
                     // We MUST use 'user_id' as the enroll_id, NOT 'uid'!
-                    
+
                     // IMPORTANT: Check user_id FIRST, not uid!
                     $enrollId = $record['user_id'] ?? $record['pin'] ?? $record['id'] ?? $record['uid'] ?? null;
-                    
+
                     if (empty($enrollId)) {
                         Log::warning("Attendance record missing enroll ID", [
                             'record_index' => $index,
                             'record' => $record,
                             'record_keys' => array_keys($record)
                         ]);
-                continue;
-            }
+                        continue;
+                    }
 
                     // Log full record structure for first few records
                     if ($index < 3) {
@@ -1120,7 +1121,7 @@ class AttendanceController extends Controller
                     // Get timestamp from record - CRITICAL: record_time is the primary field!
                     // ZKTeco library returns 'record_time' as the main timestamp field
                     $timestamp = $record['record_time'] ?? $record['timestamp'] ?? $record['time'] ?? $record['punch_time'] ?? $record['datetime'] ?? null;
-                    
+
                     // Parse timestamp to get date
                     $recordDate = null;
                     if ($timestamp) {
@@ -1130,7 +1131,7 @@ class AttendanceController extends Controller
                             // - Formatted string (e.g., "2025-12-01 12:00:00")
                             // - DateTime object
                             if (is_numeric($timestamp)) {
-                                $recordDate = date('Y-m-d', (int)$timestamp);
+                                $recordDate = date('Y-m-d', (int) $timestamp);
                             } elseif (is_string($timestamp)) {
                                 $recordDate = date('Y-m-d', strtotime($timestamp));
                             } elseif (is_object($timestamp) && method_exists($timestamp, 'format')) {
@@ -1156,7 +1157,7 @@ class AttendanceController extends Controller
                     // CRITICAL: STRICT DATE FILTERING - Only sync records that EXACTLY match the service date
                     // This ensures each service is independent - members must mark attendance fresh for each new service
                     // Records without dates are SKIPPED to prevent syncing old/unknown records
-                    
+
                     if (!$recordDate) {
                         // If record has no date, skip it - it might be from a previous service
                         // We cannot safely assign it to the current service
@@ -1169,7 +1170,7 @@ class AttendanceController extends Controller
                         ]);
                         continue; // Skip records without dates
                     }
-                    
+
                     // Only process records that EXACTLY match the service date
                     if ($recordDate !== $date) {
                         Log::info("Skipping attendance record - date does not match service date (strict filtering)", [
@@ -1182,20 +1183,20 @@ class AttendanceController extends Controller
                         ]);
                         continue; // Skip records from different dates
                     }
-                    
+
                     Log::info("Processing attendance record - date matches", [
-                    'enroll_id' => $enrollId,
+                        'enroll_id' => $enrollId,
                         'record_date' => $recordDate,
                         'requested_date' => $date,
                         'timestamp' => $timestamp
                     ]);
 
-            // Find linked member or child (teenager) by biometric_enroll_id
+                    // Find linked member or child (teenager) by biometric_enroll_id
                     // Try multiple ways to match enroll ID - check both members and children
                     $member = Member::where('biometric_enroll_id', (string) $enrollId)
                         ->orWhere('biometric_enroll_id', (int) $enrollId)
                         ->first();
-                    
+
                     $child = null;
                     if (!$member) {
                         // If no member found, check if it's a teenager (child)
@@ -1203,8 +1204,8 @@ class AttendanceController extends Controller
                             ->orWhere('biometric_enroll_id', (int) $enrollId)
                             ->first();
                     }
-                    
-            if (!$member && !$child) {
+
+                    if (!$member && !$child) {
                         // Log all members and children with enroll IDs for debugging
                         $allMemberEnrollIds = Member::whereNotNull('biometric_enroll_id')
                             ->pluck('biometric_enroll_id', 'id')
@@ -1212,18 +1213,18 @@ class AttendanceController extends Controller
                         $allChildEnrollIds = Child::whereNotNull('biometric_enroll_id')
                             ->pluck('biometric_enroll_id', 'id')
                             ->toArray();
-                        
+
                         Log::warning('Biometric attendance record has no matching member or child', [
-                    'date' => $date,
+                            'date' => $date,
                             'enroll_id_from_device' => $enrollId,
                             'enroll_id_type' => gettype($enrollId),
                             'record' => $record,
                             'available_member_enroll_ids' => $allMemberEnrollIds,
                             'available_child_enroll_ids' => $allChildEnrollIds,
                             'hint' => 'Check if enroll ID from device matches any member\'s or child\'s biometric_enroll_id'
-                ]);
-                continue;
-            }
+                        ]);
+                        continue;
+                    }
 
                     // Process attendance for member or child
                     if ($member) {
@@ -1235,7 +1236,7 @@ class AttendanceController extends Controller
                             'record_date' => $recordDate,
                             'requested_date' => $date
                         ]);
-                        
+
                         // If member marked attendance, they must have enrolled fingerprint
                         // So we don't need to check enrolledEnrollIds - the attendance record is proof
                         Log::info("Processing attendance for member", [
@@ -1245,18 +1246,18 @@ class AttendanceController extends Controller
                             'record_date' => $recordDate,
                             'requested_date' => $date
                         ]);
-                        
-                        // Check if attendance already exists for this member and service
-            $exists = ServiceAttendance::where([
-                'service_type' => $serviceType,
-                'service_id' => $service->id,
-                'member_id' => $member->id,
-            ])->exists();
 
-            if ($exists) {
-                // Member already has attendance, but still include in synced list for checkbox checking
+                        // Check if attendance already exists for this member and service
+                        $exists = ServiceAttendance::where([
+                            'service_type' => $serviceType,
+                            'service_id' => $service->id,
+                            'member_id' => $member->id,
+                        ])->exists();
+
+                        if ($exists) {
+                            // Member already has attendance, but still include in synced list for checkbox checking
                             // This ensures the checkbox is checked even if attendance was already in database
-                $syncedMemberIds[] = $member->id;
+                            $syncedMemberIds[] = $member->id;
                             Log::info("Member already has attendance - adding to synced list for checkbox", [
                                 'member_id' => $member->id,
                                 'member_name' => $member->full_name,
@@ -1264,15 +1265,15 @@ class AttendanceController extends Controller
                                 'service_id' => $service->id,
                                 'service_date' => $service->service_date
                             ]);
-                continue;
-            }
+                            continue;
+                        }
 
                         // Create attendance record for member
                         $attendedAt = null;
                         if ($timestamp) {
                             try {
                                 if (is_numeric($timestamp)) {
-                                    $attendedAt = date('Y-m-d H:i:s', (int)$timestamp);
+                                    $attendedAt = date('Y-m-d H:i:s', (int) $timestamp);
                                 } elseif (is_string($timestamp)) {
                                     $attendedAt = date('Y-m-d H:i:s', strtotime($timestamp));
                                 } elseif (is_object($timestamp) && method_exists($timestamp, 'format')) {
@@ -1289,20 +1290,20 @@ class AttendanceController extends Controller
                             }
                         } else {
                             $attendedAt = $date . ' ' . date('H:i:s');
-            }
+                        }
 
-            ServiceAttendance::create([
-                'service_type' => $serviceType,
-                'service_id' => $service->id,
-                'member_id' => $member->id,
-                'child_id' => null,
+                        ServiceAttendance::create([
+                            'service_type' => $serviceType,
+                            'service_id' => $service->id,
+                            'member_id' => $member->id,
+                            'child_id' => null,
                             'attended_at' => $attendedAt,
                             'recorded_by' => auth()->id(),
-            ]);
+                        ]);
 
-            $insertedCount++;
+                        $insertedCount++;
                         $syncedMemberIds[] = $member->id;
-                        
+
                         Log::info("Created attendance record for member", [
                             'member_id' => $member->id,
                             'member_name' => $member->full_name,
@@ -1320,7 +1321,7 @@ class AttendanceController extends Controller
                             'record_date' => $recordDate,
                             'requested_date' => $date
                         ]);
-                        
+
                         // Check if attendance already exists for this child and THIS SPECIFIC SERVICE
                         // Each service is independent - children must mark attendance for each new service
                         $exists = ServiceAttendance::where([
@@ -1347,7 +1348,7 @@ class AttendanceController extends Controller
                         if ($timestamp) {
                             try {
                                 if (is_numeric($timestamp)) {
-                                    $attendedAt = date('Y-m-d H:i:s', (int)$timestamp);
+                                    $attendedAt = date('Y-m-d H:i:s', (int) $timestamp);
                                 } elseif (is_string($timestamp)) {
                                     $attendedAt = date('Y-m-d H:i:s', strtotime($timestamp));
                                 } elseif (is_object($timestamp) && method_exists($timestamp, 'format')) {
@@ -1377,7 +1378,7 @@ class AttendanceController extends Controller
 
                         $insertedCount++;
                         $syncedChildIds[] = $child->id; // Add child ID to synced list for checkbox checking
-                        
+
                         Log::info("Created attendance record for child (teenager)", [
                             'child_id' => $child->id,
                             'child_name' => $child->full_name,
@@ -1401,16 +1402,16 @@ class AttendanceController extends Controller
             // Do NOT check checkboxes for members who just enrolled fingerprint but didn't mark attendance
             // The synced_member_ids array already contains only members who marked attendance
             // No need to add additional members - only those who used their fingerprint to mark attendance
-            
+
             $uniqueSyncedIds = array_values(array_unique($syncedMemberIds)); // Re-index array and ensure unique
-            
+
             // Convert to integers to match checkbox IDs (they're stored as integers in HTML)
             $uniqueSyncedIds = array_map('intval', $uniqueSyncedIds);
-            
+
             // Also process child IDs for teenagers
             $uniqueSyncedChildIds = array_values(array_unique($syncedChildIds)); // Re-index array and ensure unique
             $uniqueSyncedChildIds = array_map('intval', $uniqueSyncedChildIds);
-            
+
             // Log detailed information for debugging
             $debugInfo = [
                 'total_attendance_records' => count($attendanceRecords),
@@ -1425,7 +1426,7 @@ class AttendanceController extends Controller
                 'service_id' => $service->id,
                 'service_date' => $service->service_date
             ];
-            
+
             // Add member details for each synced member
             if (count($uniqueSyncedIds) > 0) {
                 $memberDetails = [];
@@ -1442,7 +1443,7 @@ class AttendanceController extends Controller
                 }
                 $debugInfo['synced_member_details'] = $memberDetails;
             }
-            
+
             // Add child details for each synced child (teenager)
             if (count($uniqueSyncedChildIds) > 0) {
                 $childDetails = [];
@@ -1459,16 +1460,16 @@ class AttendanceController extends Controller
                 }
                 $debugInfo['synced_child_details'] = $childDetails;
             }
-            
+
             Log::info("Sync complete - returning synced member and child IDs", $debugInfo);
-            
+
             $totalSynced = count($uniqueSyncedIds) + count($uniqueSyncedChildIds);
             $message = "Biometric attendance synced successfully for service on {$date}. {$insertedCount} new record(s) added.";
-            
+
             // Add note about service-specific attendance
             $message .= "\n\n📅 Note: Each service requires fresh attendance. Only attendance marked for this service date has been synced.";
             $message .= " Previous service attendance records are ignored.";
-            
+
             if ($totalSynced > 0) {
                 $memberText = count($uniqueSyncedIds) > 0 ? count($uniqueSyncedIds) . " member(s)" : "";
                 $childText = count($uniqueSyncedChildIds) > 0 ? count($uniqueSyncedChildIds) . " teenager(s)" : "";
@@ -1480,12 +1481,12 @@ class AttendanceController extends Controller
                     $message .= "\n\n💡 " . count($enrolledEnrollIds) . " member(s) are registered on device but haven't marked attendance yet.";
                     $message .= "\n   Members must USE their fingerprint on the device (on the main screen) to create attendance records for this service.";
                 }
-        }
+            }
 
-        return response()->json([
-            'success' => true,
+            return response()->json([
+                'success' => true,
                 'message' => $message,
-            'inserted' => $insertedCount,
+                'inserted' => $insertedCount,
                 'synced_member_ids' => $uniqueSyncedIds, // Return unique member IDs that were synced (as integers)
                 'synced_child_ids' => $uniqueSyncedChildIds, // Return unique child IDs (teenagers) that were synced (as integers)
                 'enrolled_count' => count($enrolledEnrollIds),
@@ -1503,7 +1504,7 @@ class AttendanceController extends Controller
 
             // Provide more helpful error message
             $errorMessage = 'Failed to sync from biometric device: ' . $e->getMessage();
-            
+
             // Add troubleshooting tips based on error type
             if (strpos($e->getMessage(), 'connect') !== false || strpos($e->getMessage(), 'timeout') !== false) {
                 $errorMessage .= ' Please check: 1) Device is powered on, 2) IP address is correct, 3) Device is on the same network.';
@@ -1517,7 +1518,7 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Check if a member has missed 4 consecutive weeks (helper method)
      */
@@ -1525,7 +1526,7 @@ class AttendanceController extends Controller
     {
         $fiveWeeksAgo = now()->subWeeks(5)->startOfWeek();
         $lastSunday = now()->previous(\Carbon\Carbon::SUNDAY);
-        
+
         $recentServices = SundayService::whereBetween('service_date', [$fiveWeeksAgo, $lastSunday])
             ->orderBy('service_date', 'desc')
             ->get();
@@ -1553,7 +1554,7 @@ class AttendanceController extends Controller
 
         return $missedCount >= 4;
     }
-    
+
     /**
      * Calculate weeks missed for a member
      */
@@ -1563,7 +1564,7 @@ class AttendanceController extends Controller
             ->where('service_type', 'sunday_service')
             ->orderBy('attended_at', 'desc')
             ->first();
-            
+
         if (!$lastAttendance) {
             // If never attended, calculate from first service
             $firstService = SundayService::orderBy('service_date', 'asc')->first();
@@ -1572,10 +1573,10 @@ class AttendanceController extends Controller
             }
             return 0;
         }
-        
+
         return now()->diffInWeeks($lastAttendance->attended_at);
     }
-    
+
     /**
      * Send financial approval notification to pastors
      */

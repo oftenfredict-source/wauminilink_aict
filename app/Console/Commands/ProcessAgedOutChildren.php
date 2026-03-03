@@ -18,14 +18,14 @@ class ProcessAgedOutChildren extends Command
      *
      * @var string
      */
-    protected $description = 'Transition children aged 21 and above to independent members';
+    protected $description = 'Transition children aged 22 and above to independent members';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $ageLimit = config('membership.child_max_age', 21);
+        $ageLimit = config('membership.child_max_age', 22);
         $this->info("Checking for children aged {$ageLimit} and above...");
 
         $agedOutChildren = \App\Models\Child::all()->filter(function ($child) use ($ageLimit) {

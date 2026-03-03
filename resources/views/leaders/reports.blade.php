@@ -416,11 +416,15 @@
                             @foreach($recentAppointments->sortByDesc('appointment_date') as $leader)
                                 <tr>
                                     <td>
-                                        <strong>{{ $leader->member->full_name }}</strong><br>
-                                        <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                        @if($leader->member)
+                                            <strong>{{ $leader->member->full_name }}</strong><br>
+                                            <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                        @else
+                                            <span class="text-danger">Member record missing</span>
+                                        @endif
                                     </td>
                                     <td>{{ $leader->position_display }}</td>
-                                    <td>{{ $leader->appointment_date->format('M d, Y') }}</td>
+                                    <td>{{ $leader->appointment_date?->format('M d, Y') }}</td>
                                     <td>
                                         <span class="badge bg-{{ $leader->is_active ? 'success' : 'secondary' }}">
                                             {{ $leader->is_active ? 'Active' : 'Inactive' }}
@@ -466,11 +470,15 @@
                             @foreach($expiringTerms->sortBy('end_date') as $leader)
                                 <tr>
                                     <td>
-                                        <strong>{{ $leader->member->full_name }}</strong><br>
-                                        <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                        @if($leader->member)
+                                            <strong>{{ $leader->member->full_name }}</strong><br>
+                                            <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                        @else
+                                            <span class="text-danger">Member record missing</span>
+                                        @endif
                                     </td>
                                     <td>{{ $leader->position_display }}</td>
-                                    <td>{{ $leader->end_date->format('M d, Y') }}</td>
+                                    <td>{{ $leader->end_date?->format('M d, Y') }}</td>
                                     <td>
                                         <span class="badge bg-{{ $leader->end_date->diffInDays(now()) <= 30 ? 'danger' : 'warning' }}">
                                             {{ $leader->end_date->diffInDays(now()) }} days
@@ -579,11 +587,15 @@
                         @foreach($leaders->sortBy('position') as $leader)
                             <tr>
                                 <td>
-                                    <strong>{{ $leader->member->full_name }}</strong><br>
-                                    <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                    @if($leader->member)
+                                        <strong>{{ $leader->member->full_name }}</strong><br>
+                                        <small class="text-muted">{{ $leader->member->member_id }}</small>
+                                    @else
+                                        <span class="text-danger">Member record missing</span>
+                                    @endif
                                 </td>
                                 <td>{{ $leader->position_display }}</td>
-                                <td>{{ $leader->appointment_date->format('M d, Y') }}</td>
+                                <td>{{ $leader->appointment_date?->format('M d, Y') }}</td>
                                 <td>{{ $leader->end_date ? $leader->end_date->format('M d, Y') : 'Indefinite' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $leader->is_active ? 'success' : 'secondary' }}">
@@ -643,15 +655,19 @@
                 <div id="mobileCardsContainer">
                     @foreach($leaders->sortBy('position') as $leader)
                         <div class="leadership-card" 
-                             data-name="{{ strtolower($leader->member->full_name) }}"
-                             data-member-id="{{ strtolower($leader->member->member_id) }}"
+                             data-name="{{ strtolower($leader->member?->full_name ?? '') }}"
+                             data-member-id="{{ strtolower($leader->member?->member_id ?? '') }}"
                              data-position="{{ strtolower($leader->position_display) }}"
                              data-status="{{ $leader->is_active ? 'active' : 'inactive' }}"
                              data-position-key="{{ $leader->position }}">
                             <div class="leadership-card-header">
                                 <div class="leadership-card-name">
-                                    <strong>{{ $leader->member->full_name }}</strong>
-                                    <small>{{ $leader->member->member_id }}</small>
+                                    @if($leader->member)
+                                        <strong>{{ $leader->member->full_name }}</strong>
+                                        <small>{{ $leader->member->member_id }}</small>
+                                    @else
+                                        <strong>Member record missing</strong>
+                                    @endif
                                 </div>
                                 <div class="leadership-card-status">
                                     <span class="badge bg-{{ $leader->is_active ? 'success' : 'secondary' }}">

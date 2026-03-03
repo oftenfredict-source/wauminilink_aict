@@ -669,7 +669,7 @@ function triggerNotifications(dryRun) {
                 }
             });
             
-            const triggerNotificationsUrl = '{{ url("/attendance/trigger-notifications") }}';
+            const triggerNotificationsUrl = '{{ route("attendance.trigger.notifications") }}';
             fetch(triggerNotificationsUrl, {
                 method: 'POST',
                 headers: {

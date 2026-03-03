@@ -10,9 +10,13 @@ class Budget extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const TYPE_ANNUAL = 'annual';
+    const TYPE_OTHER = 'other';
+
     protected $fillable = [
         'budget_name',
         'budget_type',
+        'report_category',
         'purpose',
         'primary_offering_type',
         'requires_approval',
@@ -104,8 +108,8 @@ class Budget extends Model
     {
         $now = now();
         return $query->where('start_date', '<=', $now)
-                    ->where('end_date', '>=', $now)
-                    ->where('status', 'active');
+            ->where('end_date', '>=', $now)
+            ->where('status', 'active');
     }
 
     // Accessors
@@ -116,7 +120,8 @@ class Budget extends Model
 
     public function getUtilizationPercentageAttribute()
     {
-        if ($this->total_budget == 0) return 0;
+        if ($this->total_budget == 0)
+            return 0;
         return round(($this->spent_amount / $this->total_budget) * 100, 2);
     }
 
@@ -154,7 +159,8 @@ class Budget extends Model
 
     public function getFundingPercentageAttribute()
     {
-        if ($this->total_budget == 0) return 0;
+        if ($this->total_budget == 0)
+            return 0;
         return round(($this->total_allocated_from_offerings / $this->total_budget) * 100, 2);
     }
 

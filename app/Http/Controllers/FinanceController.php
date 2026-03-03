@@ -464,20 +464,19 @@ class FinanceController extends Controller
             'custom_donation_type' => 'required_if:donation_type,other|nullable|string|max:255',
             'payment_method' => 'required|string',
             'reference_number' => 'nullable|string|max:255',
-            'purpose' => 'nullable|string|max:500',
-            'notes' => 'nullable|string|max:1000',
-            'is_verified' => 'boolean',
-            'is_anonymous' => 'boolean'
+            'notes' => 'nullable|string|max:1000'
         ]);
 
         $validated['recorded_by'] = auth()->user()->name ?? 'System';
         $validated['approval_status'] = 'pending'; // Set to pending for pastor approval
-        $validated['is_verified'] = false; // Override any verification status
+        $validated['is_verified'] = false; // Always false, approval happens separately
 
         // If neither member_id nor donor_name is provided, set as anonymous donation
         if (empty($validated['member_id']) && empty($validated['donor_name'])) {
             $validated['donor_name'] = 'Anonymous';
             $validated['is_anonymous'] = true;
+        } else {
+            $validated['is_anonymous'] = false;
         }
 
         // If donation type is 'other', use the custom donation type
@@ -726,6 +725,10 @@ class FinanceController extends Controller
 
         if ($request->filled('budget_type')) {
             $query->where('budget_type', $request->budget_type);
+        } else {
+            // Default to annual if no filter is applied? Or show all? 
+            // The user said "the budget should be on the two category"
+            // Let's just allow the filter to work normally.
         }
 
         if ($request->filled('status')) {
@@ -772,9 +775,10 @@ class FinanceController extends Controller
     {
         $validated = $request->validate([
             'budget_name' => 'required|string',
-            'budget_type' => 'required|string',
-            'purpose' => 'required|string',
-            'custom_purpose' => 'required_if:purpose,other|nullable|string|max:255',
+            'budget_type' => 'required|string|in:annual,other',
+            'report_category' => 'nullable|string',
+            'purpose' => 'nullable|string',
+            'custom_purpose' => 'nullable|string|max:255',
             'fiscal_year' => 'required|integer',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -790,8 +794,10 @@ class FinanceController extends Controller
             'line_items.*.notes' => 'nullable|string'
         ]);
 
-        // If purpose is "other", use custom_purpose
-        if ($validated['purpose'] === 'other' && !empty($validated['custom_purpose'])) {
+        // If purpose is missing, use budget_name
+        if (empty($validated['purpose'])) {
+            $validated['purpose'] = strtolower(str_replace([' ', '-'], '_', $validated['budget_name']));
+        } elseif ($validated['purpose'] === 'other' && !empty($validated['custom_purpose'])) {
             $validated['purpose'] = strtolower(str_replace([' ', '-'], '_', $validated['custom_purpose']));
         }
         unset($validated['custom_purpose']);
@@ -1077,36 +1083,55 @@ class FinanceController extends Controller
         try {
             $budget = Budget::findOrFail($budgetId);
             $primaryOfferingType = $budget->primary_offering_type;
+            $isGeneral = (!$primaryOfferingType || $primaryOfferingType === 'general');
 
-            if (!$primaryOfferingType) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Budget has no primary offering type'
-                ], 400);
+            if ($isGeneral) {
+                // For general budgets, total income is the sum of all approved Tithes, Offerings, Donations, and Annual Fees
+                $totalIncome = (float) Tithe::where('approval_status', 'approved')->sum('amount') +
+                    (float) Offering::where('approval_status', 'approved')->sum('amount') +
+                    (float) Donation::where('approval_status', 'approved')->sum('amount') +
+                    (float) \App\Models\AnnualFee::where('approval_status', 'approved')->sum('amount');
+
+                // Get all budgets that use the general fund
+                $allBudgetsWithSameOffering = Budget::where(function ($query) {
+                    $query->where('primary_offering_type', 'general')
+                        ->orWhereNull('primary_offering_type');
+                })
+                    ->where('status', 'active')
+                    ->pluck('id');
+
+                // For general budgets, used amount is better represented by actual spent_amount
+                $totalUsedFromAllBudgets = (float) Budget::whereIn('id', $allBudgetsWithSameOffering)->sum('spent_amount');
+            } else {
+                // For specific fund types, aggregate from all relevant sources
+                $totalIncome = (float) Offering::where('offering_type', $primaryOfferingType)
+                    ->where('approval_status', 'approved')
+                    ->sum('amount') +
+                    (float) Donation::where('donation_type', $primaryOfferingType)
+                        ->where('approval_status', 'approved')
+                        ->sum('amount');
+
+                // If the type is 'zaka', also include Tithes
+                if ($primaryOfferingType === 'zaka') {
+                    $totalIncome += (float) Tithe::where('approval_status', 'approved')->sum('amount');
+                }
+
+                $allBudgetsWithSameOffering = Budget::where('primary_offering_type', $primaryOfferingType)
+                    ->where('status', 'active')
+                    ->pluck('id');
+
+                // Get total used amount from allocations for budgets with this offering type
+                $totalUsedFromAllBudgets = (float) \App\Models\BudgetOfferingAllocation::whereIn('budget_id', $allBudgetsWithSameOffering)
+                    ->sum('used_amount');
             }
 
-            // Get total income from offerings
-            $totalIncome = Offering::where('offering_type', $primaryOfferingType)
-                ->where('approval_status', 'approved')
-                ->sum('amount');
-
-            // IMPORTANT: Get used amount from ALL budgets using this offering type, not just this budget
-            // This ensures the fund summary shows the correct available amount across all budgets
-            $allBudgetsWithSameOffering = Budget::where('primary_offering_type', $primaryOfferingType)
-                ->where('status', 'active')
-                ->pluck('id');
-
-            // Get total used amount from ALL allocations for budgets with this offering type
-            $totalUsedFromAllBudgets = \App\Models\BudgetOfferingAllocation::whereIn('budget_id', $allBudgetsWithSameOffering)
-                ->sum('used_amount');
-
-            // Get total pending expenses from ALL budgets using this offering type
+            // Get total pending expenses from ALL budgets using this income pool
             $totalPendingFromAllBudgets = (float) \App\Models\Expense::whereIn('budget_id', $allBudgetsWithSameOffering)
                 ->where(function ($query) {
                     $query->where('status', '!=', 'paid')
                         ->where(function ($q) {
                             $q->whereIn('approval_status', ['pending', 'approved'])
-                                ->orWhereNull('approval_status'); // Include NULL for backward compatibility
+                                ->orWhereNull('approval_status');
                         });
                 })
                 ->sum('amount');
@@ -1340,6 +1365,7 @@ class FinanceController extends Controller
         $validated = $request->validate([
             'budget_name' => 'required|string',
             'budget_type' => 'required|string',
+            'report_category' => 'nullable|string',
             'fiscal_year' => 'required|integer',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -1424,7 +1450,12 @@ class FinanceController extends Controller
         }
 
         $expenses = $query->orderBy('expense_date', 'desc')->paginate(20);
-        $budgets = Budget::active()->approved()->get();
+        $budgets = Budget::active()
+            ->where(function ($q) {
+                $q->where('approval_status', 'approved')
+                    ->orWhere('approval_status', 'pending');
+            })
+            ->get();
 
         // Calculate pending expenses for each budget (includes both pending and approved expenses)
         $budgetIds = $budgets->pluck('id');
@@ -1464,31 +1495,24 @@ class FinanceController extends Controller
     public function storeExpense(Request $request)
     {
         $validated = $request->validate([
-            'budget_id' => 'nullable|exists:budgets,id',
-            'expense_category' => 'required|string',
-            'expense_name' => 'required|string',
+            'budget_id' => 'required|exists:budgets,id', // Expense MUST belong to a budget now
             'amount' => [
                 'required',
                 'numeric',
                 'min:0',
                 function ($attribute, $value, $fail) use ($request) {
-                    // If budget is selected, validate that expense amount doesn't exceed budget total
-                    if ($request->filled('budget_id')) {
-                        $budget = Budget::find($request->budget_id);
-                        if ($budget) {
-                            // Check if expense amount itself exceeds budget total
-                            if ($value > $budget->total_budget) {
-                                $fail("The expense amount (TZS " . number_format((float) $value) . ") cannot exceed the budget total amount (TZS " . number_format((float) $budget->total_budget) . ").");
-                            }
+                    $budget = Budget::find($request->budget_id);
+                    if ($budget) {
+                        if ($value > $budget->total_budget) {
+                            $fail("The expense amount (TZS " . number_format((float) $value) . ") cannot exceed the budget total amount (TZS " . number_format((float) $budget->total_budget) . ").");
+                        }
 
-                            // Also check if expense would exceed budget when combined with already spent
-                            $currentSpent = $budget->spent_amount;
-                            $newTotalSpent = $currentSpent + $value;
+                        $currentSpent = $budget->spent_amount;
+                        $newTotalSpent = $currentSpent + $value;
 
-                            if ($newTotalSpent > $budget->total_budget) {
-                                $remainingBudget = (float) $budget->total_budget - (float) $currentSpent;
-                                $fail("The expense amount (TZS " . number_format((float) $value) . ") would exceed the budget limit. Remaining budget: TZS " . number_format((float) $remainingBudget) . ". Budget total: TZS " . number_format((float) $budget->total_budget) . ".");
-                            }
+                        if ($newTotalSpent > $budget->total_budget) {
+                            $remainingBudget = (float) $budget->total_budget - (float) $currentSpent;
+                            $fail("The expense amount (TZS " . number_format((float) $value) . ") would exceed the budget limit. Remaining budget: TZS " . number_format((float) $remainingBudget) . ". Budget total: TZS " . number_format((float) $budget->total_budget) . ".");
                         }
                     }
                 }
@@ -1505,9 +1529,44 @@ class FinanceController extends Controller
             'additional_funding.*.amount' => 'required_with:additional_funding|numeric|min:0'
         ]);
 
+        $budget = Budget::findOrFail($validated['budget_id']);
+
+        // Derive name and category from budget's report mapping
+        $reportCategory = $budget->report_category ?? 'mengineyo';
+
+        // Mapping internal keys to display names
+        $categoryNames = [
+            'pastoreti' => 'Pastoreti',
+            'posho' => 'Posho',
+            'kwaya' => 'Matumizi ya Kwaya',
+            'vikao' => 'Gharama za Vikao',
+            'nauli_kikazi' => 'Nauli/Safari za kikazi',
+            'maji' => 'Gharama za Maji',
+            'stationery' => 'Gharama za Stationery',
+            'ulinzi' => 'Gharama za Ulinzi',
+            'umeme' => 'Gharama za Umeme',
+            'wahubiri' => 'Nauli kwa wahubiri waalikwa',
+            'ushirika_mtakatifu' => 'Gharama za Ushirika Mtakatifu',
+            'mapambo' => 'Gharama za Mapambo',
+            'usafi' => 'Gharama za Usafi',
+            'matengenezo' => 'Matengenezo madogo',
+            'rambirambi' => 'Rambirambi',
+            'mchungaji_huduma' => 'Huduma kwa Mchungaji',
+            'fungu_ada' => 'Fungu/Ada ya mkristo',
+            'ujenzi_matumizi' => 'Gharama za Ujenzi',
+            'talanta' => 'Talanta',
+            'pasaka_matumizi' => 'Sherehe za Pasaka',
+            'krisi_matumizi' => 'Sherehe za Krismasi',
+            'kanisa_msubiji' => 'Kujenga kanisa msubiji',
+            'makao_makuu_jengo' => 'Ujenzi Makao Makuu',
+            'mengineyo' => 'Mengineyo'
+        ];
+
+        $validated['expense_name'] = $categoryNames[$reportCategory] ?? $budget->budget_name;
+        $validated['expense_category'] = $reportCategory;
         $validated['recorded_by'] = auth()->user()->name ?? 'System';
         $validated['status'] = 'pending';
-        $validated['approval_status'] = 'pending'; // Set to pending for pastor approval
+        $validated['approval_status'] = 'pending';
 
         $expense = Expense::create($validated);
 
@@ -1690,9 +1749,7 @@ class FinanceController extends Controller
     public function updateExpense(Request $request, Expense $expense)
     {
         $validated = $request->validate([
-            'budget_id' => 'nullable|exists:budgets,id',
-            'expense_category' => 'required|string',
-            'expense_name' => 'required|string',
+            'budget_id' => 'required|exists:budgets,id',
             'amount' => 'required|numeric|min:0',
             'expense_date' => 'required|date',
             'payment_method' => 'required|string',
@@ -1700,9 +1757,44 @@ class FinanceController extends Controller
             'description' => 'nullable|string',
             'vendor' => 'nullable|string',
             'receipt_number' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'status' => 'nullable|in:pending,approved,paid'
+            'notes' => 'nullable|string'
         ]);
+
+        $budget = Budget::findOrFail($validated['budget_id']);
+
+        // Derive name and category from budget's report mapping
+        $reportCategory = $budget->report_category ?? 'mengineyo';
+
+        // Mapping internal keys to display names
+        $categoryNames = [
+            'pastoreti' => 'Pastoreti',
+            'posho' => 'Posho',
+            'kwaya' => 'Matumizi ya Kwaya',
+            'vikao' => 'Gharama za Vikao',
+            'nauli_kikazi' => 'Nauli/Safari za kikazi',
+            'maji' => 'Gharama za Maji',
+            'stationery' => 'Gharama za Stationery',
+            'ulinzi' => 'Gharama za Ulinzi',
+            'umeme' => 'Gharama za Umeme',
+            'wahubiri' => 'Nauli kwa wahubiri waalikwa',
+            'ushirika_mtakatifu' => 'Gharama za Ushirika Mtakatifu',
+            'mapambo' => 'Gharama za Mapambo',
+            'usafi' => 'Gharama za Usafi',
+            'matengenezo' => 'Matengenezo madogo',
+            'rambirambi' => 'Rambirambi',
+            'mchungaji_huduma' => 'Huduma kwa Mchungaji',
+            'fungu_ada' => 'Fungu/Ada ya mkristo',
+            'ujenzi_matumizi' => 'Gharama za Ujenzi',
+            'talanta' => 'Talanta',
+            'pasaka_matumizi' => 'Sherehe za Pasaka',
+            'krisi_matumizi' => 'Sherehe za Krismasi',
+            'kanisa_msubiji' => 'Kujenga kanisa msubiji',
+            'makao_makuu_jengo' => 'Ujenzi Makao Makuu',
+            'mengineyo' => 'Mengineyo'
+        ];
+
+        $validated['expense_name'] = $categoryNames[$reportCategory] ?? $budget->budget_name;
+        $validated['expense_category'] = $reportCategory;
 
         $expense->update($validated);
 

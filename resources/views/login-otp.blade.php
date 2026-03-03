@@ -70,7 +70,7 @@
         /* Left side background */
         .otp-left {
             flex: 1;
-            background: url('{{ asset("assets/images/church.jpg") }}') no-repeat center center;
+            background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
             background-size: cover;
             position: relative;
             color: #fff;

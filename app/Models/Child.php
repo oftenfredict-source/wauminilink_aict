@@ -124,7 +124,7 @@ class Child extends Model
     /**
      * Get the child's age group
      * 
-     * @return string|null 'infant' (< 3), 'sunday_school' (3-12), 'teenager' (13-20), or null if 21+
+     * @return string|null 'infant' (< 3), 'sunday_school' (3-12), 'teenager' (13-21), or null if 22+
      */
     public function getAgeGroup()
     {
@@ -134,17 +134,17 @@ class Child extends Model
             return 'infant';
         } elseif ($age >= 3 && $age <= 12) {
             return 'sunday_school';
-        } elseif ($age >= 13 && $age <= 20) {
+        } elseif ($age >= 13 && $age <= 21) {
             return 'teenager';
         }
 
-        return null; // 21 or older
+        return null; // 22 or older
     }
 
     /**
      * Determine which service type this child should attend based on age
      * 
-     * @return string|null 'children_service' for ages 3-12, 'sunday_service' for ages 13-20, null for others
+     * @return string|null 'children_service' for ages 3-12, 'sunday_service' for ages 13-21, null for others
      */
     public function getRecommendedServiceType()
     {
@@ -156,7 +156,7 @@ class Child extends Model
             case 'teenager':
                 return 'sunday_service'; // Main adult service
             default:
-                return null; // Infants (< 3) or adults (21+) - not typically recorded
+                return null; // Infants (< 3) or adults (22+) - not typically recorded
         }
     }
 
@@ -171,7 +171,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child should attend main service (ages 13-20)
+     * Check if this child should attend main service (ages 13-21)
      * 
      * @return bool
      */
@@ -181,7 +181,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child is part of children's ministry (ages 3-20)
+     * Check if this child is part of children's ministry (ages 3-21)
      * 
      * @return bool
      */
@@ -192,7 +192,7 @@ class Child extends Model
     }
 
     /**
-     * Check if this child should be recorded in attendance (ages 3-20)
+     * Check if this child should be recorded in attendance (ages 3-21)
      * 
      * @return bool
      */
@@ -242,15 +242,15 @@ class Child extends Model
 
     /**
      * Boot method to auto-generate biometric enroll ID when child is created
-     * Only for teenagers (13-17) who should attend main service
+     * Only for teenagers (13-21) who should attend main service
      */
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($child) {
-            // Auto-generate biometric enroll ID for teenagers (13-20) who should record attendance
-            // Only generate if child is a teenager (13-20) who should attend main service
+            // Auto-generate biometric enroll ID for teenagers (13-21) who should record attendance
+            // Only generate if child is a teenager (13-21) who should attend main service
             if (empty($child->biometric_enroll_id) && $child->shouldAttendMainService()) {
                 $child->biometric_enroll_id = self::generateBiometricEnrollId();
             }

@@ -203,6 +203,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         Route::get('/offering-fund-breakdown', [App\Http\Controllers\ReportController::class, 'offeringFundBreakdown'])->name('offering-fund-breakdown');
         Route::get('/monthly-financial', [App\Http\Controllers\ReportController::class, 'monthlyFinancialReport'])->name('monthly-financial');
         Route::get('/weekly-financial', [App\Http\Controllers\ReportController::class, 'weeklyFinancialReport'])->name('weekly-financial');
+        Route::get('/general', [App\Http\Controllers\ReportController::class, 'generalReport'])->name('general');
         // Specific routes first (for backward compatibility)
         Route::get('/export/pdf', [App\Http\Controllers\ReportController::class, 'exportPdf'])->name('export.pdf');
         Route::get('/export/excel', [App\Http\Controllers\ReportController::class, 'exportExcel'])->name('export.excel');
@@ -485,6 +486,11 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
     Route::put('/special-events/{specialEvent}', [SpecialEventController::class, 'update'])->name('special.events.update');
     Route::delete('/special-events/{specialEvent}', [SpecialEventController::class, 'destroy'])->name('special.events.destroy');
     Route::get('/special-events-members/notification', [SpecialEventController::class, 'getMembersForNotification'])->name('special.events.members.notification');
+
+    // Department routes
+    Route::resource('departments', \App\Http\Controllers\DepartmentController::class);
+    Route::post('/departments/{department}/assign-members', [\App\Http\Controllers\DepartmentController::class, 'assignMembers'])->name('departments.assign-members');
+    Route::delete('/departments/{department}/members/{member}', [\App\Http\Controllers\DepartmentController::class, 'removeMember'])->name('departments.remove-member');
 });
 
 // Attendance clear-all route - OUTSIDE treasurer group for admin/pastor/secretary access
@@ -502,7 +508,7 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
         ->name('attendance.biometric.sync')
         ->middleware('auth'); // Explicitly add auth middleware
 
-    Route::post('/attendance/trigger-notifications', [AttendanceController::class, 'triggerNotifications'])->name('attendance.trigger.notifications');
+    Route::post('/stats/trigger-notifications', [AttendanceController::class, 'triggerNotifications'])->name('attendance.trigger.notifications');
     Route::get('/attendance/member/{memberId}/history', [AttendanceController::class, 'memberHistory'])->name('attendance.member.history');
     Route::get('/attendance/service/{serviceType}/{serviceId}/report', [AttendanceController::class, 'serviceReport'])->name('attendance.service.report');
     // Primary route that works with php artisan serve (avoids conflict with public/attendance directory)

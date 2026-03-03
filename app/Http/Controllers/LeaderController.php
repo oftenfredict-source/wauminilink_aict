@@ -317,6 +317,11 @@ class LeaderController extends Controller
     {
         $leaders = Leader::with('member')->get();
 
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function ($leader) {
+            return $leader->member !== null;
+        });
+
         // Group by position
         $leadersByPosition = $leaders->groupBy('position');
 
@@ -353,6 +358,11 @@ class LeaderController extends Controller
     public function exportCsv()
     {
         $leaders = Leader::with('member')->get();
+
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function ($leader) {
+            return $leader->member !== null;
+        });
 
         $filename = 'leadership_report_' . date('Y-m-d_H-i-s') . '.csv';
 
@@ -406,6 +416,12 @@ class LeaderController extends Controller
     public function exportPdf()
     {
         $leaders = Leader::with('member')->get();
+
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function ($leader) {
+            return $leader->member !== null;
+        });
+
         $leadersByPosition = $leaders->groupBy('position');
         $activeLeaders = $leaders->where('is_active', true);
 
@@ -437,6 +453,11 @@ class LeaderController extends Controller
     {
         $leaders = Leader::with('member')->active()->get();
 
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function ($leader) {
+            return $leader->member !== null;
+        });
+
         // Get church information from settings or use defaults
         $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Church');
         $churchAddress = \App\Services\SettingsService::get('church_address', 'Dar es Salaam, Tanzania');
@@ -452,6 +473,11 @@ class LeaderController extends Controller
     public function positionIdentityCards($position)
     {
         $leaders = Leader::with('member')->where('position', $position)->active()->get();
+
+        // Filter out leaders without members (data integrity issue)
+        $leaders = $leaders->filter(function ($leader) {
+            return $leader->member !== null;
+        });
 
         if ($leaders->isEmpty()) {
             return redirect()->back()->with('error', 'No active leaders found for this position.');

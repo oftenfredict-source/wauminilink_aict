@@ -37,7 +37,6 @@
             height: 80px;
         }
 
-        /* Hero Section */
         .hero {
             position: relative;
             height: 100vh;
@@ -47,17 +46,8 @@
             text-align: center;
             color: white;
             overflow: hidden;
-        }
-
-        .hero video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            z-index: 0;
+            background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
+            background-size: cover;
         }
 
         .hero::before {
@@ -584,11 +574,6 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <video id="heroVideo" autoplay muted loop playsinline preload="auto"
-            poster="{{ asset('assets/images/church.jpg') }}">
-            <source src="{{ asset('assets/videos/waumini_link_video.mp4') }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
 
         <div class="hero-content">
             <h1>Welcome to Waumini Link</h1>
@@ -715,14 +700,6 @@
     <!-- Bootstrap JS -->
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- JS to ensure full video playback -->
-    <script>
-        const video = document.getElementById('heroVideo');
-        video.addEventListener('ended', () => {
-            video.currentTime = 0;
-            video.play();
-        });
-    </script>
 </body>
 
 </html>

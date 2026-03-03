@@ -2159,6 +2159,13 @@
                                     @endif
                                 </nav>
                             </div>
+
+                            @if(auth()->user()->isAdmin() || auth()->user()->isPastor() || auth()->user()->isSecretary())
+                            <a class="nav-link" href="{{ route('departments.index') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-layer-group"></i></div>
+                                Departments
+                            </a>
+                            @endif
                             
                             <a class="nav-link" href="{{ route('announcements.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>

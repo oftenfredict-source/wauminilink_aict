@@ -85,14 +85,37 @@
                         </label>
                         <select class="form-select form-select-sm" id="donation_type" name="donation_type">
                             <option value="">All Types</option>
-                            <option value="general" {{ request('donation_type') == 'general' ? 'selected' : '' }}>General
-                            </option>
-                            <option value="building" {{ request('donation_type') == 'building' ? 'selected' : '' }}>Building
-                                Fund</option>
-                            <option value="mission" {{ request('donation_type') == 'mission' ? 'selected' : '' }}>Mission
-                            </option>
-                            <option value="special" {{ request('donation_type') == 'special' ? 'selected' : '' }}>Special
-                                Project</option>
+                            <optgroup label="Mifuko ya Sinodi">
+                                <option value="sadaka" {{ request('donation_type') == 'sadaka' ? 'selected' : '' }}>Sadaka
+                                </option>
+                                <option value="zaka" {{ request('donation_type') == 'zaka' ? 'selected' : '' }}>Zaka</option>
+                                <option value="shukurani" {{ request('donation_type') == 'shukurani' ? 'selected' : '' }}>
+                                    Shukurani</option>
+                                <option value="sunday_school" {{ request('donation_type') == 'sunday_school' ? 'selected' : '' }}>Sunday School</option>
+                                <option value="mavuno" {{ request('donation_type') == 'mavuno' ? 'selected' : '' }}>
+                                    Mavuno/Malimbuko</option>
+                                <option value="ushirika_mtakatifu" {{ request('donation_type') == 'ushirika_mtakatifu' ? 'selected' : '' }}>Ushirika Mtakatifu</option>
+                            </optgroup>
+                            <optgroup label="Matoleo Mengine">
+                                <option value="talanta" {{ request('donation_type') == 'talanta' ? 'selected' : '' }}>Talanta
+                                </option>
+                                <option value="mchungaji" {{ request('donation_type') == 'mchungaji' ? 'selected' : '' }}>
+                                    Huduma kwa Mchungaji</option>
+                                <option value="fungu_ada" {{ request('donation_type') == 'fungu_ada' ? 'selected' : '' }}>
+                                    Fungu/Ada ya mkristo</option>
+                            </optgroup>
+                            <optgroup label="Machangizo Mbalimbali">
+                                <option value="pasaka" {{ request('donation_type') == 'pasaka' ? 'selected' : '' }}>Sherehe za
+                                    Pasaka</option>
+                                <option value="krisimasi" {{ request('donation_type') == 'krisimasi' ? 'selected' : '' }}>
+                                    Sherehe za Krismasi</option>
+                                <option value="ujenzi" {{ request('donation_type') == 'ujenzi' ? 'selected' : '' }}>Ujenzi wa
+                                    Kanisa</option>
+                                <option value="tank" {{ request('donation_type') == 'tank' ? 'selected' : '' }}>Ununuzi wa
+                                    Tank</option>
+                                <option value="makao_makuu" {{ request('donation_type') == 'makao_makuu' ? 'selected' : '' }}>
+                                    Ujenzi wa Jengo la makao makuu</option>
+                            </optgroup>
                             <option value="other" {{ request('donation_type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                     </div>
@@ -145,7 +168,6 @@
                                 <th>Type</th>
                                 <th>Amount</th>
                                 <th class="d-none d-xl-table-cell">Payment Method</th>
-                                <th class="d-none d-md-table-cell">Purpose</th>
                                 <th>Status</th>
                                 <th class="text-end">Actions</th>
                             </tr>
@@ -157,25 +179,16 @@
                                         <div class="fw-bold">{{ $donation->donation_date->format('M d, Y') }}</div>
                                         <div class="d-md-none">
                                             <small class="text-muted d-block">
-                                                @if($donation->is_anonymous)
-                                                    <i class="fas fa-user-secret me-1"></i>Anonymous
-                                                @elseif($donation->member)
+                                                @if($donation->member)
                                                     <i class="fas fa-user me-1"></i>{{ $donation->member->full_name }}
                                                 @else
                                                     <i class="fas fa-user me-1"></i>{{ $donation->donor_name ?? 'Unknown' }}
                                                 @endif
                                             </small>
-                                            @if($donation->purpose)
-                                                <small class="text-muted d-block">
-                                                    <i class="fas fa-bullseye me-1"></i>{{ Str::limit($donation->purpose, 30) }}
-                                                </small>
-                                            @endif
                                         </div>
                                     </td>
                                     <td class="d-none d-lg-table-cell">
-                                        @if($donation->is_anonymous)
-                                            <span class="text-muted">Anonymous</span>
-                                        @elseif($donation->member)
+                                        @if($donation->member)
                                             {{ $donation->member->full_name }}
                                         @else
                                             {{ $donation->donor_name ?? 'Unknown' }}
@@ -199,7 +212,6 @@
                                             {{ ucfirst($donation->payment_method) }}
                                         </span>
                                     </td>
-                                    <td class="d-none d-md-table-cell">{{ $donation->purpose ?? '-' }}</td>
                                     <td>
                                         @if($donation->approval_status == 'approved')
                                             <span class="badge bg-success">
@@ -220,17 +232,15 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary text-white"
                                                 onclick="viewDonation(this)" data-id="{{ $donation->id }}"
                                                 data-date="{{ $donation->donation_date->format('M d, Y') }}"
-                                                data-donor="{{ $donation->is_anonymous ? 'Anonymous' : ($donation->member->full_name ?? ($donation->donor_name ?? 'Unknown')) }}"
+                                                data-donor="{{ $donation->member->full_name ?? ($donation->donor_name ?? 'Unknown') }}"
                                                 data-donor-name="{{ $donation->donor_name ?? ($donation->member->full_name ?? 'N/A') }}"
                                                 data-donor-email="{{ $donation->donor_email ?? ($donation->member->email ?? 'N/A') }}"
                                                 data-donor-phone="{{ $donation->donor_phone ?? ($donation->member->phone_number ?? 'N/A') }}"
                                                 data-member-id="{{ $donation->member_id ?? '' }}"
                                                 data-is-member="{{ $donation->member_id ? 'true' : 'false' }}"
-                                                data-is-anonymous="{{ $donation->is_anonymous ? 'true' : 'false' }}"
-                                                data-type="{{ in_array($donation->donation_type, ['general', 'building', 'mission', 'special']) ? ucfirst(str_replace('_', ' ', $donation->donation_type)) : ucfirst($donation->donation_type) }}"
+                                                data-type="{{ in_array($donation->donation_type, ['sadaka', 'zaka', 'shukurani', 'mavuno', 'ushirika_mtakatifu', 'talanta', 'mchungaji', 'fungu_ada', 'pasaka', 'krisimasi', 'ujenzi', 'tank', 'makao_makuu']) ? ucfirst($donation->donation_type) : ucfirst($donation->donation_type) }}"
                                                 data-amount="{{ number_format($donation->amount, 2) }}"
                                                 data-method="{{ ucfirst($donation->payment_method) }}"
-                                                data-purpose="{{ $donation->purpose ?? '-' }}"
                                                 data-status="{{ $donation->approval_status == 'approved' ? 'Approved' : ($donation->approval_status == 'rejected' ? 'Rejected' : 'Pending Approval') }}"
                                                 data-reference="{{ $donation->reference_number ?? '-' }}"
                                                 data-notes="{{ $donation->notes ?? '-' }}" title="View Details">
@@ -303,10 +313,26 @@
                                     <label for="donation_type" class="form-label">Donation Type *</label>
                                     <select class="form-select" id="donation_type" name="donation_type" required>
                                         <option value="">Select Type</option>
-                                        <option value="general">General</option>
-                                        <option value="building">Building Fund</option>
-                                        <option value="mission">Mission</option>
-                                        <option value="special">Special Project</option>
+                                        <optgroup label="Mifuko ya Sinodi">
+                                            <option value="sadaka">Sadaka</option>
+                                            <option value="zaka">Zaka</option>
+                                            <option value="shukurani">Shukurani</option>
+                                            <option value="sunday_school">Sunday School</option>
+                                            <option value="mavuno">Mavuno/Malimbuko</option>
+                                            <option value="ushirika_mtakatifu">Ushirika Mtakatifu</option>
+                                        </optgroup>
+                                        <optgroup label="Matoleo Mengine">
+                                            <option value="talanta">Talanta</option>
+                                            <option value="mchungaji">Huduma kwa Mchungaji</option>
+                                            <option value="fungu_ada">Fungu/Ada ya mkristo</option>
+                                        </optgroup>
+                                        <optgroup label="Machangizo Mbalimbali">
+                                            <option value="pasaka">Sherehe za Pasaka</option>
+                                            <option value="krisimasi">Sherehe za Krismasi</option>
+                                            <option value="ujenzi">Ujenzi wa Kanisa</option>
+                                            <option value="tank">Ununuzi wa Tank</option>
+                                            <option value="makao_makuu">Ujenzi wa Jengo la makao makuu</option>
+                                        </optgroup>
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
@@ -377,18 +403,12 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6" id="donation_reference_group">
-                                <div class="mb-3">
-                                    <label for="reference_number" class="form-label">Reference Number</label>
-                                    <input type="text" class="form-control" id="reference_number" name="reference_number">
+                                <div class="col-md-6" id="donation_reference_group">
+                                    <div class="mb-3">
+                                        <label for="reference_number" class="form-label">Reference Number</label>
+                                        <input type="text" class="form-control" id="reference_number" name="reference_number">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="purpose" class="form-label">Purpose</label>
-                                    <input type="text" class="form-control" id="purpose" name="purpose">
-                                </div>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -397,33 +417,10 @@
                         </div>
 
                         <div class="row">
-                            @if(!auth()->user()->isAccountant())
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="is_verified" name="is_verified"
-                                            value="1">
-                                        <label class="form-check-label" for="is_verified">
-                                            Verified
-                                        </label>
-                                    </div>
-                                </div>
-                            @else
-                                <input type="hidden" name="is_verified" value="0">
-                            @endif
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_anonymous" name="is_anonymous"
-                                        value="1">
-                                    <label class="form-check-label" for="is_anonymous">
-                                        Anonymous Donation
-                                    </label>
-                                </div>
-                            </div>
                             <div class="col-12">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    <strong>Note:</strong> You can record donations without specifying a member or donor
-                                    name. Leave optional fields empty to record as an anonymous donation.
+                                    <strong>Note:</strong> Record a donation by selecting a member or entering donor details.
                                 </div>
                             </div>
                         </div>
@@ -675,10 +672,10 @@
             const statusClass = data.status.toLowerCase() === 'verified' ? 'success' : 'warning';
 
             // Donation type styling
-            const typeClass = data.type.toLowerCase() === 'general' ? 'primary' :
-                data.type.toLowerCase() === 'building' ? 'info' :
-                    data.type.toLowerCase() === 'mission' ? 'success' :
-                        data.type.toLowerCase() === 'special' ? 'warning' : 'secondary';
+            const typeClass = data.type.toLowerCase() === 'sadaka' ? 'primary' :
+                data.type.toLowerCase() === 'shukurani' ? 'info' :
+                    data.type.toLowerCase() === 'zaka' ? 'success' :
+                        data.type.toLowerCase() === 'mavuno' ? 'warning' : 'secondary';
 
             // Payment method styling
             const methodClass = data.method.toLowerCase() === 'cash' ? 'success' :
@@ -687,173 +684,158 @@
                         data.method.toLowerCase() === 'check' ? 'warning' : 'secondary';
 
             const html = `
-            <div class="row g-4">
-                <!-- Donation Overview Cards -->
-                <div class="col-12">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-heart fa-2x mb-2"></i>
-                                    <h6 class="card-title">Donation Amount</h6>
-                                    <h4 class="mb-0">TZS ${data.amount || '0.00'}</h4>
+                <div class="row g-4">
+                    <!-- Donation Overview Cards -->
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card bg-primary text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-heart fa-2x mb-2"></i>
+                                        <h6 class="card-title">Donation Amount</h6>
+                                        <h4 class="mb-0">TZS ${data.amount || '0.00'}</h4>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-${statusClass} text-white h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                    <h6 class="card-title">Status</h6>
-                                    <h4 class="mb-0">${data.status || '-'}</h4>
+                            <div class="col-md-4">
+                                <div class="card bg-${statusClass} text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <h6 class="card-title">Status</h6>
+                                        <h4 class="mb-0">${data.status || '-'}</h4>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-${typeClass} text-white h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-gift fa-2x mb-2"></i>
-                                    <h6 class="card-title">Type</h6>
-                                    <h4 class="mb-0">${data.type || '-'}</h4>
+                            <div class="col-md-4">
+                                <div class="card bg-${typeClass} text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-gift fa-2x mb-2"></i>
+                                        <h6 class="card-title">Type</h6>
+                                        <h4 class="mb-0">${data.type || '-'}</h4>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Donor Information -->
-                ${data.isAnonymous !== 'true' ? `
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">
-                                <i class="fas fa-user me-2"></i>
-                                ${data.isMember === 'true' ? 'Member Information' : 'Donor Information'}
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-user text-primary me-3"></i>
-                                        <div>
-                                            <small class="text-muted">${data.isMember === 'true' ? 'Member Name' : 'Donor Name'}</small>
-                                            <div class="fw-bold">${data.donorName && data.donorName !== 'N/A' ? data.donorName : '-'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                ${data.donorEmail && data.donorEmail !== 'N/A' ? `
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-envelope text-info me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Email</small>
-                                            <div class="fw-bold">
-                                                <a href="mailto:${data.donorEmail}">${data.donorEmail}</a>
+                    <!-- Donor Information -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    ${data.isMember === 'true' ? 'Member Information' : 'Donor Information'}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user text-primary me-3"></i>
+                                            <div>
+                                                <small class="text-muted">${data.isMember === 'true' ? 'Member Name' : 'Donor Name'}</small>
+                                                <div class="fw-bold">${data.donorName && data.donorName !== 'N/A' ? data.donorName : '-'}</div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                ` : ''}
-                                ${data.donorPhone && data.donorPhone !== 'N/A' ? `
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-phone text-success me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Phone</small>
-                                            <div class="fw-bold">
-                                                <a href="tel:${data.donorPhone}">${data.donorPhone}</a>
+                                    ${data.donorEmail && data.donorEmail !== 'N/A' ? `
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-envelope text-info me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Email</small>
+                                                <div class="fw-bold">
+                                                    <a href="mailto:${data.donorEmail}">${data.donorEmail}</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                ` : ''}
-                                ${data.isMember === 'true' && data.memberId ? `
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-id-card text-warning me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Member ID</small>
-                                            <div class="fw-bold">${data.memberId}</div>
+                                    ` : ''}
+                                    ${data.donorPhone && data.donorPhone !== 'N/A' ? `
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-phone text-success me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Phone</small>
+                                                <div class="fw-bold">
+                                                    <a href="tel:${data.donorPhone}">${data.donorPhone}</a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                    ` : ''}
+                                    ${data.isMember === 'true' && data.memberId ? `
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-id-card text-warning me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Member ID</small>
+                                                <div class="fw-bold">${data.memberId}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                 </div>
-                                ` : ''}
                             </div>
                         </div>
                     </div>
-                </div>
-                ` : `
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-user-secret me-2"></i>Donor Information</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                This is an anonymous donation. Donor information is not available.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                `}
 
-                <!-- Donation Details -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Donation Information</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-calendar text-primary me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Date</small>
-                                            <div class="fw-bold">${data.date || '-'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-tag text-${typeClass} me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Donation Type</small>
-                                            <div class="fw-bold">
-                                                <span class="badge bg-${typeClass}">${data.type || '-'}</span>
+                    <!-- Donation Details -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Donation Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-calendar text-primary me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Date</small>
+                                                <div class="fw-bold">${data.date || '-'}</div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-credit-card text-${methodClass} me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Payment Method</small>
-                                            <div class="fw-bold">
-                                                <span class="badge bg-${methodClass}">${data.method || '-'}</span>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-tag text-${typeClass} me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Donation Type</small>
+                                                <div class="fw-bold">
+                                                    <span class="badge bg-${typeClass}">${data.type || '-'}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-hashtag text-secondary me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Reference Number</small>
-                                            <div class="fw-bold">${data.reference || '-'}</div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-credit-card text-${methodClass} me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Payment Method</small>
+                                                <div class="fw-bold">
+                                                    <span class="badge bg-${methodClass}">${data.method || '-'}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-flag text-${statusClass} me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Status</small>
-                                            <div class="fw-bold">
-                                                <span class="badge bg-${statusClass}">${data.status || '-'}</span>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-hashtag text-secondary me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Reference Number</small>
+                                                <div class="fw-bold">${data.reference || '-'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-flag text-${statusClass} me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Status</small>
+                                                <div class="fw-bold">
+                                                    <span class="badge bg-${statusClass}">${data.status || '-'}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -861,72 +843,53 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Remaining Amount Card (Always Zero for Donations) -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Payment Status</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-check-circle text-success me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Amount Paid</small>
-                                            <div class="fw-bold text-success">TZS ${data.amount || '0.00'}</div>
+                    <!-- Remaining Amount Card (Always Zero for Donations) -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Payment Status</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Amount Paid</small>
+                                                <div class="fw-bold text-success">TZS ${data.amount || '0.00'}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-times-circle text-muted me-3"></i>
-                                        <div>
-                                            <small class="text-muted">Remaining Amount</small>
-                                            <div class="fw-bold text-muted">TZS 0.00</div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-times-circle text-muted me-3"></i>
+                                            <div>
+                                                <small class="text-muted">Remaining Amount</small>
+                                                <div class="fw-bold text-muted">TZS 0.00</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Purpose and Notes -->
-                ${(data.purpose && data.purpose !== '-') || (data.notes && data.notes !== '-') ? `
-                <div class="col-12">
-                    <div class="row g-3">
-                        ${data.purpose && data.purpose !== '-' ? `
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>Purpose</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p class="mb-0">${data.purpose}</p>
-                                </div>
+                    <!-- Notes -->
+                    ${data.notes && data.notes !== '-' ? `
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Notes</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">${data.notes}</p>
                             </div>
                         </div>
-                        ` : ''}
-                        ${data.notes && data.notes !== '-' ? `
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Notes</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p class="mb-0">${data.notes}</p>
-                                </div>
-                            </div>
-                        </div>
-                        ` : ''}
                     </div>
+                    ` : ''}
                 </div>
-                ` : ''}
-            </div>
-        `;
+            `;
 
             document.getElementById('viewDonationBody').innerHTML = html;
             const modal = new bootstrap.Modal(document.getElementById('viewDonationModal'));

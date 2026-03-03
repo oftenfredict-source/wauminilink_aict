@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\Department;
 use App\Models\Member;
 use App\Services\SmsService;
 use App\Services\SettingsService;
@@ -37,7 +38,8 @@ class AnnouncementController extends Controller
     public function create()
     {
         $members = Member::orderBy('full_name')->get();
-        return view('announcements.create', compact('members'));
+        $departments = Department::where('status', 'active')->with('members')->orderBy('name')->get();
+        return view('announcements.create', compact('members', 'departments'));
     }
 
     /**
@@ -50,6 +52,8 @@ class AnnouncementController extends Controller
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'type' => 'required|in:general,urgent,event,reminder',
+                'target_type' => 'required|in:all,specific,department',
+                'department_id' => 'nullable|exists:departments,id',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
             ];
@@ -66,18 +70,31 @@ class AnnouncementController extends Controller
             $validated['is_pinned'] = $request->has('is_pinned') ? true : false;
 
             // Handle empty dates
-            if (empty($validated['start_date'])) {
+            if (empty($validated['start_date']))
                 $validated['start_date'] = null;
-            }
-            if (empty($validated['end_date'])) {
+            if (empty($validated['end_date']))
                 $validated['end_date'] = null;
+
+            // Store department targeting as 'specific' with the department's members synced
+            $departmentId = null;
+            if ($validated['target_type'] === 'department') {
+                $departmentId = $validated['department_id'] ?? null;
+                $validated['target_type'] = 'specific'; // store as specific in DB
             }
+            unset($validated['department_id']);
 
             $announcement = Announcement::create($validated);
 
-            // Handle specific targeting
-            if ($validated['target_type'] === 'specific' && $request->has('target_member_ids')) {
-                $announcement->targetedMembers()->sync($request->target_member_ids);
+            // Handle specific / department targeting
+            if ($announcement->target_type === 'specific') {
+                if ($departmentId) {
+                    // Department-based: sync all members of that department
+                    $dept = Department::with('members')->find($departmentId);
+                    $memberIds = $dept ? $dept->members->pluck('id')->toArray() : [];
+                    $announcement->targetedMembers()->sync($memberIds);
+                } elseif ($request->has('target_member_ids')) {
+                    $announcement->targetedMembers()->sync($request->target_member_ids);
+                }
             }
 
             \Log::info('Announcement created successfully', [
@@ -124,8 +141,9 @@ class AnnouncementController extends Controller
     public function edit(Announcement $announcement)
     {
         $members = Member::orderBy('full_name')->get();
+        $departments = Department::where('status', 'active')->with('members')->orderBy('name')->get();
         $targetedMemberIds = $announcement->targetedMembers()->pluck('members.id')->toArray();
-        return view('announcements.edit', compact('announcement', 'members', 'targetedMemberIds'));
+        return view('announcements.edit', compact('announcement', 'members', 'departments', 'targetedMemberIds'));
     }
 
     /**
@@ -140,7 +158,8 @@ class AnnouncementController extends Controller
                 'type' => 'required|in:general,urgent,event,reminder',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
-                'target_type' => 'required|in:all,specific',
+                'target_type' => 'required|in:all,specific,department',
+                'department_id' => 'nullable|exists:departments,id',
                 'target_member_ids' => 'nullable|array',
                 'target_member_ids.*' => 'exists:members,id',
             ];
@@ -156,20 +175,32 @@ class AnnouncementController extends Controller
             $validated['is_pinned'] = $request->has('is_pinned') ? true : false;
 
             // Handle empty dates
-            if (empty($validated['start_date'])) {
+            if (empty($validated['start_date']))
                 $validated['start_date'] = null;
-            }
-            if (empty($validated['end_date'])) {
+            if (empty($validated['end_date']))
                 $validated['end_date'] = null;
+
+            // Handle department targeting
+            $departmentId = null;
+            if ($validated['target_type'] === 'department') {
+                $departmentId = $validated['department_id'] ?? null;
+                $validated['target_type'] = 'specific';
             }
+            unset($validated['department_id'], $validated['target_member_ids']);
 
             $announcement->update($validated);
 
-            // Handle specific targeting
-            if ($validated['target_type'] === 'specific' && $request->has('target_member_ids')) {
-                $announcement->targetedMembers()->sync($request->target_member_ids);
+            // Handle specific / department targeting
+            if ($announcement->target_type === 'specific') {
+                if ($departmentId) {
+                    $dept = Department::with('members')->find($departmentId);
+                    $memberIds = $dept ? $dept->members->pluck('id')->toArray() : [];
+                    $announcement->targetedMembers()->sync($memberIds);
+                } elseif ($request->has('target_member_ids')) {
+                    $announcement->targetedMembers()->sync($request->target_member_ids);
+                }
             } else {
-                // Remove any existing targeting if changed back to 'all'
+                // Changed back to 'all' — remove targeting
                 $announcement->targetedMembers()->detach();
             }
 
@@ -254,6 +285,7 @@ class AnnouncementController extends Controller
 
             // Get members to send to based on targeting
             if ($announcement->target_type === 'specific') {
+                // Covers both 'specific members' and 'department' targeting (stored as specific)
                 $members = $announcement->targetedMembers()
                     ->whereNotNull('phone_number')
                     ->where('phone_number', '!=', '')

@@ -2270,7 +2270,7 @@ class ReportController extends Controller
             'tithesCount',
             'totalOfferings',
             'offeringsCount',
-            'offeringsByType',
+            'offeringTypes',
             'totalDonations',
             'donationsCount',
             'donationsByType',
@@ -2411,7 +2411,7 @@ class ReportController extends Controller
             'tithesCount',
             'totalOfferings',
             'offeringsCount',
-            'offeringsByType',
+            'offeringTypes',
             'totalDonations',
             'donationsCount',
             'donationsByType',
@@ -2508,6 +2508,239 @@ class ReportController extends Controller
             'startDate',
             'endDate',
             'churchInfo'
+        ));
+    }
+
+    /**
+     * Generate general financial report (Taarifa ya Mapato na Matumizi)
+     */
+    public function generalReport(Request $request)
+    {
+        $fiscalYear = $request->get('fiscal_year', date('Y'));
+
+        // Get all annual budgets for this fiscal year for line item fallback
+        $annualBudgets = Budget::where('fiscal_year', $fiscalYear)
+            ->where('budget_type', Budget::TYPE_ANNUAL)
+            ->get();
+
+        // Helper function to get budget amount for a specific report category or name
+        $getBudgetAmount = function ($categoryKey, $name = null) use ($fiscalYear, $annualBudgets) {
+            // 1. Get budgets matching report_category for this fiscal year
+            $total = Budget::where('fiscal_year', $fiscalYear)
+                ->where('report_category', $categoryKey)
+                ->sum('total_budget');
+
+            // 2. If no total yet and name is provided, check line items for backward compatibility
+            if ($total == 0 && $name) {
+                foreach ($annualBudgets as $b) {
+                    $lineItemAmount = $b->lineItems()
+                        ->where('item_name', 'LIKE', '%' . $name . '%')
+                        ->sum('amount');
+                    $total += $lineItemAmount;
+
+                    if (stripos($b->budget_name, $name) !== false && $b->lineItems()->count() == 0) {
+                        $total += (float) $b->total_budget;
+                    }
+                }
+            }
+            return (float) $total;
+        };
+
+        // Helper function to get actual expenses for a specific report category
+        $getActualAmount = function ($categoryKey, $name = null) use ($fiscalYear) {
+            return Expense::whereYear('expense_date', $fiscalYear)
+                ->where('approval_status', 'approved')
+                ->where(function ($q) use ($categoryKey, $name) {
+                    $q->where('expense_category', $categoryKey);
+                    if ($name) {
+                        $q->orWhere('expense_name', 'LIKE', '%' . $name . '%')
+                            ->orWhereHas('budget', function ($bq) use ($name) {
+                                $bq->where('budget_name', 'LIKE', '%' . $name . '%');
+                            });
+                    }
+                })->sum('amount');
+        };
+
+        // --- MAPATO (INCOME) ---
+
+        // 1. Mifuko ya Sinodi
+        $sadakaBajeti = $getBudgetAmount('sadaka', 'Sadaka');
+        $zakaBajeti = $getBudgetAmount('zaka', 'Zaka');
+        $shukuraniBajeti = $getBudgetAmount('shukurani', 'Shukurani');
+        $sundaySchoolBajeti = $getBudgetAmount('sunday_school', 'Sunday School');
+        $mavunoBajeti = $getBudgetAmount('mavuno', 'Mavuno/Malimbuko');
+        $ushirikaMtakatifuBajeti = $getBudgetAmount('ushirika_mtakatifu', 'Ushirika Mtakatifu');
+
+        $sadakaHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'sadaka')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'sadaka')->where('approval_status', 'approved')->sum('amount');
+        $zakaHalisi = Tithe::whereYear('tithe_date', $fiscalYear)->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'zaka')->where('approval_status', 'approved')->sum('amount');
+        $shukuraniHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'shukurani')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'shukurani')->where('approval_status', 'approved')->sum('amount');
+        $sundaySchoolHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'sunday_school')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'sunday_school')->where('approval_status', 'approved')->sum('amount');
+        $mavunoHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'mavuno')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'mavuno')->where('approval_status', 'approved')->sum('amount');
+        $ushirikaMtakatifuHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'ushirika_mtakatifu')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'ushirika_mtakatifu')->where('approval_status', 'approved')->sum('amount');
+
+        $mifukoYaSinodiBajetiTotal = $sadakaBajeti + $zakaBajeti + $shukuraniBajeti + $sundaySchoolBajeti + $mavunoBajeti + $ushirikaMtakatifuBajeti;
+        $mifukoYaSinodiHalisiTotal = $sadakaHalisi + $zakaHalisi + $shukuraniHalisi + $sundaySchoolHalisi + $mavunoHalisi + $ushirikaMtakatifuHalisi;
+
+        // 2. Matoleo Mengine
+        $talantaBajeti = $getBudgetAmount('talanta', 'Talanta');
+        $mchungajiBajeti = $getBudgetAmount('mchungaji', 'Huduma kwa Mchungaji');
+        $funguAdaBajeti = $getBudgetAmount('fungu_ada', 'Fungu/Ada ya mkristo');
+
+        $talantaHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'talanta')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'talanta')->where('approval_status', 'approved')->sum('amount');
+        $mchungajiHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'mchungaji')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'mchungaji')->where('approval_status', 'approved')->sum('amount');
+        $funguAdaHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'fungu_ada')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'fungu_ada')->where('approval_status', 'approved')->sum('amount') +
+            (float) AnnualFee::whereYear('payment_date', $fiscalYear)->where('approval_status', 'approved')->sum('amount');
+
+        $matoleoMengineBajetiTotal = $talantaBajeti + $mchungajiBajeti + $funguAdaBajeti;
+        $matoleoMengineHalisiTotal = $talantaHalisi + $mchungajiHalisi + $funguAdaHalisi;
+
+        // 3. Machangizo Mbalimbali
+        $pasakaBajeti = $getBudgetAmount('pasaka', 'Sherehe za Pasaka');
+        $krisimasiBajeti = $getBudgetAmount('krisimasi', 'Sherehe za Krismasi');
+        $ujenziBajeti = $getBudgetAmount('ujenzi', 'Ujenzi wa Kanisa');
+        $tankBajeti = $getBudgetAmount('tank', 'Ununuzi wa Tank');
+        $makaoMakuuBajeti = $getBudgetAmount('makao_makuu', 'Ujenzi wa Jengo la makao makuu');
+
+        $pasakaHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'pasaka')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'pasaka')->where('approval_status', 'approved')->sum('amount');
+        $krisimasiHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'krisimasi')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'krisimasi')->where('approval_status', 'approved')->sum('amount');
+        $ujenziHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'ujenzi')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'ujenzi')->where('approval_status', 'approved')->sum('amount');
+        $tankHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'tank')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'tank')->where('approval_status', 'approved')->sum('amount');
+        $makaoMakuuHalisi = Offering::whereYear('offering_date', $fiscalYear)->where('offering_type', 'makao_makuu')->where('approval_status', 'approved')->sum('amount') +
+            Donation::whereYear('donation_date', $fiscalYear)->where('donation_type', 'makao_makuu')->where('approval_status', 'approved')->sum('amount');
+
+        $machangizoBajetiTotal = $pasakaBajeti + $krisimasiBajeti + $ujenziBajeti + $tankBajeti + $makaoMakuuBajeti;
+        $machangizoHalisiTotal = $pasakaHalisi + $krisimasiHalisi + $ujenziHalisi + $tankHalisi + $makaoMakuuHalisi;
+
+        $totalMapatoBajeti = $mifukoYaSinodiBajetiTotal + $matoleoMengineBajetiTotal + $machangizoBajetiTotal;
+        $totalMapatoHalisi = $mifukoYaSinodiHalisiTotal + $matoleoMengineHalisiTotal + $machangizoHalisiTotal;
+
+        // --- MATUMIZI (EXPENSES) ---
+
+        // (A) Mawasilisho
+        $pastoretiBajeti = $getBudgetAmount('pastoreti', 'Pastoreti');
+        $pastoretiHalisi = $getActualAmount('pastoreti', 'Pastoreti');
+        $mawasilishoBajetiTotal = $pastoretiBajeti;
+        $mawasilishoHalisiTotal = $pastoretiHalisi;
+
+        // (B) Posho
+        $poshoBajeti = $getBudgetAmount('posho', 'Posho');
+        $poshoHalisi = $getActualAmount('posho', 'Posho');
+        $poshoBajetiTotal = $poshoBajeti;
+        $poshoHalisiTotal = $poshoHalisi;
+
+        // (C) Matumizi Mengine
+        $items_c = [
+            'kwaya' => 'Matumizi ya Kwaya',
+            'vikao' => 'Gharama za Vikao',
+            'nauli_kikazi' => 'Nauli/Safari za kikazi',
+            'maji' => 'Gharama za Maji',
+            'stationery' => 'Gharama za Stationery',
+            'ulinzi' => 'Gharama za Ulinzi',
+            'umeme' => 'Gharama za Umeme',
+            'wahubiri' => 'Nauli kwa wahubiri waalikwa',
+            'ushirika_mtakatifu' => 'Gharama za vifaa vya Ushirika mtakatifu',
+            'mengineyo' => 'Mengineyo',
+            'mapambo' => 'Gharama za Mapambo ya Kanisa',
+            'usafi' => 'Gharama za Usafi',
+            'matengenezo' => 'Gharama za Matengenezo madogomadog',
+            'rambirambi' => 'Rambirambi',
+            'mchungaji_huduma' => 'Huduma kwa Mchungaji',
+            'fungu_ada' => 'Fungu/Ada ya mkristo',
+            'ujenzi_matumizi' => 'Gharama za Ujenzi',
+            'talanta' => 'Talanta',
+            'pasaka_matumizi' => 'Sherehe za Pasaka',
+            'krisi_matumizi' => 'Sherehe za Krismasi',
+            'kanisa_msubiji' => 'Kujenga kanisa msubiji',
+            'makao_makuu_jengo' => 'Ujenzi wa Jengo la makao makuu'
+        ];
+
+        $matumiziMengineBajeti = [];
+        $matumiziMengineHalisi = [];
+        $matumiziMengineBajetiTotal = 0;
+        $matumiziMengineHalisiTotal = 0;
+
+        foreach ($items_c as $key => $name) {
+            $matumiziMengineBajeti[$key] = $getBudgetAmount($key, $name);
+            $matumiziMengineHalisi[$key] = $getActualAmount($key, $name);
+
+            $matumiziMengineBajetiTotal += $matumiziMengineBajeti[$key];
+            $matumiziMengineHalisiTotal += $matumiziMengineHalisi[$key];
+        }
+
+        $totalMatumiziBajeti = $mawasilishoBajetiTotal + $poshoBajetiTotal + $matumiziMengineBajetiTotal;
+        $totalMatumiziHalisi = $mawasilishoHalisiTotal + $poshoHalisiTotal + $matumiziMengineHalisiTotal;
+
+        $allBudgets = Budget::orderBy('fiscal_year', 'desc')->get();
+        $budget = $annualBudgets->first(); // For backward compatibility with view if needed
+
+        return view('finance.reports.general', compact(
+            'fiscalYear',
+            'allBudgets',
+            'budget',
+            'sadakaBajeti',
+            'sadakaHalisi',
+            'zakaBajeti',
+            'zakaHalisi',
+            'shukuraniBajeti',
+            'shukuraniHalisi',
+            'sundaySchoolBajeti',
+            'sundaySchoolHalisi',
+            'mavunoBajeti',
+            'mavunoHalisi',
+            'ushirikaMtakatifuBajeti',
+            'ushirikaMtakatifuHalisi',
+            'mifukoYaSinodiBajetiTotal',
+            'mifukoYaSinodiHalisiTotal',
+            'talantaBajeti',
+            'talantaHalisi',
+            'mchungajiBajeti',
+            'mchungajiHalisi',
+            'funguAdaBajeti',
+            'funguAdaHalisi',
+            'matoleoMengineBajetiTotal',
+            'matoleoMengineHalisiTotal',
+            'pasakaBajeti',
+            'pasakaHalisi',
+            'krisimasiBajeti',
+            'krisimasiHalisi',
+            'ujenziBajeti',
+            'ujenziHalisi',
+            'tankBajeti',
+            'tankHalisi',
+            'makaoMakuuBajeti',
+            'makaoMakuuHalisi',
+            'machangizoBajetiTotal',
+            'machangizoHalisiTotal',
+            'totalMapatoBajeti',
+            'totalMapatoHalisi',
+            'pastoretiBajeti',
+            'pastoretiHalisi',
+            'mawasilishoBajetiTotal',
+            'mawasilishoHalisiTotal',
+            'poshoBajeti',
+            'poshoHalisi',
+            'poshoBajetiTotal',
+            'poshoHalisiTotal',
+            'items_c',
+            'matumiziMengineBajeti',
+            'matumiziMengineHalisi',
+            'matumiziMengineBajetiTotal',
+            'matumiziMengineHalisiTotal',
+            'totalMatumiziBajeti',
+            'totalMatumiziHalisi'
         ));
     }
 }
