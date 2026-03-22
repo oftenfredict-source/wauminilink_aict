@@ -147,8 +147,8 @@ class Member extends Model
 
     /**
      * Generate a unique member ID
-     * Format: AICT + YYYY + sequential number (4 digits)
-     * Example: AICT-2025-0001
+     * Format: AICT + YYYY + sequential number (3 digits)
+     * Example: AICT-2026-001
      */
     public static function generateMemberId()
     {
@@ -169,8 +169,8 @@ class Member extends Model
             }
         }
 
-        // Format: AICT-2025-0001
-        $memberId = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        // Format: AICT-2026-001
+        $memberId = $prefix . str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
         // Final check for uniqueness (both in members table and users table email)
         while (self::where('member_id', $memberId)->exists() || \App\Models\User::where('email', $memberId)->exists()) {

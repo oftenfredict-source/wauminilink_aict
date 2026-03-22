@@ -106,6 +106,41 @@ class MemberController extends Controller
         return response()->json(['next_id' => Member::generateMemberId()]);
     }
 
+    public function checkEnvelope(Request $request)
+    {
+        $envelope = $request->query('envelope');
+        $memberId = $request->query('member_id'); // For edit mode (optional)
+        $childId = $request->query('child_id');   // For child edit mode (optional)
+
+        if (!$envelope) {
+            return response()->json(['available' => true]);
+        }
+
+        // Check members table (main envelope and spouse envelope)
+        $memberExists = Member::where(function ($q) use ($envelope) {
+            $q->where('envelope_number', $envelope)
+                ->orWhere('spouse_envelope_number', $envelope);
+        })
+            ->when($memberId, function ($q) use ($memberId) {
+                $q->where('id', '!=', $memberId);
+            })
+            ->exists();
+
+        // Check children table
+        $childExists = Child::where('envelope_number', $envelope)
+            ->when($childId, function ($q) use ($childId) {
+                $q->where('id', '!=', $childId);
+            })
+            ->exists();
+
+        $isTaken = $memberExists || $childExists;
+
+        return response()->json([
+            'available' => !$isTaken,
+            'taken' => $isTaken
+        ]);
+    }
+
     public function store(Request $request)
     {
         // Debug: Log received data
@@ -146,7 +181,7 @@ class MemberController extends Controller
             'guardian_relationship' => 'nullable|required_if:membership_type,temporary|string|max:100',
 
             // Children
-            'children_count' => 'nullable|integer|min:0|max:4',
+            'children_count' => 'nullable|integer|min:0',
             'children' => 'nullable|array',
             'children.*.full_name' => 'required_with:children|string|max:255',
             'children.*.gender' => ['required_with:children', Rule::in(['male', 'female'])],
@@ -444,7 +479,7 @@ class MemberController extends Controller
                         'gender' => $childData['gender'],
                         'date_of_birth' => $childData['date_of_birth'],
                         'is_church_member' => $childData['is_church_member'] ?? 'no',
-                        'envelope_number' => $childData['envelope_number'] ?? null,
+                        'envelope_number' => ($age >= 21) ? ($childData['envelope_number'] ?? null) : null,
                         'relationship' => $childData['relationship'] ?? 'Son/Daughter',
                     ]);
 
@@ -967,7 +1002,7 @@ class MemberController extends Controller
         $archivedMembers = \App\Models\DeletedMember::orderBy('deleted_at_actual', 'desc')->get();
 
         // Fetch children, filtered by search if present
-        $childrenQuery = \App\Models\Child::with(['member', 'linkedMember']);
+        $childrenQuery = \App\Models\Child::with(['member', 'linkedMember'])->where('is_church_member', 'yes');
         if ($request->filled('search')) {
             $search = $request->search;
             $childrenQuery->where(function ($q) use ($search) {
@@ -1284,7 +1319,7 @@ class MemberController extends Controller
                     'gender' => $childData['gender'],
                     'date_of_birth' => $childData['date_of_birth'],
                     'is_church_member' => $childData['is_church_member'] ?? 'no',
-                    'envelope_number' => $childData['envelope_number'] ?? null,
+                    'envelope_number' => ($age >= 21) ? ($childData['envelope_number'] ?? null) : null,
                     'relationship' => $childData['relationship'] ?? 'Son/Daughter',
                 ]);
 

@@ -246,6 +246,7 @@ Route::middleware(['auth', 'treasurer'])->group(function () {
         return redirect()->route('member.leaders');
     })->name('members.leaders.redirect');
     Route::get('/members/next-id', [MemberController::class, 'nextId'])->name('members.next_id');
+    Route::get('/members/check-envelope', [MemberController::class, 'checkEnvelope'])->name('members.check-envelope');
     Route::get('/members/export/csv', [MemberController::class, 'exportCsv'])->name('members.export.csv');
 
     // PUT and DELETE routes must come before GET routes with parameters

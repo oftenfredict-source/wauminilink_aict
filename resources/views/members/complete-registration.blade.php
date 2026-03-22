@@ -93,6 +93,21 @@
             background-color: #f8f9fa !important;
             cursor: not-allowed;
         }
+        .envelope-status-msg {
+            font-size: 0.75rem;
+            min-height: 18px;
+            margin-top: 4px;
+        }
+
+        .check-envelope.is-valid {
+            border-color: #198754 !important;
+            background-image: none !important;
+        }
+
+        .check-envelope.is-invalid {
+            border-color: #dc3545 !important;
+            background-image: none !important;
+        }
     </style>
 @endsection
 
@@ -215,15 +230,15 @@
                                 </div>
                             </div>
 
-                            {{-- Envelope Number (locked) --}}
-                            <div class="col-md-4">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control field-locked" name="envelope_number"
-                                        id="envelope_number" value="{{ old('envelope_number', $member->envelope_number) }}"
-                                        readonly>
-                                    <label for="envelope_number">Envelope Number</label>
-                                </div>
-                            </div>
+                             <div class="col-md-4">
+                                 <div class="form-floating">
+                                     <input type="text" class="form-control field-locked check-envelope" name="envelope_number"
+                                         id="envelope_number" value="{{ old('envelope_number', $member->envelope_number) }}"
+                                         readonly>
+                                     <label for="envelope_number">Envelope Number</label>
+                                     <div id="envelope_number_status" class="envelope-status-msg"></div>
+                                 </div>
+                             </div>
                         </div>
 
                         <div class="row g-4 mb-4">
@@ -414,18 +429,18 @@
                             {{-- Ward --}}
                             <div class="col-md-3">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" name="ward" id="ward" required
+                                    <input type="text" class="form-control" name="ward" id="ward"
                                         value="{{ old('ward', $member->ward) }}">
-                                    <label for="ward">Ward (Origin)</label>
+                                    <label for="ward">Ward (Optional)</label>
                                 </div>
                             </div>
 
                             {{-- Street --}}
                             <div class="col-md-3">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" name="street" id="street" required
+                                    <input type="text" class="form-control" name="street" id="street"
                                         value="{{ old('street', $member->street) }}">
-                                    <label for="street">Street (Origin)</label>
+                                    <label for="street">Street (Optional)</label>
                                 </div>
                             </div>
 
@@ -507,15 +522,15 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" name="residence_ward" id="residence_ward"
-                                        required value="{{ old('residence_ward', $member->residence_ward) }}">
-                                    <label for="residence_ward">Ward (Residence)</label>
+                                        value="{{ old('residence_ward', $member->residence_ward) }}">
+                                    <label for="residence_ward">Ward (Optional)</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" name="residence_street" id="residence_street"
-                                        required value="{{ old('residence_street', $member->residence_street) }}">
-                                    <label for="residence_street">Street (Residence)</label>
+                                        value="{{ old('residence_street', $member->residence_street) }}">
+                                    <label for="residence_street">Street (Optional)</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -659,7 +674,7 @@
                                     </div>
                                     <div class="col-md-4" id="spouseOtherTribeWrapper" style="display: {{ old('spouse_tribe', $member->spouse_tribe) === 'Other' ? 'block' : 'none' }};">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" name="spouse_other_tribe" id="spouse_other_tribe" 
+                                            <input type="text" class="form-control" name="spouse_other_tribe" id="spouse_other_tribe"
                                                 value="{{ old('spouse_other_tribe', $member->spouse_other_tribe) }}">
                                             <label for="spouse_other_tribe">Specify Other Tribe</label>
                                         </div>
@@ -694,8 +709,9 @@
                                     <div class="col-md-6">
                                         <div class="form-group" id="spouseEnvelopeWrapper" style="display: {{ old('spouse_church_member', $member->spouse_church_member) === 'yes' ? 'block' : 'none' }};">
                                             <label for="spouse_envelope_number" class="form-label small fw-bold text-muted ms-1">Spouse Envelope Number</label>
-                                            <input type="text" class="form-control" name="spouse_envelope_number" id="spouse_envelope_number" 
+                                            <input type="text" class="form-control check-envelope" name="spouse_envelope_number" id="spouse_envelope_number"
                                                 value="{{ old('spouse_envelope_number', $member->spouseMember->envelope_number ?? ($member->spouse_church_member === 'yes' ? $member->spouse_member_id : '')) }}">
+                                            <div id="spouse_envelope_number_status" class="envelope-status-msg"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -721,13 +737,13 @@
                                     <div class="row g-3 mb-2 align-items-end child-row" data-index="{{ $childIdx }}">
                                         <div class="col-md-3">
                                             <label class="form-label small fw-bold text-muted">Full Name</label>
-                                            <input type="text" class="form-control child-fullname" 
-                                                   name="children[{{ $childIdx }}][full_name]" 
+                                            <input type="text" class="form-control child-fullname"
+                                                   name="children[{{ $childIdx }}][full_name]"
                                                    value="{{ $child->full_name }}" required>
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small fw-bold text-muted">Relationship</label>
-                                            <select class="form-select child-relationship" 
+                                            <select class="form-select child-relationship"
                                                     name="children[{{ $childIdx }}][relationship]" required>
                                                 @foreach(['Son/Daughter', 'Father', 'Mother', 'Brother', 'Sister', 'Grandparent', 'Relative', 'Other'] as $rel)
                                                     <option value="{{ $rel }}" {{ ($child->relationship ?? 'Son/Daughter') === $rel ? 'selected' : '' }}>{{ $rel }}</option>
@@ -736,7 +752,7 @@
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small fw-bold text-muted">Gender</label>
-                                            <select class="form-select child-gender" 
+                                            <select class="form-select child-gender"
                                                     name="children[{{ $childIdx }}][gender]" required>
                                                 <option value="male" {{ $child->gender === 'male' ? 'selected' : '' }}>Male</option>
                                                 <option value="female" {{ $child->gender === 'female' ? 'selected' : '' }}>Female</option>
@@ -745,30 +761,32 @@
                                         <div class="col-md-2">
                                             <label class="form-label small fw-bold text-muted">Date of Birth</label>
                                             <div class="input-group">
-                                                <input type="date" class="form-control child-dob" 
-                                                       name="children[{{ $childIdx }}][date_of_birth]" 
+                                                <input type="date" class="form-control child-dob"
+                                                       name="children[{{ $childIdx }}][date_of_birth]"
                                                        value="{{ $child->date_of_birth->format('Y-m-d') }}" required>
                                                 <span class="input-group-text child-age bg-light" style="min-width:40px; font-size:0.7rem;">{{ $child->date_of_birth->age }}y</span>
                                             </div>
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small fw-bold text-muted">Church Member</label>
-                                            <select class="form-select child-church-member" 
-                                                    name="children[{{ $childIdx }}][is_church_member]" 
+                                            <select class="form-select child-church-member"
+                                                    name="children[{{ $childIdx }}][is_church_member]"
                                                     onchange="toggleChildEnvelope(this, {{ $childIdx }})">
                                                 <option value="no" {{ $child->is_church_member === 'no' ? 'selected' : '' }}>No</option>
                                                 <option value="yes" {{ $child->is_church_member === 'yes' ? 'selected' : '' }}>Yes</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2" id="childEnvelopeWrapper_{{ $childIdx }}" 
-                                             style="{{ $child->is_church_member === 'yes' ? '' : 'display:none;' }}">
-                                            <label class="form-label small fw-bold text-muted">Envelope #</label>
-                                            <input type="text" class="form-control child-envelope" 
-                                                   name="children[{{ $childIdx }}][envelope_number]" 
-                                                   value="{{ $child->envelope_number }}">
-                                        </div>
+                                         <div class="col-md-2" id="childEnvelopeWrapper_{{ $childIdx }}"
+                                              style="{{ $child->is_church_member === 'yes' ? '' : 'display:none;' }}">
+                                             <label class="form-label small fw-bold text-muted">Envelope #</label>
+                                             <input type="text" class="form-control child-envelope check-envelope"
+                                                    name="children[{{ $childIdx }}][envelope_number]"
+                                                    data-child-id="{{ $child->id }}"
+                                                    value="{{ $child->envelope_number }}">
+                                             <div class="envelope-status-msg"></div>
+                                         </div>
                                         <div class="col-md-1 text-end">
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn" 
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn"
                                                     title="Remove Member"><i class="fas fa-trash"></i></button>
                                         </div>
                                     </div>
@@ -857,13 +875,16 @@
                                         <table class="table table-sm table-borderless">
                                             <tr><th>Phone</th><td id="sum_phone">—</td></tr>
                                             <tr><th>Email</th><td id="sum_email">—</td></tr>
-                                            <tr><th>Region (Origin)</th><td id="sum_region">—</td></tr>
-                                            <tr><th>District (Origin)</th><td id="sum_district">—</td></tr>
-                                            <tr><th>Ward</th><td id="sum_ward">—</td></tr>
-                                            <tr><th>Residence Region</th><td id="sum_res_region">—</td></tr>
-                                            <tr><th>Residence District</th><td id="sum_res_district">—</td></tr>
-                                        </table>
-                                    </div>
+                                             <tr><th>Region (Origin)</th><td id="sum_region">—</td></tr>
+                                             <tr><th>District (Origin)</th><td id="sum_district">—</td></tr>
+                                             <tr><th>Ward</th><td id="sum_ward">—</td></tr>
+                                             <tr><th>Street</th><td id="sum_street">—</td></tr>
+                                             <tr><th>Residence Region</th><td id="sum_res_region">—</td></tr>
+                                             <tr><th>Residence District</th><td id="sum_res_district">—</td></tr>
+                                             <tr><th>Residence Ward</th><td id="sum_res_ward">—</td></tr>
+                                             <tr><th>Residence Street</th><td id="sum_res_street">—</td></tr>
+                                         </table>
+                                     </div>
                                 </div>
                             </div>
                         </div>
@@ -1051,16 +1072,25 @@
 
         function validateStep(step) {
             let valid = true;
+            let firstInvalid = null;
             document.querySelectorAll('#step' + step + ' [required]').forEach(el => {
-                if (!el.disabled && !el.value.trim()) {
+                const isVisible = el.offsetParent !== null;
+                if (!el.disabled && isVisible && !el.value.trim()) {
                     el.classList.add('is-invalid');
                     valid = false;
+                    if (!firstInvalid) firstInvalid = el;
                 } else {
                     el.classList.remove('is-invalid');
                 }
             });
-            if (!valid && typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', title: 'Required Fields', text: 'Please fill in all required fields before proceeding.', confirmButtonColor: '#940000' });
+            if (!valid) {
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Required Fields', text: 'Please fill in all required fields before proceeding.', confirmButtonColor: '#940000' });
+                }
             }
             return valid;
         }
@@ -1088,8 +1118,11 @@
             t('sum_region',      v('region'));
             t('sum_district',    v('district'));
             t('sum_ward',        v('ward'));
+            t('sum_street',      v('street'));
             t('sum_res_region',  v('residence_region'));
             t('sum_res_district',v('residence_district'));
+            t('sum_res_ward',    v('residence_ward'));
+            t('sum_res_street',  v('residence_street'));
         }
 
         // ── Image preview ────────────────────────────────────────────
@@ -1165,10 +1198,11 @@
                         <option value="yes">Yes</option>
                     </select>
                 </div>
-                <div class="col-md-2" id="childEnvelopeWrapper_${idx}" style="display:none;">
-                    <label class="form-label small fw-bold text-muted">Envelope #</label>
-                    <input type="text" class="form-control child-envelope" name="children[${idx}][envelope_number]">
-                </div>
+                 <div class="col-md-2" id="childEnvelopeWrapper_${idx}" style="display:none;">
+                     <label class="form-label small fw-bold text-muted">Envelope #</label>
+                     <input type="text" class="form-control child-envelope check-envelope" name="children[${idx}][envelope_number]" data-child-id="">
+                     <div class="envelope-status-msg"></div>
+                 </div>
                 <div class="col-md-1 text-end">
                     <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn" title="Remove Member"><i class="fas fa-trash"></i></button>
                 </div>
@@ -1238,13 +1272,9 @@
                 isAdult = age >= 21;
             }
 
-            if (select.value === 'yes') {
+            if (select.value === 'yes' && isAdult) {
                 wrapper.style.display = 'block';
-                if (isAdult) {
-                    wrapper.querySelector('input').setAttribute('required', 'required');
-                } else {
-                    wrapper.querySelector('input').removeAttribute('required');
-                }
+                wrapper.querySelector('input').setAttribute('required', 'required');
             } else {
                 wrapper.style.display = 'none';
                 wrapper.querySelector('input').removeAttribute('required');
@@ -1276,6 +1306,72 @@
         });
 
         showStep(1);
+
+        // --- Envelope Availability Check ---
+
+        function checkEnvelopeAvailability(input, statusDiv, memberId = null, childId = null) {
+            const envelope = input.value.trim();
+            if (!envelope) {
+                statusDiv.innerHTML = '';
+                input.classList.remove('is-invalid', 'is-valid');
+                return;
+            }
+
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Checking...';
+            statusDiv.className = 'envelope-status-msg text-muted small mt-1';
+
+            let url = `{{ route('members.check-envelope') }}?envelope=${encodeURIComponent(envelope)}`;
+            if (memberId) url += `&member_id=${memberId}`;
+            if (childId) url += `&child_id=${childId}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.taken) {
+                        statusDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i> Already Taken';
+                        statusDiv.className = 'envelope-status-msg text-danger small mt-1';
+                        input.classList.add('is-invalid');
+                        input.classList.remove('is-valid');
+                    } else {
+                        statusDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> Available';
+                        statusDiv.className = 'envelope-status-msg text-success small mt-1';
+                        input.classList.add('is-valid');
+                        input.classList.remove('is-invalid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking envelope:', error);
+                    statusDiv.innerHTML = 'Error checking availability';
+                    statusDiv.className = 'envelope-status-msg text-warning small mt-1';
+                });
+        }
+
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function exec(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const debouncedCheck = debounce(function (e) {
+            const input = e.target;
+            const statusDiv = input.closest('div').querySelector('.envelope-status-msg');
+            
+            if (statusDiv) {
+                const memberId = '{{ $member->id }}';
+                const childId = input.dataset.childId || null;
+                checkEnvelopeAvailability(input, statusDiv, memberId, childId);
+            }
+        }, 500);
+
+        // Event delegation for all envelope inputs (including dynamic ones)
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('check-envelope')) {
+                debouncedCheck(e);
+            }
+        });
     });
     </script>
 @endsection
