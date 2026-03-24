@@ -141,6 +141,35 @@ class MemberController extends Controller
         ]);
     }
 
+    public function checkPhone(Request $request)
+    {
+        $phone = $request->query('phone');
+        $memberId = $request->query('member_id');
+
+        if (empty($phone)) {
+            return response()->json(['taken' => false]);
+        }
+
+        // Clean phone number for comparison if needed
+        // Assuming database stores with +255
+        $searchPhone = $phone;
+        if (!str_starts_with($phone, '+')) {
+            $searchPhone = '+255' . ltrim($phone, '0');
+        }
+
+        $query = Member::where('phone_number', $searchPhone);
+        if ($memberId) {
+            $query->where('id', '!=', $memberId);
+        }
+        $exists = $query->exists();
+
+        return response()->json([
+            'taken' => $exists,
+            'message' => $exists ? 'This phone number is already registered.' : 'Available'
+        ]);
+    }
+
+
     public function store(Request $request)
     {
         // Debug: Log received data
@@ -194,8 +223,8 @@ class MemberController extends Controller
             'other_tribe' => 'nullable|required_if:tribe,Other|string|max:100',
             'region' => 'required|string|max:100',
             'district' => 'required|string|max:100',
-            'ward' => 'required|string|max:100',
-            'street' => 'required|string|max:255',
+            'ward' => 'nullable|string|max:100',
+            'street' => 'nullable|string|max:255',
             'address' => 'required|string',
 
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -234,8 +263,6 @@ class MemberController extends Controller
             'tribe.required' => 'Tribe is required.',
             'region.required' => 'Region is required.',
             'district.required' => 'District is required.',
-            'ward.required' => 'Ward is required.',
-            'street.required' => 'Street is required.',
             'address.required' => 'Address is required.',
             'other_tribe.required_if' => 'Please specify the tribe name.',
             'avatar.image' => 'Avatar must be an image file.',
