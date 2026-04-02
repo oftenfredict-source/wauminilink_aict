@@ -45,7 +45,7 @@ class MemberController extends Controller
             // Create new member record
             $memberData = [
                 'member_id' => Member::generateMemberId(),
-                'envelope_number' => $child->envelope_number ?? Member::generateMemberId(), // Use fallback if no envelope
+                'envelope_number' => $child->envelope_number ?? null, // Must be exactly 3 digits if present
                 'member_type' => 'independent',
                 'membership_type' => 'permanent',
                 'full_name' => $child->full_name,
@@ -112,8 +112,13 @@ class MemberController extends Controller
         $memberId = $request->query('member_id'); // For edit mode (optional)
         $childId = $request->query('child_id');   // For child edit mode (optional)
 
-        if (!$envelope) {
-            return response()->json(['available' => true]);
+        if (!$envelope || strlen($envelope) !== 3 || !ctype_digit($envelope)) {
+            return response()->json([
+                'available' => false,
+                'taken' => false,
+                'invalid' => true,
+                'message' => 'Envelope number must be exactly 3 digits.'
+            ]);
         }
 
         // Check members table (main envelope and spouse envelope)
@@ -195,7 +200,7 @@ class MemberController extends Controller
             'membership_type' => ['required', Rule::in(['permanent', 'temporary'])],
 
             'full_name' => 'required|string|max:255',
-            'envelope_number' => ['required', 'string', 'max:50', Rule::unique('members', 'envelope_number')],
+            'envelope_number' => ['required', 'string', 'digits:3', Rule::unique('members', 'envelope_number')],
             'email' => 'nullable|email|max:255',
             'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+255[0-9]{9,15}$/', Rule::unique('members', 'phone_number')],
             'date_of_birth' => 'required|date|before:today',
@@ -242,7 +247,7 @@ class MemberController extends Controller
             'spouse_tribe' => 'nullable|required_if:marital_status,married|string|max:100',
             'spouse_other_tribe' => 'nullable|required_if:spouse_tribe,Other|string|max:100',
             'spouse_church_member' => ['nullable', 'required_if:marital_status,married', Rule::in(['yes', 'no'])],
-            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'max:50', 'different:envelope_number', Rule::unique('members', 'envelope_number')],
+            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'digits:3', 'different:envelope_number', Rule::unique('members', 'envelope_number')],
         ];
         // Custom validation for independent persons
         if ($request->member_type === 'independent' && $request->membership_type === 'permanent') {
@@ -1171,6 +1176,7 @@ class MemberController extends Controller
 
         $rules = [
             'full_name' => 'sometimes|required|string|max:255',
+            'envelope_number' => ['sometimes', 'required', 'string', 'digits:3', Rule::unique('members', 'envelope_number')->ignore($member->id)],
             'email' => 'sometimes|nullable|email|max:255',
             'phone_number' => 'sometimes|required|string|max:20',
             'education_level' => 'sometimes|nullable|string|max:100',
@@ -1214,7 +1220,7 @@ class MemberController extends Controller
             'spouse_phone_number' => 'sometimes|nullable|string|max:20',
             'spouse_church_member' => 'sometimes|nullable|in:yes,no',
             'spouse_gender' => 'sometimes|nullable|in:male,female',
-            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'max:50', 'different:envelope_number'],
+            'spouse_envelope_number' => ['nullable', 'required_if:spouse_church_member,yes', 'string', 'digits:3', 'different:envelope_number'],
 
             // Children/Dependents
             'children' => 'nullable|array',
@@ -1223,7 +1229,7 @@ class MemberController extends Controller
             'children.*.date_of_birth' => 'required_with:children|date|before_or_equal:today',
             'children.*.relationship' => 'nullable|string|max:100',
             'children.*.is_church_member' => 'nullable|in:yes,no',
-            'children.*.envelope_number' => 'nullable|string|max:50',
+            'children.*.envelope_number' => 'nullable|string|digits:3',
         ];
 
         \Log::info('MEMBER_UPDATE_START', ['id' => $member->id, 'data' => $request->all()]);
