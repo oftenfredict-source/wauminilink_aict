@@ -1840,13 +1840,13 @@
         <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
             <!-- Navbar Brand - Hidden on Mobile -->
             <a class="navbar-brand ps-3 d-none d-lg-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 50px; max-width: 300px; object-fit: contain;">
+                <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo" style="height: 75px; max-width: 300px; object-fit: contain;">
             </a>
             <!-- Sidebar Toggle - First on Mobile -->
             <button class="btn btn-link btn-sm order-first order-lg-0 me-3 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
             <!-- Welcome Message -->
             <div class="navbar-text me-auto ms-2 ms-md-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <strong>Waumini Link</strong>
+                <strong>AIC Moshi Kilimanjaro</strong>
             </div>
 
             <!-- Navbar-->

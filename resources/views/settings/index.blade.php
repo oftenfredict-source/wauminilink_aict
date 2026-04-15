@@ -113,10 +113,10 @@
                         <div class="row">
                             <div class="col-12">
                                 <h5 class="mb-3" style="color: #940000 !important;">
-                                    <i class="{{ $categories[$categoryKey]['icon'] ?? 'fas fa-cog' }} me-2"></i>
-                                    {{ $categories[$categoryKey]['name'] ?? ucfirst($categoryKey) }}
+                                    <i class="{{ $categories[$categoryKey]['icon'] }} me-2"></i>
+                                    {{ $categories[$categoryKey]['name'] }}
                                 </h5>
-                                <p class="text-muted mb-4">{{ $categories[$categoryKey]['description'] ?? '' }}</p>
+                                <p class="text-muted mb-4">{{ $categories[$categoryKey]['description'] }}</p>
                             </div>
                         </div>
 
@@ -127,9 +127,9 @@
                                         <div class="card-header bg-transparent border-0">
                                             <h6 class="mb-0 text-dark">
                                                 <i class="fas fa-layer-group me-2"></i>
-                                                {{ $groups[$groupKey]['name'] ?? ucfirst($groupKey) }}
+                                                {{ $groups[$groupKey]['name'] }}
                                             </h6>
-                                            <small class="text-muted">{{ $groups[$groupKey]['description'] ?? '' }}</small>
+                                            <small class="text-muted">{{ $groups[$groupKey]['description'] }}</small>
                                         </div>
                                         <div class="card-body">
                                             <form method="POST" action="{{ route('settings.update.category', $categoryKey) }}" class="settings-form">

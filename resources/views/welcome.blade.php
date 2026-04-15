@@ -34,7 +34,7 @@
         }
 
         .navbar-custom .navbar-brand img {
-            height: 50px;
+            height: 80px;
         }
 
         .hero {
@@ -46,20 +46,8 @@
             text-align: center;
             color: white;
             overflow: hidden;
-            background-color: #000;
-        }
-
-        #hero-video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            z-index: 0;
+            background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
+            background-size: cover;
         }
 
         .hero::before {
@@ -69,7 +57,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1;
         }
 
@@ -580,16 +568,13 @@
     <!-- Navbar -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="#">
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
         </a>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <video autoplay muted loop playsinline id="hero-video">
-            <source src="{{ asset('assets/videos/waumini_link_video.mp4') }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+
         <div class="hero-content">
             <h1>Welcome to Waumini Link</h1>
             <p>Your central system to manage all church members efficiently</p>
