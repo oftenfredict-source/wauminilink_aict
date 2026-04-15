@@ -30,7 +30,7 @@ return [
             'validation_rules' => ['required', 'string']
         ],
         'church_name' => [
-            'value' => 'AIC Moshi Kilimanjaro',
+            'value' => 'Waumini Link',
             'type' => 'string',
             'category' => 'general',
             'group' => 'basic',
@@ -231,6 +231,22 @@ return [
             'description' => 'Automatically generate receipts for financial transactions',
             'validation_rules' => ['boolean']
         ],
+        'annual_fee_adult' => [
+            'value' => 2000,
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'basic',
+            'description' => 'Annual fee amount for adults (18+ years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
+        ],
+        'annual_fee_child' => [
+            'value' => 1000,
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'basic',
+            'description' => 'Annual fee amount for children (under 18 years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
+        ],
 
         // Notification Settings
         'enable_email_notifications' => [
@@ -345,7 +361,7 @@ return [
 
         // Security Settings
         'enable_otp' => [
-            'value' => true,
+            'value' => false,
             'type' => 'boolean',
             'category' => 'security',
             'group' => 'basic',

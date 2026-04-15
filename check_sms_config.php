@@ -14,7 +14,7 @@ $apiUrl = \App\Services\SettingsService::get('sms_api_url');
 $apiKey = \App\Services\SettingsService::get('sms_api_key');
 $username = \App\Services\SettingsService::get('sms_username');
 $password = \App\Services\SettingsService::get('sms_password');
-$senderId = \App\Services\SettingsService::get('sms_sender_id', 'AIC Moshi Kilimanjaro');
+$senderId = \App\Services\SettingsService::get('sms_sender_id', 'Waumini Link');
 
 echo "SMS Notifications Enabled: " . ($enabled ? "YES ✓" : "NO ✗") . "\n";
 echo "API URL: " . ($apiUrl ?: "NOT SET ✗") . "\n";
@@ -56,7 +56,7 @@ if ($enabled && ((!empty($username) && !empty($password)) || (!empty($apiUrl) &&
     echo "Testing SMS to +255743001243...\n";
     $smsService = app(\App\Services\SmsService::class);
     $result = $smsService->sendDebug('+255743001243', 'Test SMS from WauminiLink diagnostic script');
-    
+
     echo "\nResult:\n";
     echo "  Success: " . ($result['ok'] ? "YES ✓" : "NO ✗") . "\n";
     if (isset($result['status'])) {
@@ -76,7 +76,7 @@ if ($enabled && ((!empty($username) && !empty($password)) || (!empty($apiUrl) &&
     if (isset($result['body'])) {
         $body = $result['body'];
         echo "  Response Body: " . substr($body, 0, 300) . "\n";
-        
+
         // Check for rejection in response
         $responseData = json_decode($body, true);
         if (isset($responseData['messages']) && is_array($responseData['messages'])) {
@@ -101,7 +101,7 @@ echo "\n=== Recent SMS Logs ===\n";
 $logFile = storage_path('logs/laravel.log');
 if (file_exists($logFile)) {
     $lines = file($logFile);
-    $smsLines = array_filter($lines, function($line) {
+    $smsLines = array_filter($lines, function ($line) {
         return stripos($line, 'sms') !== false;
     });
     $recentSmsLines = array_slice($smsLines, -10);

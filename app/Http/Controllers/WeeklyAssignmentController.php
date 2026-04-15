@@ -37,10 +37,10 @@ class WeeklyAssignmentController extends Controller
             $query->currentWeek()->where('is_active', true);
         } elseif ($status === 'past') {
             $query->where('week_end_date', '<', now()->toDateString())
-                  ->where('is_active', true);
+                ->where('is_active', true);
         } elseif ($status === 'upcoming') {
             $query->where('week_start_date', '>', now()->toDateString())
-                  ->where('is_active', true);
+                ->where('is_active', true);
         } elseif ($status === 'all') {
             // Show all assignments (active and inactive)
             // No additional filter
@@ -55,8 +55,8 @@ class WeeklyAssignmentController extends Controller
         }
 
         $assignments = $query->orderBy('week_start_date', 'desc')
-                            ->orderBy('position')
-                            ->paginate(15);
+            ->orderBy('position')
+            ->paginate(15);
 
         // Get active leaders grouped by position for filters
         // Only include leaders that have associated members
@@ -148,13 +148,13 @@ class WeeklyAssignmentController extends Controller
         // Check for overlapping assignments
         $overlapping = WeeklyAssignment::where('leader_id', $request->leader_id)
             ->where('is_active', true)
-            ->where(function($q) use ($request) {
+            ->where(function ($q) use ($request) {
                 $q->whereBetween('week_start_date', [$request->week_start_date, $request->week_end_date])
-                  ->orWhereBetween('week_end_date', [$request->week_start_date, $request->week_end_date])
-                  ->orWhere(function($q2) use ($request) {
-                      $q2->where('week_start_date', '<=', $request->week_start_date)
-                         ->where('week_end_date', '>=', $request->week_end_date);
-                  });
+                    ->orWhereBetween('week_end_date', [$request->week_start_date, $request->week_end_date])
+                    ->orWhere(function ($q2) use ($request) {
+                        $q2->where('week_start_date', '<=', $request->week_start_date)
+                            ->where('week_end_date', '>=', $request->week_end_date);
+                    });
             })
             ->first();
 
@@ -254,13 +254,13 @@ class WeeklyAssignmentController extends Controller
         $overlapping = WeeklyAssignment::where('leader_id', $request->leader_id)
             ->where('id', '!=', $weeklyAssignment->id)
             ->where('is_active', true)
-            ->where(function($q) use ($request) {
+            ->where(function ($q) use ($request) {
                 $q->whereBetween('week_start_date', [$request->week_start_date, $request->week_end_date])
-                  ->orWhereBetween('week_end_date', [$request->week_start_date, $request->week_end_date])
-                  ->orWhere(function($q2) use ($request) {
-                      $q2->where('week_start_date', '<=', $request->week_start_date)
-                         ->where('week_end_date', '>=', $request->week_end_date);
-                  });
+                    ->orWhereBetween('week_end_date', [$request->week_start_date, $request->week_end_date])
+                    ->orWhere(function ($q2) use ($request) {
+                        $q2->where('week_start_date', '<=', $request->week_start_date)
+                            ->where('week_end_date', '>=', $request->week_end_date);
+                    });
             })
             ->first();
 
@@ -286,8 +286,8 @@ class WeeklyAssignmentController extends Controller
         // 1. Assignment is active
         // 2. AND (leader changed OR dates changed OR was just activated)
         $leaderChanged = $originalLeaderId != $weeklyAssignment->leader_id;
-        $datesChanged = $originalStartDate != $weeklyAssignment->week_start_date->format('Y-m-d') 
-                    || $originalEndDate != $weeklyAssignment->week_end_date->format('Y-m-d');
+        $datesChanged = $originalStartDate != $weeklyAssignment->week_start_date->format('Y-m-d')
+            || $originalEndDate != $weeklyAssignment->week_end_date->format('Y-m-d');
         $justActivated = !$wasActive && $weeklyAssignment->is_active;
 
         if ($weeklyAssignment->is_active && ($leaderChanged || $datesChanged || $justActivated)) {
@@ -328,7 +328,7 @@ class WeeklyAssignmentController extends Controller
             if (!$assignment->relationLoaded('leader')) {
                 $assignment->load(['leader.member']);
             }
-            
+
             // Check if leader and member exist
             if (!$assignment->leader || !$assignment->leader->member) {
                 Log::warning('Leader or member not found for assignment ID: ' . $assignment->id);
@@ -344,7 +344,7 @@ class WeeklyAssignmentController extends Controller
             }
 
             // Get church name from settings
-            $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
+            $churchName = SettingsService::get('church_name', 'Waumini Link');
 
             // Format dates
             $startDate = $assignment->week_start_date->format('Y-m-d');

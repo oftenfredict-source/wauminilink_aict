@@ -321,7 +321,7 @@
     <!-- Navbar/Header -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="{{ route('landing_page') }}">
-            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
+            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
         </a>
     </nav>
 
@@ -342,7 +342,7 @@
                 @csrf
                 <input type="hidden" name="token" value="{{ $token }}">
 
-                <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo">
+                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo">
                 <h2>Reset Password</h2>
                 <p>Enter your email and choose a new password.</p>
 

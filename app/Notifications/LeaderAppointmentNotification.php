@@ -30,12 +30,12 @@ class LeaderAppointmentNotification extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         $channels = ['database'];
-        
+
         // Add email if member has email
         if (!empty($notifiable->email)) {
             $channels[] = 'mail';
         }
-        
+
         return $channels;
     }
 
@@ -44,8 +44,8 @@ class LeaderAppointmentNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $churchName = \App\Services\SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
-        
+        $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Link');
+
         return (new MailMessage)
             ->subject('Hongera! Umechaguliwa kuwa Kiongozi')
             ->greeting("Shalom {$notifiable->full_name},")
@@ -63,8 +63,8 @@ class LeaderAppointmentNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        $churchName = \App\Services\SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
-        
+        $churchName = \App\Services\SettingsService::get('church_name', 'Waumini Link');
+
         return [
             'leader_id' => $this->leader->id,
             'member_id' => $this->leader->member_id,

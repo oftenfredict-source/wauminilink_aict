@@ -47,7 +47,7 @@
         padding: 8px 30px;
     }
     .navbar-custom .navbar-brand img {
-        height: 80px;
+        height: 50px;
         transition: height 0.3s ease;
     }
     .navbar-custom.scrolled .navbar-brand img {
@@ -63,7 +63,7 @@
     /* Left side background */
     .login-left {
         flex: 1;
-        background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
+        background: url('{{ asset("assets/images/church.jpg") }}') no-repeat center center;
         background-size: cover;
         position: relative;
         color: #fff;
@@ -631,7 +631,7 @@
 <!-- Navbar/Header -->
 <nav class="navbar navbar-custom">
     <a class="navbar-brand" href="{{ route('landing_page') }}">
-        <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
+        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
     </a>
 </nav>
 

@@ -60,7 +60,7 @@
                     <div
                         style="display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
                         <div style="flex: 0 0 100px;">
-                            <img src="{{ asset('assets/images/aict.png') }}" alt="AICT Logo"
+                            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="AICT Logo"
                                 style="height: 80px; width: auto;">
                         </div>
                         <div style="flex: 1; text-align: center;">

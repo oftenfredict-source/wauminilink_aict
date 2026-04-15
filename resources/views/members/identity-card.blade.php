@@ -473,7 +473,7 @@
         <div class="decorative-elements"></div>
 
         <div class="card-header">
-            <div class="church-name">AIC MOSHI KILIMANJARO</div>
+            <div class="church-name">Waumini Link</div>
             <div class="church-subtitle">Member Identity Card</div>
         </div>
 
@@ -556,7 +556,7 @@ Tribe: {{ ($member->tribe ?? '-') . ($member->other_tribe ? ' (' . $member->othe
     Guardian Name: {{ $member->guardian_name ?? '-' }}
     Guardian Phone: {{ $member->guardian_phone ?? '-' }}
 Guardian Relationship: {{ $member->guardian_relationship ?? '-' }}@endif
-Church: AIC MOSHI KILIMANJARO
+Church: Waumini Link
 Issued: {{ now()->format('M d, Y') }}`;
 
             const qrElement = document.getElementById('memberQrCode');

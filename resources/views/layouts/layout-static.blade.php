@@ -50,7 +50,7 @@
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <!-- Navbar Brand-->
         <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo"
+            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo"
                 style="height: 75px; max-width: 300px; object-fit: contain;">
         </a>
         <!-- Sidebar Toggle-->

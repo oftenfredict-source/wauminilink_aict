@@ -102,7 +102,7 @@
                                 style="display: inline-block; animation: scroll-left 50s linear infinite; color: white; font-weight: 600; font-size: 1.05rem; padding: 0.75rem 0;">
                                 <span class="marquee-item">
                                     <i class="fas fa-church me-2"></i>
-                                    <strong>Karibu katika kanisa la AIC MOSHI KILIMANJARO</strong> |
+                                    <strong>Karibu katika mfumo wa Waumini Link</strong> |
                                     <i class="fas fa-mobile-alt me-1"></i> <strong>Lipa Namba Voda:</strong> <span
                                         class="highlight-number">68019088</span> - <strong>AIC Moshi</strong> |
                                     <i class="fas fa-university me-1"></i> <strong>CRDB Bank:</strong> Akaunti <span
@@ -113,7 +113,7 @@
                                 </span>
                                 <span class="marquee-item" style="padding-left: 80px;">
                                     <i class="fas fa-church me-2"></i>
-                                    <strong>Karibu katika kanisa la AIC MOSHI KILIMANJARO</strong> |
+                                    <strong>Karibu katika mfumo wa Waumini Link</strong> |
                                     <i class="fas fa-mobile-alt me-1"></i> <strong>Lipa Namba Voda:</strong> <span
                                         class="highlight-number">68019088</span> - <strong>AIC Moshi</strong> |
                                     <i class="fas fa-university me-1"></i> <strong>CRDB Bank:</strong> Akaunti <span

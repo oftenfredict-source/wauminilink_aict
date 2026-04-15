@@ -590,7 +590,7 @@ class MemberController extends Controller
                         'member_id' => $member->id
                     ]);
                 } else {
-                    $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
+                    $churchName = SettingsService::get('church_name', 'Waumini Link');
 
                     // Get username and password for SMS
                     $username = $member->member_id;
@@ -737,7 +737,7 @@ class MemberController extends Controller
                     $spouseMember
                 ) {
 
-                    $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
+                    $churchName = SettingsService::get('church_name', 'Waumini Link');
 
                     // Get username and password for spouse SMS
                     $spouseUsername = $spouseMember->member_id;

@@ -2486,7 +2486,7 @@ class ReportController extends Controller
 
         // Church information (used in member receipt header)
         $churchInfo = [
-            'name' => 'AIC Moshi Kilimanjaro',
+            'name' => 'Waumini Link',
             'address' => 'P.O. Box 8765, Moshi, Kilimanjaro, Tanzania',
             'phone' => '+255 756 330 509',
             'email' => 'info@wauminilink.org',

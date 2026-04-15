@@ -278,7 +278,7 @@ class AnnouncementController extends Controller
             }
 
             // Get church name from settings
-            $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
+            $churchName = SettingsService::get('church_name', 'Waumini Link');
 
             // Build SMS message
             $message = $this->buildAnnouncementMessage($announcement, $churchName);
