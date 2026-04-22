@@ -523,8 +523,8 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     // Alternative route for compatibility
     Route::get('/attendance/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members.legacy');
     // Generic routes come LAST
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/service-attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/service-attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
     // Biometric Device Testing Routes
     Route::get('/biometric/test', [ZKTecoController::class, 'index'])->name('biometric.test');
