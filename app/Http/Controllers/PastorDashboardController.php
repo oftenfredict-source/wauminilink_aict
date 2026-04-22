@@ -214,6 +214,7 @@ class PastorDashboardController extends Controller
             $now = Carbon::now();
             $next30Days = $now->copy()->addDays(30);
             $announcementsList = Announcement::active()
+                ->targetedFor($pastorMember->id)
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -224,8 +225,12 @@ class PastorDashboardController extends Controller
             foreach ($announcementsList as $announcement) {
                 $announcement->is_unread = !in_array($announcement->id, $viewedAnnouncementIds);
             }
-            $activeAnnouncements = Announcement::active()->pluck('id');
-            $unreadCount = $activeAnnouncements->diff($viewedAnnouncementIds)->count();
+
+            // Re-calculate unread count based on targeted announcements
+            $activeAnnouncementIds = Announcement::active()
+                ->targetedFor($pastorMember->id)
+                ->pluck('id');
+            $unreadCount = $activeAnnouncementIds->diff($viewedAnnouncementIds)->count();
 
             $announcements = [
                 'announcements' => $announcementsList,
