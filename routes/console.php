@@ -45,3 +45,17 @@ Schedule::command('app:process-aged-out-children')
     ->timezone('Africa/Dar_es_Salaam')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Schedule database and file backups daily at 3:00 AM (Saa tisa usiku)
+Schedule::command('backup:run')
+    ->dailyAt('03:00')
+    ->timezone('Africa/Dar_es_Salaam')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Schedule backup cleanup daily at 3:30 AM
+Schedule::command('backup:clean')
+    ->dailyAt('03:30')
+    ->timezone('Africa/Dar_es_Salaam')
+    ->withoutOverlapping()
+    ->runInBackground();
