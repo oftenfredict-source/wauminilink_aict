@@ -63,6 +63,11 @@ return [
                 PDO::ATTR_TIMEOUT => 5, // Connection timeout in seconds
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]) : [],
+            'dump' => [
+                'dump_binary_path' => env('DUMP_BINARY_PATH', '/usr/bin'),
+                'use_single_transaction' => true,
+                'timeout' => 60 * 5, // 5 minute timeout
+            ],
         ],
 
         'mariadb' => [
@@ -150,7 +155,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')) . '-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
