@@ -221,10 +221,10 @@ return [
      */
     'notifications' => [
         'notifications' => [
-            BackupHasFailedNotification::class => ['mail'],
+            \App\Notifications\Backup\BackupHasFailedNotification::class => ['mail', 'sms'],
             UnhealthyBackupWasFoundNotification::class => ['mail'],
             CleanupHasFailedNotification::class => ['mail'],
-            BackupWasSuccessfulNotification::class => ['mail'],
+            \App\Notifications\Backup\BackupWasSuccessfulNotification::class => ['mail', 'sms'],
             HealthyBackupWasFoundNotification::class => ['mail'],
             CleanupWasSuccessfulNotification::class => ['mail'],
         ],
@@ -233,7 +233,7 @@ return [
          * Here you can specify the notifiable to which the notifications should be sent. The default
          * notifiable will use the variables specified in this config file.
          */
-        'notifiable' => Notifiable::class,
+        'notifiable' => \App\Notifications\Backup\Notifiable::class,
 
         'mail' => [
             'to' => env('BACKUP_NOTIFICATION_EMAIL', 'your@example.com'),
@@ -255,6 +255,10 @@ return [
             'username' => null,
 
             'icon' => null,
+        ],
+
+        'sms' => [
+            'to' => env('BACKUP_NOTIFICATION_PHONE'),
         ],
 
         'discord' => [
