@@ -6,11 +6,6 @@ use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification as
 
 class BackupWasSuccessfulNotification extends SpatieBackupWasSuccessfulNotification
 {
-    public function via(): array
-    {
-        return array_merge(parent::via(), ['sms']);
-    }
-
     public function toSms($notifiable): string
     {
         return "Shalom! Backup ya mfumo wa WauminiLink (AIC) imekamilika kikamilifu kwenye Google Drive leo tarehe " . date('d/m/Y H:i') . ".";
