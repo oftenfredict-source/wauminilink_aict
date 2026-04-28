@@ -593,7 +593,7 @@
         <div class="hero-content">
             <h1>Welcome to Waumini Link</h1>
             <p>Your central system to manage all church members efficiently</p>
-            <a href="{{ route('login') }}" class="btn btn-welcome">Get Started</a>
+            <a href="{{ route('login') }}" class="btn btn-welcome">View Demo</a>
         </div>
     </section>
 

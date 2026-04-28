@@ -120,21 +120,21 @@
                             </div>
                         </div>
 
-                        @foreach($categorySettings as $groupKey => $groupSettings)
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="card border-0 bg-light">
-                                        <div class="card-header bg-transparent border-0">
-                                            <h6 class="mb-0 text-dark">
-                                                <i class="fas fa-layer-group me-2"></i>
-                                                {{ $groups[$groupKey]['name'] ?? ucfirst($groupKey) }}
-                                            </h6>
-                                            <small class="text-muted">{{ $groups[$groupKey]['description'] ?? '' }}</small>
-                                        </div>
-                                        <div class="card-body">
-                                            <form method="POST" action="{{ route('settings.update.category', $categoryKey) }}" class="settings-form">
+                        <form method="POST" action="{{ route('settings.update.category', $categoryKey) }}" class="settings-form">
                             @csrf
-                            <div class="row g-3">
+                            @foreach($categorySettings as $groupKey => $groupSettings)
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-header bg-transparent border-0">
+                                                <h6 class="mb-0 text-dark">
+                                                    <i class="fas fa-layer-group me-2"></i>
+                                                    {{ $groups[$groupKey]['name'] ?? ucfirst($groupKey) }}
+                                                </h6>
+                                                <small class="text-muted">{{ $groups[$groupKey]['description'] ?? '' }}</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
                                                     @foreach($groupSettings as $setting)
                                                         <div class="col-md-6 col-lg-4">
                                                             <div class="form-group">
@@ -223,24 +223,24 @@
                                                         </div>
                                                     @endforeach
                                                 </div>
-                                                
-                                                @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
-                                                <div class="d-flex justify-content-end mt-3">
-                                                    <button type="submit" class="btn text-white" style="background-color: #940000 !important; border-color: #940000 !important;">
-                                                        <i class="fas fa-save me-2"></i>Save {{ $categories[$categoryKey]['name'] }}
-                                                    </button>
-                                                </div>
-                                                @else
-                                                <div class="alert alert-info mt-3">
-                                                    <i class="fas fa-info-circle me-2"></i>You have view-only access. You cannot edit settings.
-                                                </div>
-                                                @endif
-                                            </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            @endforeach
+
+                            @if(auth()->user()->hasPermission('settings.edit') || auth()->user()->isAdmin())
+                            <div class="d-flex justify-content-end mt-4 mb-5">
+                                <button type="submit" class="btn btn-lg text-white" style="background-color: #940000 !important; border-color: #940000 !important; padding: 12px 30px;">
+                                    <i class="fas fa-save me-2"></i>Save All {{ $categories[$categoryKey]['name'] }}
+                                </button>
                             </div>
-                        @endforeach
+                            @else
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>You have view-only access. You cannot edit settings.
+                            </div>
+                            @endif
+                        </form>
                     </div>
                 @endforeach
             </div>

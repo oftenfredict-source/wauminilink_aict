@@ -623,7 +623,7 @@ Route::post('/test-biometric-sync', [AttendanceController::class, 'syncBiometric
     ->name('test.biometric.sync');
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 })->name('landing_page');
 
 

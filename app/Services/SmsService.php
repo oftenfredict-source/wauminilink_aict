@@ -194,7 +194,10 @@ class SmsService
         if ($serviceDate instanceof \Carbon\Carbon) {
             $formattedDate = $serviceDate->format('d/m/Y');
         } elseif ($service && $service->service_date) {
-            $formattedDate = $service->service_date->format('d/m/Y');
+            $sd = $service->service_date instanceof \Carbon\Carbon
+                ? $service->service_date
+                : \Carbon\Carbon::parse($service->service_date);
+            $formattedDate = $sd->format('d/m/Y');
         } else {
             $formattedDate = date('d/m/Y', strtotime($serviceDate));
         }
@@ -203,7 +206,10 @@ class SmsService
         $serviceDetails = [];
         if ($service) {
             if ($service->start_time) {
-                $serviceDetails[] = "Muda: " . $service->start_time->format('H:i');
+                $startTime = $service->start_time instanceof \Carbon\Carbon
+                    ? $service->start_time
+                    : \Carbon\Carbon::parse($service->start_time);
+                $serviceDetails[] = "Muda: " . $startTime->format('H:i');
             }
             if ($service->venue) {
                 $serviceDetails[] = "Mahali: " . $service->venue;
