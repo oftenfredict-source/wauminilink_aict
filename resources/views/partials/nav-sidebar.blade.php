@@ -39,6 +39,12 @@
             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
             Dashboard
           </a>
+          @if(Auth::user()->is_admin && Auth::user()->role === 'pastor')
+            <a class="nav-link" href="{{ route('dashboard.pastor') }}">
+              <div class="sb-nav-link-icon"><i class="fas fa-church"></i></div>
+              Pastor Dashboard
+            </a>
+          @endif
           <div class="sb-sidenav-menu-heading">Management</div>
           <a class="nav-link" href="{{ route('members.view') }}">
             <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>

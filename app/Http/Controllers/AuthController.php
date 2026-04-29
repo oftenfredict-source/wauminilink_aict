@@ -568,7 +568,7 @@ class AuthController extends Controller
         }
 
         // Redirect based on role - but members and leaders go to member dashboard first
-        if ($user->role === 'admin') {
+        if ($user->isAdmin()) {
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Login successful! Welcome Admin.');
         } elseif ($user->member_id) {
@@ -578,13 +578,13 @@ class AuthController extends Controller
                 ->with('success', 'Login successful! Welcome.');
         } else {
             // Non-member users (legacy accounts without member_id)
-            if ($user->role === 'secretary') {
+            if ($user->role === 'secretary' || ($user->isAdmin() && $user->role === 'secretary')) {
                 return redirect()->route('dashboard.secretary')
                     ->with('success', 'Login successful! Welcome back.');
-            } elseif ($user->role === 'pastor') {
+            } elseif ($user->isPastor()) {
                 return redirect()->route('dashboard.pastor')
                     ->with('success', 'Login successful! Welcome Pastor.');
-            } elseif ($user->role === 'treasurer') {
+            } elseif ($user->isTreasurer()) {
                 return redirect()->route('finance.dashboard')
                     ->with('success', 'Login successful! Welcome Treasurer.');
             } else {

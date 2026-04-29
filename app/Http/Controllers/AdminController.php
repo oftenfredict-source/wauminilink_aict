@@ -125,13 +125,13 @@ class AdminController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('route', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%");
+                    ->orWhere('route', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%");
             });
         }
 
         $logs = $query->orderBy('created_at', 'desc')->paginate(25);
-        
+
         $users = User::orderBy('name')->get();
         $actions = ActivityLog::distinct()->pluck('action');
 
@@ -202,7 +202,7 @@ class AdminController extends Controller
                 $session->last_activity_human = Carbon::createFromTimestamp($session->last_activity)->diffForHumans();
                 $session->is_current = $session->id === session()->getId();
                 $session->is_active = $session->last_activity > now()->subHours(24)->timestamp;
-                
+
                 // Check if user is blocked from logging in
                 $user = User::find($session->user_id);
                 if ($user) {
@@ -216,7 +216,7 @@ class AdminController extends Controller
                     $session->remaining_block_time = null;
                     $session->remaining_block_time_formatted = null;
                 }
-                
+
                 return $session;
             });
 
@@ -241,7 +241,7 @@ class AdminController extends Controller
 
         // Get the user ID from the session before deleting it
         $session = DB::table('sessions')->where('id', $sessionId)->first();
-        
+
         if (!$session || !$session->user_id) {
             return response()->json([
                 'success' => false,
@@ -264,12 +264,12 @@ class AdminController extends Controller
         // datetime-local sends time in the user's browser timezone (Tanzania)
         // We need to interpret it as Tanzania timezone (Africa/Dar_es_Salaam)
         $tanzaniaTimezone = 'Africa/Dar_es_Salaam';
-        
+
         // Parse the datetime string assuming it's in Tanzania timezone
         // The datetime-local format is: YYYY-MM-DDTHH:mm (no timezone info)
         // We interpret this as Tanzania local time
         $blockedUntil = Carbon::createFromFormat('Y-m-d\TH:i', $request->blocked_until, $tanzaniaTimezone);
-        
+
         // Laravel stores timestamps in UTC, so convert Tanzania time to UTC for storage
         // Use setTimezone('UTC') instead of utc() to avoid double conversion
         $blockedUntilForStorage = $blockedUntil->copy()->setTimezone('UTC');
@@ -282,7 +282,7 @@ class AdminController extends Controller
         $affected = User::where('id', $userId)->update([
             'login_blocked_until' => $blockedUntilForStorage
         ]);
-        
+
         // Verify the block was saved (for debugging)
         $verifyUser = User::find($userId);
         if (!$verifyUser || !$verifyUser->login_blocked_until) {
@@ -313,27 +313,27 @@ class AdminController extends Controller
         // Use Tanzania timezone explicitly
         $tanzaniaTimezone = 'Africa/Dar_es_Salaam';
         $appTimezone = $tanzaniaTimezone; // For backward compatibility
-        
+
         // Get the raw timestamp from database to avoid timezone conversion issues
         $rawBlockedUntil = DB::table('users')
             ->where('id', $userId)
             ->value('login_blocked_until');
-        
+
         if ($rawBlockedUntil) {
             // Parse as UTC directly (how it's stored in database)
             $blockedUntilUtc = Carbon::createFromFormat('Y-m-d H:i:s', $rawBlockedUntil, 'UTC');
             $now = Carbon::now('UTC');
-            
+
             // Convert to Tanzania timezone for display
             $blockedUntilDisplay = $blockedUntilUtc->copy()->setTimezone($appTimezone);
             $blockedUntilFormatted = $blockedUntilDisplay->format('Y-m-d H:i:s');
-            
+
             // Calculate the actual time remaining from now (both in UTC)
             // diffInMinutes returns: $this - $other
             // So blockedUntilUtc->diffInMinutes($now, false) = blockedUntil - now
             // Positive if blockedUntil is in the future, negative if in the past
-            $remainingMinutes = (int)$blockedUntilUtc->diffInMinutes($now, false);
-            
+            $remainingMinutes = (int) $blockedUntilUtc->diffInMinutes($now, false);
+
             // Only show positive remaining time
             if ($remainingMinutes <= 0) {
                 $blockedUntilHuman = "now (block has expired)";
@@ -361,7 +361,7 @@ class AdminController extends Controller
             $blockedUntilHuman = 'N/A';
             $remainingMinutes = 0;
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => "Session revoked successfully. {$user->name} cannot login until {$blockedUntilFormatted} ({$blockedUntilHuman}).",
@@ -403,16 +403,16 @@ class AdminController extends Controller
             ->whereIn('role', ['admin', 'pastor', 'secretary', 'treasurer'])
             ->pluck('member_id')
             ->toArray();
-        
+
         // Debug: Get all leaders first to see what we're working with
         $allLeaders = \App\Models\Leader::with('member')
             ->whereIn('position', ['pastor', 'assistant_pastor', 'secretary', 'assistant_secretary', 'treasurer', 'assistant_treasurer'])
             ->get();
-        
+
         // Debug: Log for troubleshooting
         Log::info('User creation - All leaders found', [
             'total_leaders' => $allLeaders->count(),
-            'leaders_details' => $allLeaders->map(function($l) use ($membersWithUsers) {
+            'leaders_details' => $allLeaders->map(function ($l) use ($membersWithUsers) {
                 return [
                     'id' => $l->id,
                     'position' => $l->position,
@@ -425,7 +425,7 @@ class AdminController extends Controller
             })->toArray(),
             'members_with_users' => $membersWithUsers
         ]);
-        
+
         // Get active leaders with their member information
         // Only show leaders who don't already have a user account
         // Show all active leaders regardless of end_date (admin can still create account)
@@ -437,20 +437,20 @@ class AdminController extends Controller
             ->orderBy('position')
             ->orderBy('appointment_date', 'desc')
             ->get()
-            ->map(function($leader) {
+            ->map(function ($leader) {
                 // Skip if member relationship is missing
                 if (!$leader->member) {
                     return null;
                 }
-                
+
                 // Map leader position to user role
-                $role = match($leader->position) {
+                $role = match ($leader->position) {
                     'pastor', 'assistant_pastor' => 'pastor',
                     'secretary', 'assistant_secretary' => 'secretary',
                     'treasurer', 'assistant_treasurer' => 'treasurer',
                     default => null
                 };
-                
+
                 return [
                     'id' => $leader->id,
                     'member_id' => $leader->member_id,
@@ -464,12 +464,12 @@ class AdminController extends Controller
                     'end_date' => $leader->end_date ? $leader->end_date->format('Y-m-d') : null,
                 ];
             })
-            ->filter(function($leader) {
+            ->filter(function ($leader) {
                 // Only include positions that map to user roles and have valid data
                 return $leader !== null && $leader['role'] !== null;
             })
             ->values(); // Re-index array after filtering
-        
+
         // Debug: Log final leaders that will be shown
         Log::info('User creation - Final leaders to display', [
             'count' => $leaders->count(),
@@ -497,15 +497,15 @@ class AdminController extends Controller
             'email' => $request->input('email'),
             'has_email' => $request->has('email'),
         ]);
-        
+
         // Check if creating for a leader (member-based) or admin (direct creation)
         $isAdminCreation = $request->input('account_type') === 'admin';
-        
+
         if ($isAdminCreation) {
             // Direct admin creation (not tied to a member)
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email',
+                'email' => 'required|string|max:255|unique:users,email',
                 'phone_number' => [
                     'nullable',
                     'string',
@@ -520,7 +520,7 @@ class AdminController extends Controller
                             $phone = ltrim($phone, '0');
                             // Prepend +255
                             $formattedPhone = '+255' . $phone;
-                            
+
                             // Check if this formatted phone number already exists
                             if (User::where('phone_number', $formattedPhone)->exists()) {
                                 $fail('This phone number is already in use by another user. Each user must have a unique phone number.');
@@ -528,8 +528,9 @@ class AdminController extends Controller
                         }
                     },
                 ],
+                'is_admin' => 'nullable|boolean',
             ]);
-            
+
             $role = 'admin';
             $memberId = null;
             $userName = $validated['name'];
@@ -541,7 +542,7 @@ class AdminController extends Controller
                 $phone = preg_replace('/^\+255/', '', $phone);
                 $phone = ltrim($phone, '0');
                 $phoneNumber = '+255' . $phone;
-                
+
                 // Check if phone number already exists
                 if (User::where('phone_number', $phoneNumber)->exists()) {
                     $phoneNumber = null;
@@ -553,31 +554,31 @@ class AdminController extends Controller
             // Email is required for leader accounts
             // Check if email is provided before validation
             $emailProvided = $request->filled('email') && trim($request->input('email')) !== '';
-            
+
             Log::info('Before validation check', [
                 'email_provided' => $emailProvided,
                 'email_value' => $request->input('email'),
                 'has_email' => $request->has('email'),
                 'all_input_keys' => array_keys($request->all()),
             ]);
-            
+
             $validated = $request->validate([
                 'leader_id' => 'required|exists:leaders,id',
                 'email' => [
                     'required',
                     'string',
-                    'email:rfc,dns',
                     'max:255',
                 ],
+                'is_admin' => 'nullable|boolean',
             ], [
                 'leader_id.required' => 'Please select a leader from the dropdown.',
                 'leader_id.exists' => 'The selected leader is invalid.',
                 'email.required' => 'Email address is required. Please enter an email address for the user account.',
                 'email.email' => 'Please enter a valid email address.',
             ]);
-            
+
             $leader = \App\Models\Leader::with('member')->findOrFail($validated['leader_id']);
-            
+
             // Verify leader doesn't already have a leader/admin user account
             // Regular member accounts (role='member') are allowed - a person can have both
             $existingUser = $leader->member->user;
@@ -586,36 +587,36 @@ class AdminController extends Controller
                     ->with('error', 'This leader already has a user account with role: ' . ucfirst($existingUser->role) . '.')
                     ->withInput();
             }
-            
+
             // Map leader position to user role
-            $role = match($leader->position) {
+            $role = match ($leader->position) {
                 'pastor', 'assistant_pastor' => 'pastor',
                 'secretary', 'assistant_secretary' => 'secretary',
                 'treasurer', 'assistant_treasurer' => 'treasurer',
                 default => null
             };
-            
+
             if (!$role) {
                 return redirect()->back()
                     ->with('error', 'This leadership position does not require a user account.')
                     ->withInput();
             }
-            
+
             // Get member information
             $member = $leader->member;
             $memberId = $member->id;
             $userName = $member->full_name;
-            
+
             // Get email from validated data
             $userEmail = $validated['email'];
-            
+
             // Debug: Log email value
             Log::info('Email from validation', [
                 'email' => $userEmail,
                 'email_empty' => empty($userEmail),
                 'email_trimmed' => trim($userEmail ?? ''),
             ]);
-            
+
             // Validate email uniqueness - allow same email if it's the member's own regular account
             $emailValidation = Validator::make(['email' => $userEmail], [
                 'email' => [
@@ -626,27 +627,27 @@ class AdminController extends Controller
                     function ($attribute, $value, $fail) use ($existingUser) {
                         // If member has a regular member account, allow using the same email
                         $emailExists = User::where('email', $value)
-                            ->where(function($query) use ($existingUser) {
-                                if ($existingUser && $existingUser->role === 'member') {
-                                    // Exclude the member's own regular account
-                                    $query->where('id', '!=', $existingUser->id);
-                                }
-                            })
+                            ->where(function ($query) use ($existingUser) {
+                            if ($existingUser && $existingUser->role === 'member') {
+                                // Exclude the member's own regular account
+                                $query->where('id', '!=', $existingUser->id);
+                            }
+                        })
                             ->exists();
-                        
+
                         if ($emailExists) {
                             $fail('This email address is already in use by another user account.');
                         }
                     },
                 ],
             ]);
-            
+
             if ($emailValidation->fails()) {
                 return redirect()->back()
                     ->withErrors($emailValidation)
                     ->withInput();
             }
-            
+
             // Format phone number from member
             $phoneNumber = null;
             if (!empty($member->phone_number)) {
@@ -655,14 +656,14 @@ class AdminController extends Controller
                 $phone = ltrim($phone, '0');
                 $phoneNumber = '+255' . $phone;
             }
-            
+
             // Handle phone number for leader account creation
             // Note: Member may already have a "member" role account with this phone number
             // Since it's the same person, we'll allow the leader account to use the same phone
             // by temporarily removing it from the member account
             $phoneNumberWarning = null;
             $memberAccountPhoneToRestore = null;
-            
+
             if ($phoneNumber) {
                 // First, check if member already has a user account with this phone
                 if ($existingUser && $existingUser->phone_number === $phoneNumber) {
@@ -677,37 +678,37 @@ class AdminController extends Controller
                         'new_role' => $role,
                         'phone' => $phoneNumber
                     ]);
-                    
+
                     // Store the phone to restore later if needed (though we'll use it for leader account)
                     $memberAccountPhoneToRestore = $phoneNumber;
-                    
+
                     // Temporarily remove phone from member account to allow leader account to use it
                     // The leader account will have the phone number (more important for SMS notifications)
                     $existingUser->phone_number = null;
                     $existingUser->save();
-                    
+
                     $phoneNumberWarning = "Note: The phone number has been transferred from the member account to the leader account. The member account ({$existingUser->role} role) no longer has a phone number, but the leader account ({$role} role) now has it for SMS notifications.";
                 } else {
                     // Check if any OTHER user (different member) has this phone number
                     $existingUserWithPhone = User::where('phone_number', $phoneNumber)
-                        ->where(function($q) use ($memberId, $existingUser) {
+                        ->where(function ($q) use ($memberId, $existingUser) {
                             // Exclude this member's accounts
                             if ($existingUser) {
                                 $q->where('id', '!=', $existingUser->id);
                             }
                             // Also exclude any other accounts for this member
-                            $q->where(function($subQ) use ($memberId) {
+                            $q->where(function ($subQ) use ($memberId) {
                                 $subQ->whereNull('member_id')
-                                     ->orWhere('member_id', '!=', $memberId);
+                                    ->orWhere('member_id', '!=', $memberId);
                             });
                         })
                         ->first();
-                    
+
                     if ($existingUserWithPhone) {
                         $existingUserRole = $existingUserWithPhone->role;
                         $existingUserName = $existingUserWithPhone->name;
                         $existingMemberId = $existingUserWithPhone->member_id;
-                        
+
                         // Get member name if it's a member account
                         $memberName = $existingUserName;
                         if ($existingMemberId) {
@@ -716,7 +717,7 @@ class AdminController extends Controller
                                 $memberName = $existingMember->full_name;
                             }
                         }
-                        
+
                         // Another user (different member) has this phone - set to null and continue
                         Log::warning('Phone number already used by different member - creating leader account without phone', [
                             'member_id' => $memberId,
@@ -726,7 +727,7 @@ class AdminController extends Controller
                             'existing_role' => $existingUserRole,
                             'phone' => $phoneNumber
                         ]);
-                        
+
                         $phoneNumber = null;
                         $phoneNumberWarning = "Note: The leader account was created without a phone number because phone number {$member->phone_number} is already in use by {$memberName}'s account ({$existingUserRole} role). Each user account must have a unique phone number.";
                     }
@@ -753,11 +754,12 @@ class AdminController extends Controller
                 'email' => $userEmail,
                 'password' => Hash::make($generatedPassword),
                 'role' => $role,
+                'is_admin' => $request->boolean('is_admin'),
                 'phone_number' => $phoneNumber,
                 'member_id' => $memberId,
-                'can_approve_finances' => $role === 'pastor' || $role === 'admin',
+                'can_approve_finances' => $role === 'pastor' || $role === 'admin' || $request->boolean('is_admin'),
             ]);
-            
+
             Log::info('User created successfully', ['user_id' => $user->id]);
         } catch (\Exception $e) {
             Log::error('Error creating user', [
@@ -773,7 +775,7 @@ class AdminController extends Controller
         $smsSent = false;
         $smsError = null;
         $smsReason = null;
-        
+
         if (!empty($phoneNumber)) {
             try {
                 // Check if SMS is enabled first
@@ -788,19 +790,19 @@ class AdminController extends Controller
                 } else {
                     $smsService = app(SmsService::class);
                     $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
-                    
+
                     $roleLabel = ucfirst($role);
                     $message = "Hongera {$user->name}! Akaunti yako ya {$roleLabel} imeundwa kikamilifu kwenye mfumo wa {$churchName}.\n\n";
                     $message .= "Unaweza kuingia kwenye akaunti yako kwa kutumia:\n";
                     $message .= "Username: {$user->email}\n";
                     $message .= "Password: {$generatedPassword}\n\n";
                     $message .= "Tafadhali badilisha nenosiri baada ya kuingia kwa mara ya kwanza. Mungu akubariki!";
-                    
+
                     // Use sendDebug to get detailed response
                     $smsResult = $smsService->sendDebug($phoneNumber, $message);
                     $smsSent = $smsResult['ok'] ?? false;
                     $smsReason = $smsResult['reason'] ?? null;
-                    
+
                     if ($smsSent) {
                         Log::info('User account credentials SMS sent successfully', [
                             'user_id' => $user->id,
@@ -820,7 +822,7 @@ class AdminController extends Controller
                                 $smsError = $smsResult['error'] ?? $smsResult['body'] ?? 'Unknown error occurred';
                                 break;
                         }
-                        
+
                         Log::warning('User account credentials SMS failed', [
                             'user_id' => $user->id,
                             'phone' => $phoneNumber,
@@ -865,7 +867,7 @@ class AdminController extends Controller
         if ($phoneNumberWarning) {
             $successMessage .= " {$phoneNumberWarning}";
         }
-        
+
         // Store credentials in session for SweetAlert popup
         return redirect()->route('admin.users')
             ->with('success', $successMessage)
@@ -891,19 +893,19 @@ class AdminController extends Controller
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
         $symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-        
+
         // Ensure at least one character from each set
         $password = $uppercase[random_int(0, strlen($uppercase) - 1)];
         $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
         $password .= $numbers[random_int(0, strlen($numbers) - 1)];
         $password .= $symbols[random_int(0, strlen($symbols) - 1)];
-        
+
         // Fill the rest randomly from all character sets
         $all = $uppercase . $lowercase . $numbers . $symbols;
         for ($i = strlen($password); $i < $length; $i++) {
             $password .= $all[random_int(0, strlen($all) - 1)];
         }
-        
+
         // Shuffle to randomize position
         return str_shuffle($password);
     }
@@ -914,7 +916,7 @@ class AdminController extends Controller
     public function unblockUser(Request $request, $userId)
     {
         $user = User::findOrFail($userId);
-        
+
         $user->update(['login_blocked_until' => null]);
 
         // Log this activity
@@ -1017,13 +1019,13 @@ class AdminController extends Controller
                 // Check if it's a deadlock error
                 // MySQL deadlock: SQLSTATE[40001] with error code 1213
                 // Also check for "Deadlock" in the message
-                $isDeadlock = $e->getCode() == 40001 || 
-                              str_contains($e->getMessage(), 'Deadlock') ||
-                              str_contains($e->getMessage(), '1213');
-                
+                $isDeadlock = $e->getCode() == 40001 ||
+                    str_contains($e->getMessage(), 'Deadlock') ||
+                    str_contains($e->getMessage(), '1213');
+
                 if ($isDeadlock) {
                     $retryCount++;
-                    
+
                     if ($retryCount >= $maxRetries) {
                         Log::error('Deadlock retry limit exceeded in updateRolePermissions', [
                             'role' => $role,
@@ -1031,15 +1033,15 @@ class AdminController extends Controller
                             'error' => $e->getMessage(),
                             'error_code' => $e->getCode(),
                         ]);
-                        
+
                         return back()->with('error', 'Failed to update permissions due to a database conflict. Please try again in a moment.');
                     }
-                    
+
                     // Wait before retrying (exponential backoff)
                     usleep($retryDelay * 1000 * $retryCount);
                     continue;
                 }
-                
+
                 // If it's not a deadlock, re-throw the exception
                 throw $e;
             }
@@ -1088,7 +1090,7 @@ class AdminController extends Controller
 
             // Generate a strong password automatically
             $newPassword = $this->generateStrongPassword();
-            
+
             // Update password
             $user->password = Hash::make($newPassword);
             $user->save();
@@ -1106,7 +1108,7 @@ class AdminController extends Controller
             $smsSent = false;
             $smsError = null;
             $smsReason = null;
-            
+
             if (!empty($user->phone_number)) {
                 try {
                     // Check if SMS is enabled first
@@ -1121,16 +1123,16 @@ class AdminController extends Controller
                     } else {
                         $smsService = app(SmsService::class);
                         $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
-                        
+
                         $roleLabel = ucfirst($user->role);
                         $message = "Shalom {$user->name}, nenosiri lako jipya la akaunti yako ya {$roleLabel} ni: {$newPassword}.\n\n";
                         $message .= "Tafadhali badilisha nenosiri baada ya kuingia kwa mara ya kwanza. Mungu akubariki!";
-                        
+
                         // Use sendDebug to get detailed response
                         $smsResult = $smsService->sendDebug($user->phone_number, $message);
                         $smsSent = $smsResult['ok'] ?? false;
                         $smsReason = $smsResult['reason'] ?? null;
-                        
+
                         if ($smsSent) {
                             Log::info('User password reset SMS sent successfully', [
                                 'user_id' => $user->id,
@@ -1150,7 +1152,7 @@ class AdminController extends Controller
                                     $smsError = $smsResult['error'] ?? $smsResult['body'] ?? 'Unknown error occurred';
                                     break;
                             }
-                            
+
                             Log::warning('User password reset SMS failed', [
                                 'user_id' => $user->id,
                                 'phone' => $user->phone_number,
@@ -1222,7 +1224,7 @@ class AdminController extends Controller
     public function edit($userId)
     {
         $user = User::findOrFail($userId);
-        
+
         $roles = [
             'pastor' => 'Pastor',
             'secretary' => 'Secretary',
@@ -1242,7 +1244,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $userId,
+            'email' => 'required|string|max:255|unique:users,email,' . $userId,
             'role' => 'required|in:admin,pastor,secretary,treasurer',
             'phone_number' => [
                 'nullable',
@@ -1258,7 +1260,7 @@ class AdminController extends Controller
                         $phone = ltrim($phone, '0');
                         // Prepend +255
                         $formattedPhone = '+255' . $phone;
-                        
+
                         // Check if this formatted phone number already exists (excluding current user)
                         if (User::where('phone_number', $formattedPhone)->where('id', '!=', $userId)->exists()) {
                             $fail('This phone number is already in use by another user. Each user must have a unique phone number.');
@@ -1267,6 +1269,7 @@ class AdminController extends Controller
                 },
             ],
             'can_approve_finances' => 'nullable|boolean',
+            'is_admin' => 'nullable|boolean',
         ]);
 
         // Format phone number: prepend +255 if not already present
@@ -1287,7 +1290,8 @@ class AdminController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'phone_number' => $phoneNumber,
-            'can_approve_finances' => $validated['can_approve_finances'] ?? false,
+            'can_approve_finances' => $request->boolean('can_approve_finances'),
+            'is_admin' => $request->boolean('is_admin'),
         ]);
 
         // Log this activity
@@ -1368,10 +1372,10 @@ class AdminController extends Controller
     public function logs(Request $request)
     {
         $logType = $request->get('type', 'activity'); // activity, system, failed-login
-        
+
         // Merge type parameter into request so child methods know they're called from unified view
         $request->merge(['type' => $logType, 'unified' => true]);
-        
+
         if ($logType === 'system') {
             return $this->systemLogs($request);
         } elseif ($logType === 'failed-login') {
@@ -1413,13 +1417,13 @@ class AdminController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('message', 'like', "%{$search}%")
-                  ->orWhere('action', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%");
+                    ->orWhere('action', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%");
             });
         }
 
         $logs = $query->orderBy('created_at', 'desc')->paginate(25);
-        
+
         $users = User::orderBy('name')->get();
         $levels = SystemLog::distinct()->pluck('level');
         $categories = SystemLog::distinct()->pluck('category')->filter();
@@ -1462,7 +1466,7 @@ class AdminController extends Controller
         }
 
         $logs = $query->orderBy('created_at', 'desc')->paginate(25);
-        
+
         $blockedIps = BlockedIp::active()->pluck('ip_address')->toArray();
 
         return view('admin.logs', [
@@ -1598,7 +1602,7 @@ class AdminController extends Controller
     public function getDeviceDetails($logId)
     {
         $log = SystemLog::findOrFail($logId);
-        
+
         return response()->json([
             'device_type' => $log->device_type,
             'device_name' => $log->device_name,
@@ -1629,7 +1633,7 @@ class AdminController extends Controller
     {
         try {
             $systemInfo = SystemMonitorService::getSystemInfo();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $systemInfo,
@@ -1637,7 +1641,7 @@ class AdminController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to get system info: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve system information: ' . $e->getMessage(),
@@ -1656,7 +1660,7 @@ class AdminController extends Controller
             $errors = [];
 
             // Helper function to safely call Artisan commands
-            $safeArtisanCall = function($command, $successMessage) use (&$results, &$errors) {
+            $safeArtisanCall = function ($command, $successMessage) use (&$results, &$errors) {
                 try {
                     Artisan::call($command);
                     $results[$command] = $successMessage;
@@ -1674,7 +1678,7 @@ class AdminController extends Controller
                     $safeArtisanCall('config:clear', 'Configuration cache cleared');
                     $safeArtisanCall('route:clear', 'Route cache cleared');
                     $safeArtisanCall('view:clear', 'View cache cleared');
-                    
+
                     // Try optimize:clear, but don't fail if it doesn't exist
                     try {
                         Artisan::call('optimize:clear');
@@ -1684,7 +1688,7 @@ class AdminController extends Controller
                         Log::info('optimize:clear command not available: ' . $e->getMessage());
                         $results['optimize'] = 'Optimization cache skipped (command not available)';
                     }
-                    
+
                     // Clear Laravel cache
                     try {
                         Cache::flush();
@@ -1694,31 +1698,31 @@ class AdminController extends Controller
                         Log::warning('Failed to flush Laravel cache: ' . $e->getMessage());
                     }
                     break;
-                    
+
                 case 'application':
                     if (!$safeArtisanCall('cache:clear', 'Application cache cleared')) {
                         throw new \Exception('Failed to clear application cache');
                     }
                     break;
-                    
+
                 case 'config':
                     if (!$safeArtisanCall('config:clear', 'Configuration cache cleared')) {
                         throw new \Exception('Failed to clear config cache');
                     }
                     break;
-                    
+
                 case 'route':
                     if (!$safeArtisanCall('route:clear', 'Route cache cleared')) {
                         throw new \Exception('Failed to clear route cache');
                     }
                     break;
-                    
+
                 case 'view':
                     if (!$safeArtisanCall('view:clear', 'View cache cleared')) {
                         throw new \Exception('Failed to clear view cache');
                     }
                     break;
-                    
+
                 case 'optimize':
                     try {
                         Artisan::call('optimize:clear');
@@ -1727,7 +1731,7 @@ class AdminController extends Controller
                         throw new \Exception('Failed to clear optimization cache: ' . $e->getMessage());
                     }
                     break;
-                    
+
                 case 'laravel':
                     try {
                         Cache::flush();
@@ -1736,7 +1740,7 @@ class AdminController extends Controller
                         throw new \Exception('Failed to flush Laravel cache: ' . $e->getMessage());
                     }
                     break;
-                    
+
                 default:
                     throw new \Exception('Invalid cache type: ' . $cacheType);
             }
@@ -1777,15 +1781,15 @@ class AdminController extends Controller
                 ->with('success', $responseData['message'])
                 ->with('cache_results', $results)
                 ->with('cache_warnings', $errors);
-                
+
         } catch (\Exception $e) {
             Log::error('Failed to clear cache: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'cache_type' => $request->input('type', 'all'),
             ]);
-            
+
             $errorMessage = 'Failed to clear cache: ' . $e->getMessage();
-            
+
             // Always return JSON for AJAX/JSON requests
             if ($request->wantsJson() || $request->ajax() || $request->expectsJson()) {
                 return response()->json([
@@ -1818,7 +1822,7 @@ class AdminController extends Controller
                 $query->where('expires_at', '<', now());
             } elseif ($status === 'active') {
                 $query->where('is_used', false)
-                      ->where('expires_at', '>', now());
+                    ->where('expires_at', '>', now());
             }
         }
 
@@ -1838,19 +1842,19 @@ class AdminController extends Controller
         // Search by email or OTP code
         if ($request->has('search') && $request->get('search')) {
             $search = $request->get('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('otp_code', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('otp_code', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
         // Order by latest first
         $otps = $query->orderBy('created_at', 'desc')
-                      ->paginate(50);
+            ->paginate(50);
 
         // Get statistics
         $stats = [
@@ -1859,15 +1863,15 @@ class AdminController extends Controller
             'unused' => LoginOtp::where('is_used', false)->count(),
             'expired' => LoginOtp::where('expires_at', '<', now())->count(),
             'active' => LoginOtp::where('is_used', false)
-                               ->where('expires_at', '>', now())
-                               ->count(),
+                ->where('expires_at', '>', now())
+                ->count(),
             'today' => LoginOtp::whereDate('created_at', today())->count(),
         ];
 
         // Get users for filter dropdown
         $users = User::select('id', 'name', 'email')
-                    ->orderBy('name')
-                    ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('admin.otps', compact('otps', 'stats', 'users'));
     }
