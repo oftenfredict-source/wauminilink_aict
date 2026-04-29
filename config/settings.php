@@ -518,6 +518,24 @@ return [
             'group' => 'basic',
             'description' => 'Phone for backup notifications',
             'validation_rules' => ['nullable', 'string']
+        ],
+
+        // Annual Fee Settings
+        'annual_fee_adult' => [
+            'value' => '2000',
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'General',
+            'description' => 'Annual fee amount for adults (18+ years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
+        ],
+        'annual_fee_child' => [
+            'value' => '1000',
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'General',
+            'description' => 'Annual fee amount for children (under 18 years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
         ]
     ],
 
@@ -594,6 +612,10 @@ return [
         'system' => [
             'name' => 'System Settings',
             'description' => 'Internal system configuration'
+        ],
+        'General' => [
+            'name' => 'General Settings',
+            'description' => 'General category settings'
         ]
     ]
 ];

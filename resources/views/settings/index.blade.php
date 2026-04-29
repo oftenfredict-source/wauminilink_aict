@@ -127,9 +127,9 @@
                                         <div class="card-header bg-transparent border-0">
                                             <h6 class="mb-0 text-dark">
                                                 <i class="fas fa-layer-group me-2"></i>
-                                                {{ $groups[$groupKey]['name'] }}
+                                                {{ $groups[$groupKey]['name'] ?? $groupKey }}
                                             </h6>
-                                            <small class="text-muted">{{ $groups[$groupKey]['description'] }}</small>
+                                            <small class="text-muted">{{ $groups[$groupKey]['description'] ?? '' }}</small>
                                         </div>
                                         <div class="card-body">
                                             <form method="POST" action="{{ route('settings.update.category', $categoryKey) }}" class="settings-form">
