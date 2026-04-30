@@ -23,10 +23,10 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/css/datatables.min.css') }}" rel="stylesheet" />
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
+        <link href="{{ asset('assets/css/bootstrap.min.css') }}?v={{ time() }}" rel="stylesheet" />
+        <link href="{{ asset('assets/css/datatables.min.css') }}?v={{ time() }}" rel="stylesheet" />
+        <link href="{{ asset('css/styles.css') }}?v={{ time() }}" rel="stylesheet" />
+        <script src="{{ asset('assets/js/fontawesome.min.js') }}?v={{ time() }}" crossorigin="anonymous"></script>
         <!-- SweetAlert2 CDN -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- SweetAlert Helpers -->

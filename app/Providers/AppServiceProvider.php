@@ -91,8 +91,11 @@ class AppServiceProvider extends ServiceProvider
             // Forcing URL via APP_URL can cause routing / 404 issues on servers if .env is misconfigured.
         }
 
-        // Force HTTPS in production/staging to prevent Mixed Content errors for CSS/JS
-        if ($appEnv !== 'local') {
+        // Force HTTPS on live servers to prevent Mixed Content errors for CSS/JS
+        $host = request()->getHost();
+        $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']) || str_ends_with($host, '.test');
+
+        if (!$isLocalHost) {
             URL::forceScheme('https');
         }
 

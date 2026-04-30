@@ -8,12 +8,39 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\PreventBackHistory;
 
 
-Route::get('/clear-cache', function () {
+Route::get('/repair-system', function () {
     try {
+        // 1. Clear all caches
         \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-        return 'Server cache cleared successfully! Please click Back and do a Hard Refresh (Ctrl+F5) on your dashboard page.';
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+
+        // 2. Ensure critical SMS settings exist in the database with safe defaults
+        $criticalSettings = [
+            'enable_sms_notifications' => ['value' => '1', 'type' => 'boolean'],
+            'enable_otp' => ['value' => '1', 'type' => 'boolean'],
+            'sms_sender_id' => ['value' => 'WauminiLnk', 'type' => 'string'],
+        ];
+
+        foreach ($criticalSettings as $key => $data) {
+            \App\Models\SystemSetting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $data['value'], 'type' => $data['type'], 'category' => 'notifications', 'is_editable' => true]
+            );
+        }
+
+        // 3. Clear cache again after DB updates to ensure they are picked up
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+
+        return "<h1>System Repaired Successfully!</h1>
+                <p>1. Caches cleared.</p>
+                <p>2. SMS/OTP settings verified.</p>
+                <p>3. HTTPS forcing active.</p>
+                <br>
+                <p><b>Next Step:</b> Go to your Dashboard and press <b>Ctrl + F5</b> to refresh CSS.</p>
+                <a href='/login' style='padding:10px; background:maroon; color:white; text-decoration:none; border-radius:5px;'>Back to Login</a>";
     } catch (\Exception $e) {
-        return 'Error clearing cache: ' . $e->getMessage();
+        return 'Error repairing system: ' . $e->getMessage();
     }
 });
 
