@@ -8,6 +8,15 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\PreventBackHistory;
 
 
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        return 'Server cache cleared successfully! Please click Back and do a Hard Refresh (Ctrl+F5) on your dashboard page.';
+    } catch (\Exception $e) {
+        return 'Error clearing cache: ' . $e->getMessage();
+    }
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
