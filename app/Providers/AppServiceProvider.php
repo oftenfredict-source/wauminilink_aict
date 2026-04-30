@@ -32,55 +32,17 @@ class AppServiceProvider extends ServiceProvider
         // Use Bootstrap 5 for pagination links
         Paginator::useBootstrapFive();
 
-        // Skip subdirectory detection for local development
-        // Only apply subdirectory logic for production/staging environments
-        $appEnv = env('APP_ENV', 'local');
-        $skipAutoDetection = env('APP_SKIP_SUBDIRECTORY_AUTO_DETECT', false);
-
-        // Handle subdirectory hosting (e.g., /demo/)
-        // This ensures asset() helper includes the subdirectory in URLs
-        $subdirectory = env('APP_SUBDIRECTORY', '');
-
-        // Auto-detect subdirectory from request if not set in env
-        // Skip auto-detection if:
-        // 1. Already set in env
-        // 2. Local environment (unless explicitly enabled)
-        // 3. Skip flag is set
-        // 4. APP_URL already contains a path (not just domain)
-        if (empty($subdirectory) && !$skipAutoDetection && $appEnv !== 'local' && request()) {
-            $appUrl = config('app.url');
-            // If APP_URL already contains a path (not just domain), don't auto-detect
-            $urlPath = parse_url($appUrl, PHP_URL_PATH);
-            if (empty($urlPath) || $urlPath === '/') {
-                // Try to detect from SCRIPT_NAME first (more reliable for subdirectory hosting)
-                if (isset($_SERVER['SCRIPT_NAME'])) {
-                    $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-                    if ($scriptPath !== '/' && $scriptPath !== '\\' && $scriptPath !== '.') {
-                        $subdirectory = rtrim($scriptPath, '/');
-                    }
-                }
-
-                // Fallback: try to detect from request URI
-                if (empty($subdirectory)) {
-                    $path = parse_url(request()->getRequestUri(), PHP_URL_PATH);
-                    // Extract subdirectory from path (e.g., /demo/... -> /demo)
-                    if (preg_match('#^/([^/]+)/#', $path, $matches)) {
-                        // Check if it's not a route (common Laravel routes)
-                        $commonRoutes = ['login', 'register', 'api', 'storage', 'assets', 'css', 'js', 'images'];
-                        if (!in_array($matches[1], $commonRoutes)) {
-                            $subdirectory = '/' . $matches[1];
-                        }
-                    }
-                }
-            }
-        }
+        // Handle subdirectory hosting only when explicitly configured.
+        // Auto-detection can create incorrect asset URLs on production servers.
+        $subdirectory = trim((string) env('APP_SUBDIRECTORY', ''));
 
         // Set asset URL to include subdirectory
-        if (!empty($subdirectory)) {
-            $appUrl = config('app.url');
+        if ($subdirectory !== '') {
+            $subdirectory = '/' . trim($subdirectory, '/');
+            $appUrl = rtrim(config('app.url'), '/');
             // Ensure subdirectory doesn't already exist in APP_URL
             if (strpos($appUrl, $subdirectory) === false) {
-                $appUrl = rtrim($appUrl, '/') . $subdirectory;
+                $appUrl .= $subdirectory;
             }
             URL::forceRootUrl($appUrl);
 
@@ -91,11 +53,15 @@ class AppServiceProvider extends ServiceProvider
             // Forcing URL via APP_URL can cause routing / 404 issues on servers if .env is misconfigured.
         }
 
-        // Force HTTPS on live servers to prevent Mixed Content errors for CSS/JS
-        $host = request()->getHost();
-        $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1']) || str_ends_with($host, '.test');
+        // Force HTTPS only when configured.
+        // Defaults to APP_URL scheme to avoid breaking HTTP-only deployments.
+        $appUrlScheme = parse_url(config('app.url'), PHP_URL_SCHEME);
+        $forceHttps = filter_var(
+            env('APP_FORCE_HTTPS', $appUrlScheme === 'https'),
+            FILTER_VALIDATE_BOOL
+        );
 
-        if (!$isLocalHost) {
+        if ($forceHttps) {
             URL::forceScheme('https');
         }
 
