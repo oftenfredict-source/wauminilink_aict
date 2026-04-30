@@ -91,6 +91,11 @@ class AppServiceProvider extends ServiceProvider
             // Forcing URL via APP_URL can cause routing / 404 issues on servers if .env is misconfigured.
         }
 
+        // Force HTTPS in production/staging to prevent Mixed Content errors for CSS/JS
+        if ($appEnv !== 'local') {
+            URL::forceScheme('https');
+        }
+
         // Extend the session manager to use our custom database handler
         Session::extend('database', function ($app) {
             $connection = $app['db']->connection($app['config']['session.connection']);
