@@ -59,16 +59,13 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
 
-                // Fallback: try to detect from request URI
+                // Fallback: use Laravel's computed base path.
+                // This is safe because it reflects where the app is hosted
+                // (e.g. /demo), and never infers from the current route.
                 if (empty($subdirectory)) {
-                    $path = parse_url(request()->getRequestUri(), PHP_URL_PATH);
-                    // Extract subdirectory from path (e.g., /demo/... -> /demo)
-                    if (preg_match('#^/([^/]+)/#', $path, $matches)) {
-                        // Check if it's not a route (common Laravel routes)
-                        $commonRoutes = ['login', 'register', 'api', 'storage', 'assets', 'css', 'js', 'images'];
-                        if (!in_array($matches[1], $commonRoutes)) {
-                            $subdirectory = '/' . $matches[1];
-                        }
+                    $basePath = request()->getBasePath();
+                    if (!empty($basePath) && $basePath !== '/' && $basePath !== '\\') {
+                        $subdirectory = rtrim($basePath, '/');
                     }
                 }
             }
