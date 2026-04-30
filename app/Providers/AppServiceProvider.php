@@ -87,16 +87,8 @@ class AppServiceProvider extends ServiceProvider
             // Also update the public disk URL to include subdirectory
             config(['filesystems.disks.public.url' => $appUrl . '/storage']);
         } else {
-            // For local development with artisan serve, don't force URL - let Laravel auto-detect
-            // Only force URL if APP_URL is explicitly set and we're not in local environment
-            if ($appEnv !== 'local') {
-                $appUrl = config('app.url');
-                if (!empty($appUrl)) {
-                    URL::forceRootUrl($appUrl);
-                }
-            }
-            // When APP_ENV is 'local' and no subdirectory, Laravel will auto-detect the URL
-            // This allows artisan serve to work correctly with http://127.0.0.1:8000
+            // Let Laravel auto-detect the URL based on the request host.
+            // Forcing URL via APP_URL can cause routing / 404 issues on servers if .env is misconfigured.
         }
 
         // Extend the session manager to use our custom database handler
