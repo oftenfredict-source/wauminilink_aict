@@ -34,7 +34,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-info">{{ ucfirst($payment->pledge->pledge_type ?? 'N/A') }}</span>
+                            <span class="badge bg-info text-truncate d-inline-block" style="max-width: 140px;" title="{{ $payment->pledge->pledge_type_label ?? 'N/A' }}">{{ $payment->pledge->pledge_type_label ?? 'N/A' }}</span>
                         </td>
                         <td class="text-end">
                             <strong>TZS {{ number_format($payment->amount, 0) }}</strong>

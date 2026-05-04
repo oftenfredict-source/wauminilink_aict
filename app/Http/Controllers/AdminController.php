@@ -22,10 +22,13 @@ use App\Services\DeviceInfoService;
 use App\Services\SystemMonitorService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    private ?bool $hasIsAdminColumn = null;
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -747,18 +750,25 @@ class AdminController extends Controller
             'phone_number' => $phoneNumber,
         ]);
 
+        $isAdminFlag = $request->boolean('is_admin');
+
+        $userData = [
+            'name' => $userName,
+            'email' => $userEmail,
+            'password' => Hash::make($generatedPassword),
+            'role' => $role,
+            'phone_number' => $phoneNumber,
+            'member_id' => $memberId,
+            'can_approve_finances' => $role === 'pastor' || $role === 'admin' || $isAdminFlag,
+        ];
+
+        if ($this->hasIsAdminColumn()) {
+            $userData['is_admin'] = $isAdminFlag;
+        }
+
         // Create the user
         try {
-            $user = User::create([
-                'name' => $userName,
-                'email' => $userEmail,
-                'password' => Hash::make($generatedPassword),
-                'role' => $role,
-                'is_admin' => $request->boolean('is_admin'),
-                'phone_number' => $phoneNumber,
-                'member_id' => $memberId,
-                'can_approve_finances' => $role === 'pastor' || $role === 'admin' || $request->boolean('is_admin'),
-            ]);
+            $user = User::create($userData);
 
             Log::info('User created successfully', ['user_id' => $user->id]);
         } catch (\Exception $e) {
@@ -1284,15 +1294,22 @@ class AdminController extends Controller
             $phoneNumber = '+255' . $phone;
         }
 
-        // Update the user
-        $user->update([
+        $isAdminFlag = $request->boolean('is_admin');
+
+        $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'phone_number' => $phoneNumber,
             'can_approve_finances' => $request->boolean('can_approve_finances'),
-            'is_admin' => $request->boolean('is_admin'),
-        ]);
+        ];
+
+        if ($this->hasIsAdminColumn()) {
+            $updateData['is_admin'] = $isAdminFlag;
+        }
+
+        // Update the user
+        $user->update($updateData);
 
         // Log this activity
         try {
@@ -1874,6 +1891,15 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.otps', compact('otps', 'stats', 'users'));
+    }
+
+    private function hasIsAdminColumn(): bool
+    {
+        if ($this->hasIsAdminColumn === null) {
+            $this->hasIsAdminColumn = Schema::hasColumn('users', 'is_admin');
+        }
+
+        return $this->hasIsAdminColumn;
     }
 }
 

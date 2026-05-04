@@ -15,7 +15,7 @@
                         <th>Type</th>
                         <th>Amount</th>
                         <th>Date</th>
-                        <th>Purpose</th>
+                        <th>Notes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -34,15 +34,15 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-info">{{ ucfirst($pledge->pledge_type) }}</span>
+                            <span class="badge bg-info text-truncate d-inline-block" style="max-width: 140px;" title="{{ $pledge->pledge_type_label }}">{{ $pledge->pledge_type_label }}</span>
                         </td>
                         <td class="text-end">
                             <strong>TZS {{ number_format($pledge->pledge_amount, 0) }}</strong>
                         </td>
                         <td>{{ $pledge->pledge_date ? \Carbon\Carbon::parse($pledge->pledge_date)->format('M d, Y') : '-' }}</td>
                         <td>
-                            <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ $pledge->purpose }}">
-                                {{ $pledge->purpose ?? '-' }}
+                            <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ $pledge->notes }}">
+                                {{ $pledge->notes ?? '-' }}
                             </span>
                         </td>
                         <td>
