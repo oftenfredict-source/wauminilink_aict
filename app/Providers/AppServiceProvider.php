@@ -80,7 +80,7 @@ class AppServiceProvider extends ServiceProvider
             return new SmsChannel($app->make(SmsService::class));
         });
 
-        // Register Google Drive driver
+        // Register Google Drive driver (OAuth refresh token → access token required for every API call)
         try {
             Storage::extend('google', function ($app, $config) {
                 $options = [];
@@ -93,10 +93,35 @@ class AppServiceProvider extends ServiceProvider
                     $options['sharedDriveId'] = $config['sharedDriveId'];
                 }
 
+                $clientId = trim((string) ($config['clientId'] ?? ''));
+                $clientSecret = trim((string) ($config['clientSecret'] ?? ''));
+                $refreshToken = trim((string) ($config['refreshToken'] ?? ''));
+
+                if ($clientId === '' || $clientSecret === '' || $refreshToken === '') {
+                    throw new \InvalidArgumentException(
+                        'Google Drive disk: GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET, and GOOGLE_DRIVE_REFRESH_TOKEN must be set in .env (then run php artisan config:clear).'
+                    );
+                }
+
                 $client = new \Google\Client();
-                $client->setClientId($config['clientId']);
-                $client->setClientSecret($config['clientSecret']);
-                $client->refreshToken($config['refreshToken']);
+                $client->setClientId($clientId);
+                $client->setClientSecret($clientSecret);
+                $client->setApplicationName((string) config('app.name', 'Laravel'));
+
+                $tokenResponse = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+                if (isset($tokenResponse['error'])) {
+                    $detail = $tokenResponse['error_description'] ?? $tokenResponse['error'];
+                    throw new \RuntimeException(
+                        'Google Drive OAuth refresh failed (401 / invalid_grant usually means the refresh token was revoked or the client secret changed). Generate a new refresh token and update GOOGLE_DRIVE_REFRESH_TOKEN. Detail: ' . $detail
+                    );
+                }
+
+                if (empty($tokenResponse['access_token'])) {
+                    throw new \RuntimeException(
+                        'Google Drive OAuth did not return an access_token. Verify credentials and that the Google Cloud project has the Drive API enabled.'
+                    );
+                }
 
                 $service = new \Google\Service\Drive($client);
                 $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folderId'] ?? '/', $options);
