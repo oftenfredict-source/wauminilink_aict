@@ -19,6 +19,7 @@
         <meta name="author" content="" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>AIC Moshi Kilimanjaro - Dashboard</title>
+        <link rel="icon" href="{{ asset('assets/images/aict.png') }}">
         <!-- Google Fonts - Montserrat as fallback (similar to Century Gothic) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

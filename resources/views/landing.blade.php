@@ -9,7 +9,7 @@
 
     <title>AIC Moshi Kilimanjaro - Church Management System</title>
 
-    <link rel="icon" href="{{ asset('vaultedge/img/core-img/favicon.ico') }}">
+    <link rel="icon" href="{{ asset('assets/images/aict.png') }}">
     <link rel="stylesheet" href="{{ asset('vaultedge/style.css') }}">
     <link rel="stylesheet" href="{{ asset('vaultedge/css/custom-override.css') }}">
 
