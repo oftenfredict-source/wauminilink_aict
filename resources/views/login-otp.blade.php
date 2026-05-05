@@ -525,7 +525,7 @@
     <!-- Navbar/Header -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="{{ route('login') }}">
-            <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo">
+            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
         </a>
     </nav>
 
