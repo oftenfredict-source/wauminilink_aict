@@ -1,7 +1,7 @@
 <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
   <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
     <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo"
-      style="height: 75px; max-width: 300px; object-fit: contain;">
+      style="height: 45px; max-width: 180px; object-fit: contain;">
   </a>
   <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i
       class="fas fa-bars"></i></button>

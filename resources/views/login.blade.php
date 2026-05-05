@@ -631,7 +631,7 @@
 <!-- Navbar/Header -->
 <nav class="navbar navbar-custom">
     <a class="navbar-brand" href="{{ route('landing_page') }}">
-        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" style="height: 50px; width: auto;">
     </a>
 </nav>
 
