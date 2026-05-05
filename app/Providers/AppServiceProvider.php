@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Session\Events\SessionStarted;
 use App\Notifications\Channels\SmsChannel;
@@ -31,68 +32,37 @@ class AppServiceProvider extends ServiceProvider
         // Use Bootstrap 5 for pagination links
         Paginator::useBootstrapFive();
 
-        // Skip subdirectory detection for local development
-        // Only apply subdirectory logic for production/staging environments
-        $appEnv = env('APP_ENV', 'local');
-        $skipAutoDetection = env('APP_SKIP_SUBDIRECTORY_AUTO_DETECT', false);
-
-        // Handle subdirectory hosting (e.g., /demo/)
-        // This ensures asset() helper includes the subdirectory in URLs
-        $subdirectory = env('APP_SUBDIRECTORY', '');
-
-        // Auto-detect subdirectory from request if not set in env
-        // Skip auto-detection if:
-        // 1. Already set in env
-        // 2. Local environment (unless explicitly enabled)
-        // 3. Skip flag is set
-        // 4. APP_URL already contains a path (not just domain)
-        if (empty($subdirectory) && !$skipAutoDetection && $appEnv !== 'local' && request()) {
-            $appUrl = config('app.url');
-            // If APP_URL already contains a path (not just domain), don't auto-detect
-            $urlPath = parse_url($appUrl, PHP_URL_PATH);
-            if (empty($urlPath) || $urlPath === '/') {
-                // Try to detect from SCRIPT_NAME first (more reliable for subdirectory hosting)
-                if (isset($_SERVER['SCRIPT_NAME'])) {
-                    $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-                    if ($scriptPath !== '/' && $scriptPath !== '\\' && $scriptPath !== '.') {
-                        $subdirectory = rtrim($scriptPath, '/');
-                    }
-                }
-
-                // Fallback: use Laravel's computed base path.
-                // This is safe because it reflects where the app is hosted
-                // (e.g. /demo), and never infers from the current route.
-                if (empty($subdirectory)) {
-                    $basePath = request()->getBasePath();
-                    if (!empty($basePath) && $basePath !== '/' && $basePath !== '\\') {
-                        $subdirectory = rtrim($basePath, '/');
-                    }
-                }
-            }
-        }
+        // Handle subdirectory hosting only when explicitly configured.
+        // Auto-detection can create incorrect asset URLs on production servers.
+        $subdirectory = trim((string) env('APP_SUBDIRECTORY', ''));
 
         // Set asset URL to include subdirectory
-        if (!empty($subdirectory)) {
-            $appUrl = config('app.url');
+        if ($subdirectory !== '') {
+            $subdirectory = '/' . trim($subdirectory, '/');
+            $appUrl = rtrim(config('app.url'), '/');
             // Ensure subdirectory doesn't already exist in APP_URL
             if (strpos($appUrl, $subdirectory) === false) {
-                $appUrl = rtrim($appUrl, '/') . $subdirectory;
+                $appUrl .= $subdirectory;
             }
             URL::forceRootUrl($appUrl);
 
             // Also update the public disk URL to include subdirectory
             config(['filesystems.disks.public.url' => $appUrl . '/storage']);
         } else {
-            // For local development with artisan serve, don't force URL - let Laravel auto-detect
-            // Only force URL if APP_URL is explicitly set and we're not in local environment
-            if ($appEnv !== 'local') {
-                $appUrl = config('app.url');
-                if (!empty($appUrl)) {
-                    URL::forceRootUrl($appUrl);
-                }
-            }
-            // When APP_ENV is 'local' and no subdirectory, Laravel will auto-detect the URL
-            // This allows artisan serve to work correctly with http://127.0.0.1:8000
+            // Let Laravel auto-detect the URL based on the request host.
+            // Forcing URL via APP_URL can cause routing / 404 issues on servers if .env is misconfigured.
+        }
+
+        // Force HTTPS only when configured.
+        // Defaults to APP_URL scheme to avoid breaking HTTP-only deployments.
+        $appUrlScheme = parse_url(config('app.url'), PHP_URL_SCHEME);
+        $forceHttps = filter_var(
+            env('APP_FORCE_HTTPS', $appUrlScheme === 'https'),
+            FILTER_VALIDATE_BOOL
+        );
+
+        if ($forceHttps) {
+            URL::forceScheme('https');
         }
 
         // Extend the session manager to use our custom database handler
@@ -109,5 +79,58 @@ class AppServiceProvider extends ServiceProvider
         Notification::extend('sms', function ($app) {
             return new SmsChannel($app->make(SmsService::class));
         });
+
+        // Register Google Drive driver (OAuth refresh token → access token required for every API call)
+        try {
+            Storage::extend('google', function ($app, $config) {
+                $options = [];
+
+                if (!empty($config['teamDriveId'] ?? null)) {
+                    $options['teamDriveId'] = $config['teamDriveId'];
+                }
+
+                if (!empty($config['sharedDriveId'] ?? null)) {
+                    $options['sharedDriveId'] = $config['sharedDriveId'];
+                }
+
+                $clientId = trim((string) ($config['clientId'] ?? ''));
+                $clientSecret = trim((string) ($config['clientSecret'] ?? ''));
+                $refreshToken = trim((string) ($config['refreshToken'] ?? ''));
+
+                if ($clientId === '' || $clientSecret === '' || $refreshToken === '') {
+                    throw new \InvalidArgumentException(
+                        'Google Drive disk: GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET, and GOOGLE_DRIVE_REFRESH_TOKEN must be set in .env (then run php artisan config:clear).'
+                    );
+                }
+
+                $client = new \Google\Client();
+                $client->setClientId($clientId);
+                $client->setClientSecret($clientSecret);
+                $client->setApplicationName((string) config('app.name', 'Laravel'));
+
+                $tokenResponse = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+                if (isset($tokenResponse['error'])) {
+                    $detail = $tokenResponse['error_description'] ?? $tokenResponse['error'];
+                    throw new \RuntimeException(
+                        'Google Drive OAuth refresh failed (401 / invalid_grant usually means the refresh token was revoked or the client secret changed). Generate a new refresh token and update GOOGLE_DRIVE_REFRESH_TOKEN. Detail: ' . $detail
+                    );
+                }
+
+                if (empty($tokenResponse['access_token'])) {
+                    throw new \RuntimeException(
+                        'Google Drive OAuth did not return an access_token. Verify credentials and that the Google Cloud project has the Drive API enabled.'
+                    );
+                }
+
+                $service = new \Google\Service\Drive($client);
+                $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folderId'] ?? '/', $options);
+                $driver = new \League\Flysystem\Filesystem($adapter);
+
+                return new \Illuminate\Filesystem\FilesystemAdapter($driver, $adapter);
+            });
+        } catch (\Exception $e) {
+            // Log or handle error if necessary
+        }
     }
 }

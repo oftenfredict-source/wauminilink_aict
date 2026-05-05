@@ -1,605 +1,522 @@
 <!DOCTYPE html>
-<html class="no-js" lang="en">
+<html lang="en">
 
 <head>
-
-    <!--- basic page needs
-    ================================================== -->
-    <meta charset="utf-8">
-    <title>Waumini Link</title>
+    <meta charset="UTF-8">
     <meta name="description" content="Waumini Link - Church Management System">
-    <meta name="author" content="Waumini Link">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- mobile specific metas
-    ================================================== -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Waumini Link - Church Management System</title>
 
-    <!-- CSS
-    ================================================== -->
-    <link rel="stylesheet" href="{{ asset('hesed-master/hesed-master/css/base.css') }}">
-    <link rel="stylesheet" href="{{ asset('hesed-master/hesed-master/css/main.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" href="{{ asset('vaultedge/img/core-img/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ asset('vaultedge/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('vaultedge/css/custom-override.css') }}">
 
     <style>
-        /* Global Font Override */
-        body,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        p,
-        a,
-        li,
-        span,
-        button {
+        /* Global Typography Override - Exclude Icons */
+        body, h1, h2, h3, h4, h5, h6, p, a, li, input, button, select, textarea, span:not(.fa):not(.fas):not(.far):not(.fab), div:not(.fa):not(.fas):not(.far):not(.fab) {
             font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif !important;
         }
-
-        /* Hero Adjustments */
-        .hero-content {
-            align-items: center !important;
-            padding-top: 5vh !important;
+        /* Ensure Icons still show */
+        .fa, .fas, .far, .fab, i {
+            font-family: FontAwesome !important;
         }
 
-        .hero-content__text {
-            width: 100%;
+        /* Header Overrides */
+        .ve-header {
+            background: #ffffff !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        }
+        .ve-nav ul li a {
+            color: #000000 !important;
+            font-weight: 700 !important;
+        }
+        .ve-nav ul li a:hover, .ve-nav ul li a.active {
+            color: #940000 !important;
+            background: rgba(148, 0, 0, 0.1) !important;
+        }
+        .ve-toggler span {
+            background: #000000 !important;
+        }
+        /* Hero Overrides */
+        .ve-hero {
+            background: #fff0f0 !important;
+        }
+        .ve-hero-left h1, .ve-stat strong {
+            color: #000000 !important;
+        }
+        .ve-hero-left p, .ve-stat span {
+            color: #444444 !important;
+        }
+        .ve-hero-left h1 .ve-highlight {
+            color: #940000 !important;
+        }
+        .ve-hero-img-main::after {
+            background: linear-gradient(120deg, #fff0f0 0%, transparent 40%) !important;
+        }
+        /* Ensure logo is visible */
+        .ve-logo img {
+            max-height: 60px;
+        }
+        /* Trust Bar Override */
+        .ve-trust-bar {
+            background: #940000 !important;
+        }
+        .ve-trust-inner span {
+            color: #ffffff !important;
+        }
+        .ve-trust-inner span i {
+            color: #ffffff !important;
         }
 
-        .hero-content h1 {
-            margin-right: 0 !important;
-            font-size: 8.4rem !important;
+        /* Generic Accent Color Override */
+        .ve-service-icon {
+            background: #940000 !important;
+        }
+        .ve-service-icon i {
+            color: #ffffff !important;
+        }
+        .ve-check-item i, .ve-footer-links li a::before, .ve-footer-contact li i {
+            color: #940000 !important;
+        }
+        .ve-service-card:hover::before, .ve-whyus-badge {
+            background: #940000 !important;
+        }
+        .ve-whyus-badge strong, .ve-whyus-badge span {
+            color: #ffffff !important;
+        }
+        .ve-section-tag {
+            background: rgba(148, 0, 0, 0.1) !important;
+            color: #940000 !important;
+            border-color: rgba(148, 0, 0, 0.25) !important;
+        }
+        .ve-btn-white:hover {
+            background: #940000 !important;
+            color: #ffffff !important;
+        }
+        /* Heading Highlights */
+        h2 span, h3 span, h4 span {
+            color: #940000 !important;
+        }
+        /* Button Hovers */
+        .ve-btn-primary:hover {
+            background: #7a0000 !important;
+            border-color: #7a0000 !important;
+            transform: translateY(-2px);
+        }
+        .ve-btn-ghost:hover {
+            background: #940000 !important;
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+        /* Header & Footer Hovers */
+        .ve-cta-btn:hover {
+            background: #7a0000 !important;
+            color: #ffffff !important;
+        }
+        .ve-social a:hover {
+            background: #940000 !important;
+            border-color: #940000 !important;
+            color: #ffffff !important;
+        }
+        /* Login Menu Item Override */
+        .ve-nav ul li a[href*="login"] {
+            color: #940000 !important;
+        }
+        /* Back to Top */
+        #scrollUp {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 45px;
+            height: 45px;
+            background: #940000;
+            color: #ffffff;
+            text-align: center;
+            line-height: 45px;
+            border-radius: 50%;
+            z-index: 1000;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        #scrollUp:hover {
+            background: #7a0000;
+            transform: translateY(-5px);
+        }
+        /* Hero Floating Card Icon */
+        .ve-float-card i {
+            color: #940000 !important;
         }
 
-        .hero-content h1::before {
+        /* New Footer Styles */
+        .ve-footer {
+            border-top: 5px solid #940000 !important;
+            background: #0d0d0d !important;
+            padding-top: 80px !important;
+        }
+        .ve-footer-title {
+            position: relative;
+            padding-bottom: 15px;
+            border-bottom: none !important;
+            margin-bottom: 25px !important;
+            text-transform: capitalize !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+        }
+        .ve-footer-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 45px;
+            height: 3px;
+            background: #940000;
+        }
+        .ve-footer-links li a i, .ve-footer-contact li i {
+            color: #940000 !important;
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+        }
+        .ve-footer-links li a {
+            display: flex !important;
+            align-items: center;
+            padding-left: 0 !important;
+            color: rgba(255,255,255,0.7) !important;
+        }
+        .ve-footer-links li a::before {
             display: none !important;
         }
-
-        .hero-content__buttons {
-            position: relative !important;
-            bottom: auto !important;
-            right: auto !important;
-            margin-top: 5rem;
+        .ve-footer-bottom {
+            background: #050505 !important;
+            padding: 25px 0 !important;
+            border-top: 1px solid rgba(255,255,255,0.05) !important;
+        }
+        .ve-footer-bottom-inner {
             display: flex;
-            gap: 2rem;
-        }
-
-        .hero-content__buttons .btn {
-            width: auto !important;
-            min-width: 20rem;
-            margin-bottom: 0;
-        }
-
-        /* Redesigned About Section */
-        .s-about {
-            padding-top: 15rem;
-            padding-bottom: 15rem;
-            background-color: #ffffff;
-        }
-
-        .about-header {
-            text-align: center;
-            max-width: 900px;
-            margin: 0 auto 10rem;
-        }
-
-        .about-header .subhead {
-            margin-bottom: 2rem;
-        }
-
-        .about-header h2 {
-            font-size: 4.8rem;
-            margin-top: 0;
-            margin-bottom: 3rem;
-        }
-
-        .about-header .lead {
-            font-size: 2.2rem;
-            color: #555;
-            line-height: 1.8;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4rem;
-        }
-
-        .feature-item {
-            background: #fff;
-            padding: 5rem 3.5rem;
-            border-radius: 20px;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            border: 1px solid #f0f0f0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-        }
-
-        .feature-item:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
-            border-color: #fb8b23;
-        }
-
-        .feature-icon {
-            font-size: 5rem;
-            color: #fb8b23;
-            margin-bottom: 3rem;
-            display: inline-block;
-        }
-
-        .feature-item h4 {
-            font-size: 2.4rem;
-            margin-top: 0;
-            margin-bottom: 2rem;
-            color: #111;
-        }
-
-        .feature-item p {
-            font-size: 1.7rem;
-            line-height: 1.7;
-            color: #666;
-            margin-bottom: 0;
-        }
-
-        .btn--login-about {
-            margin-top: 6rem;
-        }
-
-        @media screen and (max-width: 1000px) {
-            .feature-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media screen and (max-width: 800px) {
-            .hero-content h1 {
-                font-size: 6rem !important;
-            }
-
-            .hero-content__buttons {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .hero-content__buttons .btn {
-                width: 100% !important;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Preloader Customization */
-        #preloader {
-            background-color: #121212;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
+            flex-wrap: wrap;
         }
-
-        #loader-wrapper {
-            text-align: center;
-            width: 100%;
-            max-width: 300px;
-            animation: fadeIn 1s ease-in-out;
+        .ve-footer-bottom-inner p {
+            margin-bottom: 0 !important;
+            color: rgba(255,255,255,0.5) !important;
         }
-
-        #preloader-logo {
-            height: 80px;
-            width: auto;
-            margin-bottom: 40px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            filter: drop-shadow(0 0 10px rgba(251, 139, 35, 0.3));
-            animation: preloaderPulse 2s infinite ease-in-out;
-        }
-
-        #loader {
-            position: relative !important;
-            left: auto !important;
-            top: auto !important;
-            margin: 0 auto !important;
-            transform: none !important;
-            display: inline-block !important;
-            height: 20px !important;
-        }
-
-        #loader>div {
-            background-color: #fb8b23 !important;
-            /* Matches theme color */
-        }
-
-        #preloader-powered {
-            margin-top: 40px;
-            font-size: 1.3rem;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 400;
-            letter-spacing: 0.2rem;
-            text-transform: uppercase;
-        }
-
-        #preloader-powered span {
-            color: #fb8b23;
-            font-weight: 600;
-        }
-
-        @keyframes preloaderPulse {
-            0% {
-                transform: scale(1);
-                opacity: 0.9;
-            }
-
-            50% {
-                transform: scale(1.05);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 0.9;
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .emca-red {
+            color: #940000 !important;
+            font-weight: 700;
         }
     </style>
-
-    <!-- script
-    ================================================== -->
-    <script src="{{ asset('hesed-master/hesed-master/js/modernizr.js') }}"></script>
-
-    <!-- favicons
-    ================================================== -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('hesed-master/hesed-master/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('hesed-master/hesed-master/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('hesed-master/hesed-master/favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('hesed-master/hesed-master/site.webmanifest') }}">
-
 </head>
 
-<body id="top">
-
-    <!-- preloader
-    ================================================== -->
-    <div id="preloader">
-        <div id="loader-wrapper">
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" id="preloader-logo">
-            <div id="loader" class="dots-jump">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <div id="preloader-powered">
-                Powered by <span>EmCa Technologies</span>
-            </div>
+<body>
+    <!-- Preloader -->
+    <div class="preloader d-flex flex-column align-items-center justify-content-center" style="background-color: #121212;">
+        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" style="height: 80px; width: auto; margin-bottom: 30px; animation: pulse 2s infinite ease-in-out;">
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+        <div style="margin-top: 40px; font-size: 13px; color: rgba(255, 255, 255, 0.6); letter-spacing: 0.2rem; text-transform: uppercase;">
+            Powered by <span style="color: #940000; font-weight: 600;">EmCa Technologies</span>
         </div>
     </div>
 
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .lds-ellipsis div { background: #940000 !important; }
+    </style>
 
-    <!-- header
-    ================================================== -->
-    <header class="s-header">
-
-        <div class="header-logo">
-            <a class="site-logo" href="{{ route('landing_page') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link"
-                    style="height: 50px; width: auto;">
-            </a>
-        </div>
-
-        <nav class="header-nav-wrap">
-            <ul class="header-nav">
-                <li class="current"><a href="{{ route('landing_page') }}" title="Home">Home</a></li>
-                <li><a href="{{ route('login') }}" title="Login">Login</a></li>
-                <li><a href="#about" class="smoothscroll" title="About">About</a></li>
-                <li><a href="#events" class="smoothscroll" title="Events">Events</a></li>
-                <li><a href="#contact" class="smoothscroll" title="Contact us">Contact</a></li>
-            </ul>
-        </nav>
-
-        <a class="header-menu-toggle" href="#0"><span>Menu</span></a>
-
-    </header> <!-- end s-header -->
-
-
-    <!-- hero
-    ================================================== -->
-    <section class="s-hero" data-parallax="scroll"
-        data-image-src="{{ asset('hesed-master/hesed-master/images/hero-bg-3000.jpg') }}" data-natural-width=3000
-        data-natural-height=2000 data-position-y=center>
-
-        <div class="hero-left-bar"></div>
-
-        <div class="row hero-content">
-
-            <div class="column large-full hero-content__text">
-                <h1>
-                    Connecting <br>
-                    Believers, <br>
-                    Empowering Churches
-                </h1>
-
-                <div class="hero-content__buttons">
-                    <a href="{{ route('login') }}" class="btn btn--stroke">View Demo</a>
-                    <a href="#about" class="smoothscroll btn btn--stroke">About Us</a>
-                </div>
-            </div> <!-- end hero-content__text -->
-
-        </div> <!-- end hero-content -->
-
-        <ul class="hero-social">
-            <li class="hero-social__title">Follow Us</li>
-            <li>
-                <a href="#0" title="">Facebook</a>
-            </li>
-            <li>
-                <a href="#0" title="">YouTube</a>
-            </li>
-            <li>
-                <a href="#0" title="">Instagram</a>
-            </li>
-        </ul> <!-- end hero-social -->
-
-        <div class="hero-scroll">
-            <a href="#about" class="scroll-link smoothscroll">
-                Scroll For More
-            </a>
-        </div> <!-- end hero-scroll -->
-
-    </section> <!-- end s-hero -->
-
-
-    <!-- about
-    ================================================== -->
-    <section id="about" class="s-about">
-
-        <div class="row about-header">
-            <div class="column large-full">
-                <h3 class="subhead">Welcome to Waumini Link</h3>
-                <h2>Elevating Church Administration</h2>
-                <p class="lead">
-                    Waumini Link is a comprehensive church management system designed to streamline your administration.
-                    From member tracking to financial management, we provide the tools you need to focus on what matters
-                    most: your mission.
-                </p>
-                <div class="text-center">
-                    <a href="{{ route('login') }}" class="btn btn--primary btn--login-about">View Demo</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="row feature-grid">
-            <div class="column feature-item">
-                <div class="feature-icon">
-                    <i class="fa-solid fa-users-gear"></i>
-                </div>
-                <h4>Efficient Management</h4>
-                <p>
-                    Manage your congregation with ease. Track attendance, contributions, and special events effectively.
-                </p>
+    <!-- ===== NAVBAR ===== -->
+    <header class="ve-header" id="ve-sticky">
+        <div class="container-fluid ve-nav-wrap">
+            <!-- Logo -->
+            <div class="ve-logo">
+                <a href="{{ route('landing_page') }}">
+                    <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link" style="height: 60px; width: auto;">
+                </a>
             </div>
 
-            <div class="column feature-item">
-                <div class="feature-icon">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <h4>Secure & Reliable</h4>
-                <p>
-                    Your data is safe with us. We use state-of-the-art security to ensure your church records are
-                    protected.
-                </p>
-            </div>
-
-            <div class="column feature-item">
-                <div class="feature-icon">
-                    <i class="fa-solid fa-chart-pie"></i>
-                </div>
-                <h4>Transparent Reports</h4>
-                <p>
-                    Get real-time insights into your church's growth and financial health with detailed reporting.
-                </p>
-            </div>
-        </div> <!-- end feature-grid -->
-
-    </section> <!-- end s-about -->
-
-
-    <!-- connect
-    ================================================== -->
-    <section class="s-connect">
-
-        <div class="row connect-content">
-            <div class="column large-half tab-full">
-                <h3 class="display-1">Manage Your Church Better.</h3>
-                <p>
-                    Our platform offers integrated tools for database management, contribution tracking,
-                    and communication, all tailored for the modern church environment.
-                </p>
-
-                <a href="{{ route('login') }}" class="btn btn--primary h-full-width">Join Us Today</a>
-            </div>
-            <div class="column large-half tab-full">
-                <h3 class="display-1">Communicate with Ease.</h3>
-                <p>
-                    Keep your community engaged with built-in notification systems.
-                    Send updates and announcements directly to your members.
-                </p>
-
-                <a href="{{ route('login') }}" class="btn btn--primary h-full-width">Learn More</a>
-            </div>
-        </div> <!-- end connect-content  -->
-
-    </section> <!-- end s-connect -->
-
-
-    <!-- events
-    ================================================== -->
-    <section id="events" class="s-events">
-
-        <div class="row events-header">
-            <div class="column">
-                <h2 class="subhead">Core Features.</h2>
-            </div>
-        </div> <!-- end event-header -->
-
-        <div class="row block-large-1-2 block-900-full events-list">
-
-            <div class="column events-list__item">
-                <h3 class="display-1 events-list__item-title">
-                    <a href="#0" title="">Member Management</a>
-                </h3>
-                <p>
-                    Maintain a centralized database of all church members, including families, youth, and children.
-                </p>
-            </div> <!-- end events-list__item -->
-            <div class="column events-list__item">
-                <h3 class="display-1 events-list__item-title">
-                    <a href="#0" title="">Financial Tracking</a>
-                </h3>
-                <p>
-                    Seamlessly track tithes, offerings, and donations with automated receipting and reporting.
-                </p>
-            </div> <!-- end events-list__item -->
-            <div class="column events-list__item">
-                <h3 class="display-1 events-list__item-title">
-                    <a href="#0" title="">Attendance Control</a>
-                </h3>
-                <p>
-                    Monitor attendance for services and special events using digital tools and biometric integration.
-                </p>
-            </div> <!-- end events-list__item -->
-            <div class="column events-list__item">
-                <h3 class="display-1 events-list__item-title">
-                    <a href="#0" title="">Announcement System</a>
-                </h3>
-                <p>
-                    Broadcast important information to your congregation via SMS and in-app notifications.
-                </p>
-            </div> <!-- end events-list__item -->
-
-        </div> <!-- end events-list -->
-
-    </section> <!-- end s-events -->
-
-
-    <!-- Social
-    ================================================== -->
-    <section class="s-social">
-
-        <div class="row social-content">
-            <div class="column">
-                <ul class="social-list">
-                    <li class="social-list__item">
-                        <a href="#0" title="">
-                            <span class="social-list__icon social-list__icon--facebook"></span>
-                            <span class="social-list__text">Facebook</span>
-                        </a>
-                    </li>
-                    <li class="social-list__item">
-                        <a href="#0" title="">
-                            <span class="social-list__icon social-list__icon--twitter"></span>
-                            <span class="social-list__text">Twitter</span>
-                        </a>
-                    </li>
-                    <li class="social-list__item">
-                        <a href="#0" title="">
-                            <span class="social-list__icon social-list__icon--instagram"></span>
-                            <span class="social-list__text">Instagram</span>
-                        </a>
-                    </li>
-                    <li class="social-list__item">
-                        <a href="#0" title="">
-                            <span class="social-list__icon social-list__icon--email"></span>
-                            <span class="social-list__text">Email</span>
-                        </a>
-                    </li>
+            <!-- Nav Links -->
+            <nav class="ve-nav">
+                <ul>
+                    <li><a href="{{ route('landing_page') }}" class="active">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="{{ route('login') }}">Login</a></li>
+                    <li><a href="#contact">Contact</a></li>
                 </ul>
+            </nav>
+
+            <!-- CTA -->
+            <div class="ve-nav-cta">
+                <a href="{{ route('login') }}" class="ve-cta-btn" style="background-color: #940000; border-color: #940000; color: #ffffff;">Login <i class="fa fa-arrow-right"></i></a>
             </div>
-        </div> <!-- end social-content -->
 
-    </section> <!-- end s-social -->
+            <!-- Mobile Toggle -->
+            <button class="ve-toggler" id="ve-toggle">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
 
+        <!-- Mobile Menu -->
+        <div class="ve-mobile-menu" id="ve-mobile-menu">
+            <ul>
+                <li><a href="{{ route('landing_page') }}">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="{{ route('login') }}">Login</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </header>
 
-    <!-- footer
-    ================================================== -->
-    <footer id="contact" class="s-footer">
-
-        <div class="row footer-top">
-            <div class="column large-4 medium-5 tab-full">
-                <div class="footer-logo">
-                    <a class="site-footer-logo" href="{{ route('landing_page') }}">
-                        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
-                    </a>
-                </div> <!-- footer-logo -->
-                <p>
-                    Waumini Link is dedicated to providing technological solutions for faith-based organizations,
-                    helping them manage their communities more effectively and transparently.
-                </p>
+    <!-- ===== HERO ===== -->
+    <section class="ve-hero">
+        <!-- Left Panel -->
+        <div class="ve-hero-left">
+            <span class="ve-hero-badge">Empowering Faith Through Technology</span>
+            <h1>Connecting <span class="ve-highlight">Believers</span><br>Empowering Churches</h1>
+            <p>Waumini Link delivers intelligent, data-driven church management strategies and personalised guidance to help your congregation grow.</p>
+            <div class="ve-hero-btns">
+                <a href="{{ route('login') }}" class="ve-btn-primary" style="background-color: #940000; border-color: #940000; color: #ffffff;">View Demo</a>
+                <a href="#about" class="ve-btn-ghost" style="color: #940000; border-color: #940000;">Learn More</a>
             </div>
-            <div class="column large-half tab-full">
-                <div class="row">
-                    <div class="column large-7 medium-full">
-                        <h4 class="h6">Our Office</h4>
-                        <p>
-                            Moshi, Kilimanjaro <br>
-                            Tanzania
-                        </p>
+            <!-- Quick Stats Row -->
+            <div class="ve-hero-stats">
+                <div class="ve-stat">
+                    <strong>5,000+</strong>
+                    <span>Members Tracked</span>
+                </div>
+                <div class="ve-stat-divider"></div>
+                <div class="ve-stat">
+                    <strong>100%</strong>
+                    <span>Transparency</span>
+                </div>
+                <div class="ve-stat-divider"></div>
+                <div class="ve-stat">
+                    <strong>24/7</strong>
+                    <span>Support</span>
+                </div>
+            </div>
+        </div>
+        <!-- Right Panel -->
+        <div class="ve-hero-right">
+            <div class="ve-hero-img-main bg-img" style="background-image:url({{ asset('assets/images/church1.jpg') }});"></div>
+            <div class="ve-hero-img-accent bg-img" style="background-image:url({{ asset('assets/images/church4.jpg') }});"></div>
+            <!-- Floating card -->
+            <div class="ve-float-card">
+                <i class="fa fa-users"></i>
+                <div>
+                    <strong>Integrated</strong>
+                    <span>Church System</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                        <p>
-                            <a href="mailto:emca@emca.tech" class="btn btn--footer">Contact Support</a>
-                        </p>
+    <!-- ===== MARQUEE TRUST BAR ===== -->
+    <div class="ve-trust-bar">
+        <div class="ve-trust-inner">
+            <span><i class="fa fa-shield"></i> Secure Data Storage</span>
+            <span><i class="fa fa-check-circle"></i> Easy Member Tracking</span>
+            <span><i class="fa fa-users"></i> Congregational Growth</span>
+            <span><i class="fa fa-lock"></i> 256-bit Encryption</span>
+            <span><i class="fa fa-trophy"></i> Best Church App</span>
+            <span><i class="fa fa-globe"></i> Accessible Anywhere</span>
+        </div>
+    </div>
+
+    <!-- ===== SERVICES GRID ===== -->
+    <section id="services" class="ve-section ve-services-section">
+        <div class="container">
+            <div class="ve-section-header text-center">
+                <span class="ve-section-tag">What We Offer</span>
+                <h2>Comprehensive Church <span>Solutions</span></h2>
+                <p>From member management to financial tracking — we cover every aspect of your church administration.</p>
+            </div>
+            <div class="ve-services-grid">
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="100ms">
+                    <div class="ve-service-icon"><i class="fa fa-users"></i></div>
+                    <h4>Member Management</h4>
+                    <p>Maintain a centralized database of all church members, including families and children.</p>
+                </div>
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="200ms">
+                    <div class="ve-service-icon"><i class="fa fa-money"></i></div>
+                    <h4>Financial Tracking</h4>
+                    <p>Seamlessly track tithes, offerings, and donations with automated reporting.</p>
+                </div>
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="300ms">
+                    <div class="ve-service-icon"><i class="fa fa-calendar"></i></div>
+                    <h4>Attendance Control</h4>
+                    <p>Monitor attendance for services and special events using digital tools.</p>
+                </div>
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="400ms">
+                    <div class="ve-service-icon"><i class="fa fa-bullhorn"></i></div>
+                    <h4>Announcement System</h4>
+                    <p>Broadcast important information to your congregation via SMS and notifications.</p>
+                </div>
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="500ms">
+                    <div class="ve-service-icon"><i class="fa fa-line-chart"></i></div>
+                    <h4>Transparent Reports</h4>
+                    <p>Get real-time insights into your church's growth and financial health.</p>
+                </div>
+                <div class="ve-service-card wow fadeInUp" data-wow-delay="600ms">
+                    <div class="ve-service-icon"><i class="fa fa-mobile"></i></div>
+                    <h4>Mobile Accessible</h4>
+                    <p>Access your church data anytime, anywhere from any device.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY US ===== -->
+    <section id="about" class="ve-section ve-whyus-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Image Side -->
+                <div class="col-12 col-lg-5">
+                    <div class="ve-whyus-img-wrap wow fadeInLeft" data-wow-delay="100ms">
+                        <div class="ve-whyus-img-main bg-img" style="background-image:url({{ asset('assets/images/church2.jpg') }});"></div>
+                        <div class="ve-whyus-badge">
+                            <strong>100%</strong>
+                            <span>Dedicated to Church Growth</span>
+                        </div>
                     </div>
-                    <div class="column large-5 medium-full">
-                        <h4 class="h6">Quick Links</h4>
-                        <ul class="footer-list">
-                            <li><a href="{{ route('landing_page') }}">Home</a></li>
-                            <li><a href="{{ route('login') }}">Login</a></li>
-                            <li><a href="#about" class="smoothscroll">About</a></li>
-                            <li><a href="#events" class="smoothscroll">Features</a></li>
-                            <li><a href="#contact" class="smoothscroll">Contact</a></li>
-                        </ul>
+                </div>
+                <!-- Content Side -->
+                <div class="col-12 col-lg-7 wow fadeInRight" data-wow-delay="200ms">
+                    <div class="ve-whyus-content">
+                        <span class="ve-section-tag">Why Waumini Link</span>
+                        <h2>A Smarter Way to Manage <span>Your Church</span></h2>
+                        <p>We combine church expertise with cutting-edge technology to deliver outcomes that streamline your administration — all while keeping your mission first.</p>
+                        <div class="ve-checklist">
+                            <div class="ve-check-item">
+                                <i class="fa fa-check-circle"></i>
+                                <div><strong>Personalised Support</strong><p>Our team is here to help you set up and manage your system.</p></div>
+                            </div>
+                            <div class="ve-check-item">
+                                <i class="fa fa-check-circle"></i>
+                                <div><strong>Transparent Finance</strong><p>Clear, automated tracking of all church contributions and expenses.</p></div>
+                            </div>
+                            <div class="ve-check-item">
+                                <i class="fa fa-check-circle"></i>
+                                <div><strong>Scalable Solution</strong><p>Whether you're a small chapel or a large cathedral, we grow with you.</p></div>
+                            </div>
+                        </div>
+                        <a href="{{ route('login') }}" class="ve-btn-primary mt-30" style="background-color: #940000; border-color: #940000; color: #ffffff;">View Demo</a>
                     </div>
                 </div>
             </div>
-        </div> <!-- end footer-top -->
+        </div>
+    </section>
 
-        <div class="row footer-bottom">
-            <div class="column ss-copyright">
-                <span>© Copyright Waumini Link {{ date('Y') }}</span>
-                <span>Powered by <a href="https://emca.tech/">EmCa Technologies</a></span>
+    <!-- ===== CTA BANNER ===== -->
+    <section class="ve-cta-banner bg-img" style="background-image:url({{ asset('assets/images/church3.jpg') }});">
+        <div class="ve-cta-overlay"></div>
+        <div class="container ve-cta-content">
+            <div class="row align-items-center">
+                <div class="col-12 col-lg-8">
+                    <h2>Ready to Take Control of Your <span>Church Administration?</span></h2>
+                    <p>Join hundreds of churches already using Waumini Link to empower their congregation.</p>
+                </div>
+                <div class="col-12 col-lg-4 text-lg-right">
+                    <a href="{{ route('login') }}" class="ve-btn-white">Go to Dashboard</a>
+                </div>
             </div>
-        </div> <!-- footer-bottom -->
+        </div>
+    </section>
 
-        <div class="ss-go-top">
-            <a class="smoothscroll" title="Back to Top" href="#top">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                    <path d="M12 0l8 9h-6v15h-4v-15h-6z" />
-                </svg>
-            </a>
-        </div> <!-- ss-go-top -->
+    <!-- ===== FOOTER ===== -->
+    <footer id="contact" class="ve-footer">
+        <div class="container">
+            <div class="row">
+                <!-- Col 1: About -->
+                <div class="col-12 col-md-6 col-lg-3 mb-50">
+                    <h5 class="ve-footer-title">About Waumini Link</h5>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.8; margin-bottom: 25px;">
+                        Your comprehensive church management system designed to streamline member administration, financial tracking, and community engagement.
+                    </p>
+                    <div class="ve-social">
+                        <a href="#"><i class="fa fa-facebook"></i></a>
+                        <a href="#"><i class="fa fa-twitter"></i></a>
+                        <a href="#"><i class="fa fa-linkedin"></i></a>
+                        <a href="#"><i class="fa fa-instagram"></i></a>
+                    </div>
+                </div>
 
-    </footer> <!-- end s-footer -->
+                <!-- Col 2: Quick Links -->
+                <div class="col-12 col-md-6 col-lg-3 mb-50">
+                    <h5 class="ve-footer-title">Quick Links</h5>
+                    <ul class="ve-footer-links">
+                        <li><a href="{{ route('landing_page') }}"><i class="fa fa-home"></i> Home</a></li>
+                        <li><a href="{{ route('login') }}"><i class="fa fa-sign-in"></i> Login</a></li>
+                        <li><a href="#about"><i class="fa fa-info-circle"></i> About Us</a></li>
+                        <li><a href="#"><i class="fa fa-question-circle"></i> Help & Support</a></li>
+                        <li><a href="#"><i class="fa fa-shield"></i> Privacy Policy</a></li>
+                    </ul>
+                </div>
 
+                <!-- Col 3: Contact -->
+                <div class="col-12 col-md-6 col-lg-3 mb-50">
+                    <h5 class="ve-footer-title">Contact Us</h5>
+                    <ul class="ve-footer-contact">
+                        <li style="color: rgba(255,255,255,0.7);"><i class="fa fa-envelope"></i> emca@emca.tech</li>
+                        <li style="color: rgba(255,255,255,0.7);"><i class="fa fa-phone"></i> +255 749 719 998</li>
+                        <li style="color: rgba(255,255,255,0.7);"><i class="fa fa-map-marker"></i> Moshi, Kilimanjaro</li>
+                    </ul>
+                </div>
 
-    <!-- Java Script
-    ================================================== -->
-    <script src="{{ asset('hesed-master/hesed-master/js/jquery-3.2.1.min.js') }}"></script>
-    <script src="{{ asset('hesed-master/hesed-master/js/plugins.js') }}"></script>
-    <script src="{{ asset('hesed-master/hesed-master/js/main.js') }}"></script>
+                <!-- Col 4: Services -->
+                <div class="col-12 col-md-6 col-lg-3 mb-50">
+                    <h5 class="ve-footer-title">Our Services</h5>
+                    <ul class="ve-footer-links">
+                        <li><a href="#"><i class="fa fa-users"></i> Member Management</a></li>
+                        <li><a href="#"><i class="fa fa-line-chart"></i> Financial Reports</a></li>
+                        <li><a href="#"><i class="fa fa-check-square-o"></i> Attendance Tracking</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
+        <!-- Footer Bottom Bar -->
+        <div class="ve-footer-bottom">
+            <div class="container">
+                <div class="ve-footer-bottom-inner">
+                    <p>&copy; {{ date('Y') }} Waumini Link. All rights reserved.</p>
+                    <p>Powered by <span class="emca-red">EmCa Technologies</span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ asset('vaultedge/js/jquery/jquery-2.2.4.min.js') }}"></script>
+    <script src="{{ asset('vaultedge/js/bootstrap/popper.min.js') }}"></script>
+    <script src="{{ asset('vaultedge/js/bootstrap/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('vaultedge/js/plugins/plugins.js') }}"></script>
+    <script src="{{ asset('vaultedge/js/active.js') }}"></script>
+    <script src="{{ asset('vaultedge/js/vaultedge.js') }}"></script>
+    <script>
+        // Back to Top functionality
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 300) {
+                if ($('#scrollUp').length === 0) {
+                    $('body').append('<div id="scrollUp"><i class="fa fa-angle-up"></i></div>');
+                    $('#scrollUp').click(function() {
+                        $('html, body').animate({scrollTop: 0}, 800);
+                        return false;
+                    });
+                }
+                $('#scrollUp').fadeIn();
+            } else {
+                $('#scrollUp').fadeOut();
+            }
+        });
+    </script>
 </body>
-
 </html>
