@@ -1444,13 +1444,24 @@ Route::get('/google/login', function () {
 });
 
 Route::get('/google/callback', function (Illuminate\Http\Request $request) {
+    if (!$request->has('code')) {
+        return response()->json(['error' => 'No code provided'], 400);
+    }
+
     $client = new GoogleClient();
     $client->setAuthConfig(storage_path('app/google/credentials.json'));
     $client->setRedirectUri(url('/google/callback'));
 
-    $token = $client->fetchAccessTokenWithAuthCode($request->code);
-
-    return response()->json($token);
+    try {
+        $token = $client->fetchAccessTokenWithAuthCode($request->code);
+        return response()->json($token);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'redirect_uri' => url('/google/callback'),
+            'code' => $request->code
+        ], 500);
+    }
 });
 
 
