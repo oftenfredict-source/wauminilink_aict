@@ -109,7 +109,16 @@
                 
                 /* Only fix elements that actually cause overflow */
                 #layoutSidenav_content {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 100vh;
                     overflow-x: hidden !important;
+                    width: 100%;
+                }
+                
+                footer.py-4 {
+                    width: 100% !important;
+                    margin-top: auto !important;
                 }
                 
                 /* Navbar should not overflow */
@@ -2295,8 +2304,8 @@
                 <main>
                     @yield('content')
                 </main>
-               <footer class="bg-dark text-light py-4 mt-auto">
-  <div class="container px-4">
+               <footer class="bg-dark text-light py-4 mt-auto w-100">
+  <div class="container-fluid px-4">
     <div class="row align-items-center">
       <!-- Left Side -->
       <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
