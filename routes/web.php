@@ -1428,4 +1428,30 @@ Route::get('/storage/{path}', function ($path) {
     ]);
 })->where('path', '.*')->name('storage.serve');
 
+// --- GOOGLE DRIVE REFRESH TOKEN GENERATION ---
+use Google\Client as GoogleClient;
+use Google\Service\Drive as GoogleDrive;
+
+Route::get('/google/login', function () {
+    $client = new GoogleClient();
+    $client->setAuthConfig(storage_path('app/google/credentials.json'));
+    $client->addScope(GoogleDrive::DRIVE_FILE);
+    $client->setRedirectUri(url('/google/callback'));
+    $client->setAccessType('offline');
+    $client->setPrompt('consent');
+
+    return redirect($client->createAuthUrl());
+});
+
+Route::get('/google/callback', function (Illuminate\Http\Request $request) {
+    $client = new GoogleClient();
+    $client->setAuthConfig(storage_path('app/google/credentials.json'));
+    $client->setRedirectUri(url('/google/callback'));
+
+    $token = $client->fetchAccessTokenWithAuthCode($request->code);
+
+    return response()->json($token);
+});
+
+
 
