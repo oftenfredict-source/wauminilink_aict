@@ -177,6 +177,15 @@
             display: block !important;
         }
     }
+
+    /* Ensure full width on all screens */
+    .container-fluid {
+        width: 100% !important;
+    }
+    #layoutSidenav_content main {
+        width: 100% !important;
+        flex: 1 0 auto;
+    }
 </style>
 <div class="container-fluid px-4">
     <!-- Page Title and Quick Actions - Compact Collapsible -->
@@ -408,7 +417,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center">No pledges found</td>
+                            <td colspan="9" class="text-center">No pledges found</td>
                         </tr>
                         @endforelse
                     </tbody>
