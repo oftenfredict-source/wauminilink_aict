@@ -538,12 +538,17 @@ class FinanceController extends Controller
             'member_id' => 'required|exists:members,id',
             'pledge_amount' => 'required|numeric|min:0',
             'pledge_date' => 'required|date',
-            'due_date' => 'nullable|date|after:pledge_date',
+            'due_date' => 'nullable|date',
             'pledge_type' => 'required|string',
+            'custom_pledge_type' => 'required_if:pledge_type,other|nullable|string|max:255',
             'payment_frequency' => 'required|string',
-            'purpose' => 'nullable|string',
             'notes' => 'nullable|string'
         ]);
+
+        if ($validated['pledge_type'] === 'other' && !empty($validated['custom_pledge_type'])) {
+            $validated['pledge_type'] = $validated['custom_pledge_type'];
+        }
+        unset($validated['custom_pledge_type']);
 
         $validated['recorded_by'] = auth()->user()->name ?? 'System';
         $validated['amount_paid'] = 0;

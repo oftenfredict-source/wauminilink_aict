@@ -387,7 +387,6 @@
                                         data-progress="{{ $pledge->progress_percentage }}"
                                         data-due="{{ $pledge->due_date ? \Carbon\Carbon::parse($pledge->due_date)->format('M d, Y') : '-' }}"
                                         data-status="{{ ucfirst($pledge->status) }}"
-                                        data-purpose="{{ $pledge->purpose }}"
                                         data-notes="{{ $pledge->notes }}"
                                         title="View Details"
                                     >
@@ -436,8 +435,8 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="member_id" class="form-label">Member *</label>
-                                <select class="form-select select2-member-modal" id="member_id" name="member_id" required>
+                                <label for="modal_member_id" class="form-label">Member *</label>
+                                <select class="form-select select2-member-modal" id="modal_member_id" name="member_id" required>
                                     <option value="">Select Member</option>
                                     @foreach($members as $member)
                                         <option value="{{ $member->id }}">{{ $member->full_name }} ({{ $member->member_id }})</option>
@@ -447,14 +446,25 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="pledge_type" class="form-label">Pledge Type *</label>
-                                <select class="form-select" id="pledge_type" name="pledge_type" required>
+                                <label for="modal_pledge_type" class="form-label">Pledge Type *</label>
+                                <select class="form-select" id="modal_pledge_type" name="pledge_type" required>
                                     <option value="">Select Type</option>
                                     <option value="building">Building Fund</option>
                                     <option value="mission">Mission</option>
                                     <option value="special">Special Project</option>
                                     <option value="general">General</option>
+                                    <option value="other">Other</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Pledge Type (Hidden by default) -->
+                    <div class="row" id="custom_pledge_type_row" style="display: none;">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="custom_pledge_type" class="form-label">Custom Pledge Type *</label>
+                                <input type="text" class="form-control" id="custom_pledge_type" name="custom_pledge_type" placeholder="Enter custom pledge type">
                             </div>
                         </div>
                     </div>
@@ -468,12 +478,12 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="payment_frequency" class="form-label">Payment Frequency *</label>
-                                <select class="form-select" id="payment_frequency" name="payment_frequency" required>
+                                <label for="modal_payment_frequency" class="form-label">Payment Frequency *</label>
+                                <select class="form-select" id="modal_payment_frequency" name="payment_frequency" required>
                                     <option value="">Select Frequency</option>
                                     <option value="monthly">Monthly</option>
                                     <option value="quarterly">Quarterly</option>
-                                    <option value="annually">Annually</option>
+                                    <option value="annually">Annual</option>
                                     <option value="one_time">One Time</option>
                                 </select>
                             </div>
@@ -483,23 +493,24 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="pledge_date" class="form-label">Pledge Date *</label>
-                                <input type="date" class="form-control" id="pledge_date" name="pledge_date" value="{{ date('Y-m-d') }}" required>
+                                <label for="modal_pledge_date" class="form-label">Pledge Date *</label>
+                                <input type="date" class="form-control" id="modal_pledge_date" name="pledge_date" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="due_date" class="form-label">Due Date</label>
-                                <input type="date" class="form-control" id="due_date" name="due_date">
-                                <div id="due_date_error" class="text-danger small mt-1" style="display: none;"></div>
+                            <div class="mb-3" id="recurring_due_date_group">
+                                <label for="modal_due_date" class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="modal_due_date" name="due_date">
+                                <div id="modal_due_date_error" class="text-danger small mt-1" style="display: none;"></div>
+                            </div>
+                            <div class="mb-3" id="one_time_date_group" style="display: none;">
+                                <label for="modal_one_time_date" class="form-label">One Time Date *</label>
+                                <input type="date" class="form-control" id="modal_one_time_date">
                             </div>
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="purpose" class="form-label">Purpose</label>
-                        <input type="text" class="form-control" id="purpose" name="purpose">
-                    </div>
+                    <!-- Removed Purpose field as requested -->
                     
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
@@ -703,109 +714,153 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Reset validation when modal is opened
     $('#addPledgeModal').on('show.bs.modal', function() {
-        const dueDate = document.getElementById('due_date');
-        const dueDateError = document.getElementById('due_date_error');
+        console.log('Add Pledge Modal opened');
+        const dueDate = document.getElementById('modal_due_date');
+        const dueDateError = document.getElementById('modal_due_date_error');
+        const oneTimeDate = document.getElementById('modal_one_time_date');
         if (dueDate) {
             dueDate.classList.remove('is-invalid');
+            dueDate.readOnly = false;
+            dueDate.value = ''; // Clear on open
+        }
+        if (oneTimeDate) {
+            oneTimeDate.value = '';
         }
         if (dueDateError) {
             dueDateError.style.display = 'none';
             dueDateError.textContent = '';
         }
+        // Reset custom field
+        const customRow = document.getElementById('custom_pledge_type_row');
+        if (customRow) customRow.style.display = 'none';
+        setDueDateFieldMode('');
     });
     
-    // Validation for payment frequency and due date
-    const paymentFrequency = document.getElementById('payment_frequency');
-    const pledgeDate = document.getElementById('pledge_date');
-    const dueDate = document.getElementById('due_date');
-    const dueDateError = document.getElementById('due_date_error');
-    const addPledgeForm = document.querySelector('#addPledgeModal form');
+    // Format JS date as YYYY-MM-DD for date input
+    function formatDateForInput(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function addMonthsFromPledgeDate(baseDate, monthsToAdd) {
+        const targetMonthStart = new Date(baseDate.getFullYear(), baseDate.getMonth() + monthsToAdd, 1);
+        const lastDayOfTargetMonth = new Date(targetMonthStart.getFullYear(), targetMonthStart.getMonth() + 1, 0).getDate();
+        const targetDay = Math.min(baseDate.getDate(), lastDayOfTargetMonth);
+        return new Date(targetMonthStart.getFullYear(), targetMonthStart.getMonth(), targetDay);
+    }
+
+    function setDueDateFieldMode(frequency) {
+        const $recurringGroup = $('#recurring_due_date_group');
+        const $oneTimeGroup = $('#one_time_date_group');
+        const $dueDate = $('#modal_due_date');
+        const $oneTimeDate = $('#modal_one_time_date');
+        const $dueDateError = $('#modal_due_date_error');
+
+        $dueDateError.hide().text('');
+        $dueDate.removeClass('is-invalid');
+
+        if (frequency === 'one_time') {
+            $recurringGroup.hide();
+            $oneTimeGroup.show();
+
+            $dueDate.removeAttr('name').prop('required', false).attr('readonly', false).val('');
+            $oneTimeDate.attr('name', 'due_date').prop('required', true);
+        } else {
+            $oneTimeGroup.hide();
+            $recurringGroup.show();
+
+            $oneTimeDate.removeAttr('name').prop('required', false).val('');
+            $dueDate.attr('name', 'due_date').prop('required', false);
+        }
+    }
+
+    // Function to calculate automatic due date
+    function calculateDueDate() {
+        const frequency = $('#modal_payment_frequency').val();
+        const pledgeDateValue = $('#modal_pledge_date').val();
+        const $dueDate = $('#modal_due_date');
+        
+        console.log('Calculating due date:', {frequency, pledgeDateValue});
+        setDueDateFieldMode(frequency);
+        
+        if (!pledgeDateValue || !frequency) return;
+        
+        const date = new Date(`${pledgeDateValue}T00:00:00`);
+        let calculatedDate = null;
+        
+        if (frequency === 'monthly') {
+            calculatedDate = addMonthsFromPledgeDate(date, 1);
+        } else if (frequency === 'quarterly') {
+            calculatedDate = addMonthsFromPledgeDate(date, 6);
+        } else if (frequency === 'annually') {
+            calculatedDate = addMonthsFromPledgeDate(date, 12);
+        }
+        
+        if (calculatedDate) {
+            $dueDate.val(formatDateForInput(calculatedDate));
+            $dueDate.attr('readonly', true);
+        } else {
+            // One-time stays manual: user chooses the payment date.
+            $dueDate.val('');
+            $dueDate.attr('readonly', false);
+        }
+        
+        validateDueDate();
+    }
     
-    // Function to validate due date based on payment frequency
+    // Function to validate due date
     function validateDueDate() {
-        const frequency = paymentFrequency.value;
-        const pledgeDateValue = pledgeDate.value;
-        const dueDateValue = dueDate.value;
+        const frequency = $('#modal_payment_frequency').val();
+        const pledgeDateValue = $('#modal_pledge_date').val();
+        const dueDateValue = $('#modal_due_date').val();
+        const $dueDateError = $('#modal_due_date_error');
+        const $dueDate = $('#modal_due_date');
         
-        // Clear previous error
-        dueDateError.style.display = 'none';
-        dueDateError.textContent = '';
-        dueDate.classList.remove('is-invalid');
+        $dueDateError.hide().text('');
+        $dueDate.removeClass('is-invalid');
         
-        // Only validate if frequency is monthly and both dates are provided
-        if (frequency === 'monthly' && pledgeDateValue && dueDateValue) {
-            const pledgeDateObj = new Date(pledgeDateValue);
-            const dueDateObj = new Date(dueDateValue);
+        if (frequency !== 'one_time' && pledgeDateValue && dueDateValue) {
+            const pDate = new Date(`${pledgeDateValue}T00:00:00`);
+            const dDate = new Date(`${dueDateValue}T00:00:00`);
+            const diffDays = Math.ceil((dDate - pDate) / (1000 * 60 * 60 * 24));
             
-            // Calculate the difference in days
-            const timeDifference = dueDateObj.getTime() - pledgeDateObj.getTime();
-            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-            
-            // Check if due date is within 30 days from pledge date
-            if (daysDifference < 0) {
-                // Due date is before pledge date
-                dueDateError.textContent = 'The due date cannot be before the pledge date.';
-                dueDateError.style.display = 'block';
-                dueDate.classList.add('is-invalid');
-                return false;
-            } else if (daysDifference > 30) {
-                // Due date exceeds 30 days from pledge date
-                const maxDueDate = new Date(pledgeDateObj);
-                maxDueDate.setDate(maxDueDate.getDate() + 30);
-                const maxDueDateStr = maxDueDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
-                
-                dueDateError.textContent = `For monthly payment frequency, the due date must be within 30 days from the pledge date (maximum due date: ${maxDueDateStr}).`;
-                dueDateError.style.display = 'block';
-                dueDate.classList.add('is-invalid');
+            if (diffDays < 0) {
+                $dueDateError.text('The due date cannot be before the pledge date.').show();
+                $dueDate.addClass('is-invalid');
                 return false;
             }
         }
-        
         return true;
     }
     
-    // Add event listeners
-    if (paymentFrequency) {
-        paymentFrequency.addEventListener('change', function() {
-            validateDueDate();
-        });
-    }
+    // Event Listeners using jQuery for robustness
+    $(document).on('change', '#modal_pledge_type', function() {
+        const isOther = $(this).val() === 'other';
+        console.log('Pledge type changed:', $(this).val());
+        $('#custom_pledge_type_row').toggle(isOther);
+        $('#custom_pledge_type').prop('required', isOther);
+    });
     
-    if (pledgeDate) {
-        pledgeDate.addEventListener('change', function() {
-            validateDueDate();
-        });
-    }
+    $(document).on('change', '#modal_payment_frequency, #modal_pledge_date', function() {
+        calculateDueDate();
+    });
     
-    if (dueDate) {
-        dueDate.addEventListener('change', function() {
-            validateDueDate();
-        });
-    }
+    $(document).on('change', '#modal_due_date', function() {
+        validateDueDate();
+    });
     
-    // Prevent form submission if validation fails
-    if (addPledgeForm) {
-        addPledgeForm.addEventListener('submit', function(e) {
-            if (!validateDueDate()) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Show SweetAlert error
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: 'Please correct the due date. For monthly payment frequency, the due date must be within 30 days from the pledge date.',
-                    confirmButtonText: 'OK'
-                });
-                
-                return false;
-            }
-        });
-    }
+    $('#addPledgeModal form').on('submit', function(e) {
+        if (!validateDueDate()) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please check the due date requirements.'
+            });
+        }
+    });
 });
 
 function viewPledge(button) {
@@ -950,23 +1005,10 @@ function viewPledge(button) {
                 </div>
             </div>
             
-            <!-- Purpose and Notes -->
-            ${(data.purpose && data.purpose !== '-') || (data.notes && data.notes !== '-') ? `
+            <!-- Notes -->
+            ${data.notes && data.notes !== '-' ? `
             <div class="col-12">
                 <div class="row g-3">
-                    ${data.purpose && data.purpose !== '-' ? `
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>Purpose</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="mb-0">${data.purpose}</p>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
-                    ${data.notes && data.notes !== '-' ? `
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header bg-light">
@@ -977,7 +1019,6 @@ function viewPledge(button) {
                             </div>
                         </div>
                     </div>
-                    ` : ''}
                 </div>
             </div>
             ` : ''}
