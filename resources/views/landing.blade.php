@@ -321,22 +321,6 @@
             display: flex;
         }
 
-        /* Hero Button Centering & Widening */
-        .ve-hero-btns {
-            justify-content: center !important;
-            display: flex !important;
-            width: 100%;
-            margin-top: 30px;
-        }
-        .ve-hero-btns .ve-btn-primary {
-            min-width: 280px !important;
-            padding: 18px 50px !important;
-            font-size: 1.2rem !important;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-        }
-
         /* Section Spacing Overrides */
         .ve-section {
             padding: 70px 0 !important;
