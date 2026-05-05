@@ -16,6 +16,7 @@ class Pledge extends Model
         'pledge_date',
         'due_date',
         'pledge_type',
+        'pledge_type_other',
         'payment_frequency',
         'purpose',
         'notes',
@@ -109,5 +110,24 @@ class Pledge extends Model
     public function getIsCompletedAttribute()
     {
         return $this->amount_paid >= $this->pledge_amount;
+    }
+
+    /**
+     * Human-readable pledge type for tables and modals.
+     */
+    public function getPledgeTypeLabelAttribute(): string
+    {
+        if ($this->pledge_type === 'other' && filled($this->pledge_type_other)) {
+            return $this->pledge_type_other;
+        }
+
+        return match ($this->pledge_type) {
+            'building' => 'Building Fund',
+            'mission' => 'Mission',
+            'special' => 'Special Project',
+            'general' => 'General',
+            'other' => 'Other',
+            default => ucfirst((string) $this->pledge_type),
+        };
     }
 }

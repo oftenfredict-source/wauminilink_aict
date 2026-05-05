@@ -538,18 +538,37 @@ class FinanceController extends Controller
             'member_id' => 'required|exists:members,id',
             'pledge_amount' => 'required|numeric|min:0',
             'pledge_date' => 'required|date',
-            'due_date' => 'nullable|date',
-            'pledge_type' => 'required|string',
-            'custom_pledge_type' => 'required_if:pledge_type,other|nullable|string|max:255',
-            'payment_frequency' => 'required|string',
-            'notes' => 'nullable|string'
+            'pledge_type' => 'required|in:building,mission,special,general,other',
+            'pledge_type_other' => 'required_if:pledge_type,other|nullable|string|max:255',
+            'payment_frequency' => 'required|in:monthly,quarterly,annually,one_time',
+            'one_time_payment_date' => 'required_if:payment_frequency,one_time|nullable|date|after_or_equal:pledge_date',
+            'notes' => 'nullable|string',
         ]);
 
-        if ($validated['pledge_type'] === 'other' && !empty($validated['custom_pledge_type'])) {
-            $validated['pledge_type'] = $validated['custom_pledge_type'];
+        if ($validated['pledge_type'] !== 'other') {
+            $validated['pledge_type_other'] = null;
         }
-        unset($validated['custom_pledge_type']);
 
+        $pledgeDate = Carbon::parse($validated['pledge_date']);
+
+        switch ($validated['payment_frequency']) {
+            case 'monthly':
+                $validated['due_date'] = $pledgeDate->copy()->addMonth()->toDateString();
+                break;
+            case 'quarterly':
+                $validated['due_date'] = $pledgeDate->copy()->addMonths(3)->toDateString();
+                break;
+            case 'annually':
+                $validated['due_date'] = $pledgeDate->copy()->addYear()->toDateString();
+                break;
+            case 'one_time':
+                $validated['due_date'] = Carbon::parse($validated['one_time_payment_date'])->toDateString();
+                break;
+        }
+
+        unset($validated['one_time_payment_date']);
+
+        $validated['purpose'] = null;
         $validated['recorded_by'] = auth()->user()->name ?? 'System';
         $validated['amount_paid'] = 0;
         $validated['status'] = 'active';

@@ -30,7 +30,7 @@ return [
             'validation_rules' => ['required', 'string']
         ],
         'church_name' => [
-            'value' => 'Waumini Link',
+            'value' => 'AIC Moshi Kilimanjaro',
             'type' => 'string',
             'category' => 'general',
             'group' => 'basic',
@@ -231,22 +231,6 @@ return [
             'description' => 'Automatically generate receipts for financial transactions',
             'validation_rules' => ['boolean']
         ],
-        'annual_fee_adult' => [
-            'value' => 2000,
-            'type' => 'integer',
-            'category' => 'finance',
-            'group' => 'basic',
-            'description' => 'Annual fee amount for adults (18+ years)',
-            'validation_rules' => ['required', 'integer', 'min:0']
-        ],
-        'annual_fee_child' => [
-            'value' => 1000,
-            'type' => 'integer',
-            'category' => 'finance',
-            'group' => 'basic',
-            'description' => 'Annual fee amount for children (under 18 years)',
-            'validation_rules' => ['required', 'integer', 'min:0']
-        ],
 
         // Notification Settings
         'enable_email_notifications' => [
@@ -361,7 +345,7 @@ return [
 
         // Security Settings
         'enable_otp' => [
-            'value' => false,
+            'value' => true,
             'type' => 'boolean',
             'category' => 'security',
             'group' => 'basic',
@@ -460,6 +444,98 @@ return [
                 50 => '50 items',
                 100 => '100 items'
             ]
+        ],
+
+        // Backup Settings
+        'backup_disk' => [
+            'value' => 'google',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'basic',
+            'description' => 'Disk to store backups (local, google)',
+            'validation_rules' => ['required', 'string', 'in:local,google']
+        ],
+        'google_drive_client_id' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'advanced',
+            'description' => 'Google Drive Client ID',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'google_drive_client_secret' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'advanced',
+            'description' => 'Google Drive Client Secret',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'google_drive_refresh_token' => [
+            'value' => '',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'advanced',
+            'description' => 'Google Drive Refresh Token',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'google_drive_folder_id' => [
+            'value' => 'aict_backup',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'advanced',
+            'description' => 'Google Drive Folder ID',
+            'validation_rules' => ['nullable', 'string']
+        ],
+        'backup_name' => [
+            'value' => 'aict_backup',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'basic',
+            'description' => 'Name of the backup file prefix',
+            'validation_rules' => ['required', 'string']
+        ],
+        'dump_binary_path' => [
+            'value' => '/usr/bin',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'advanced',
+            'description' => 'Path to mysqldump binary',
+            'validation_rules' => ['required', 'string']
+        ],
+        'backup_notification_email' => [
+            'value' => 'oftenfred.ict@gmail.com',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'basic',
+            'description' => 'Email for backup notifications',
+            'validation_rules' => ['nullable', 'email']
+        ],
+        'backup_notification_phone' => [
+            'value' => '0744341239',
+            'type' => 'string',
+            'category' => 'backup',
+            'group' => 'basic',
+            'description' => 'Phone for backup notifications',
+            'validation_rules' => ['nullable', 'string']
+        ],
+
+        // Annual Fee Settings
+        'annual_fee_adult' => [
+            'value' => '2000',
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'General',
+            'description' => 'Annual fee amount for adults (18+ years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
+        ],
+        'annual_fee_child' => [
+            'value' => '1000',
+            'type' => 'integer',
+            'category' => 'finance',
+            'group' => 'General',
+            'description' => 'Annual fee amount for children (under 18 years)',
+            'validation_rules' => ['required', 'integer', 'min:0']
         ]
     ],
 
@@ -507,6 +583,12 @@ return [
             'description' => 'UI and display configuration',
             'icon' => 'fas fa-palette',
             'color' => 'secondary'
+        ],
+        'backup' => [
+            'name' => 'Backup Settings',
+            'description' => 'Database and file backup configuration',
+            'icon' => 'fas fa-hdd',
+            'color' => 'dark'
         ]
     ],
 
@@ -530,6 +612,10 @@ return [
         'system' => [
             'name' => 'System Settings',
             'description' => 'Internal system configuration'
+        ],
+        'General' => [
+            'name' => 'General Settings',
+            'description' => 'General category settings'
         ]
     ]
 ];

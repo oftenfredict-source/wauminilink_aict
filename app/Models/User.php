@@ -21,6 +21,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_admin',
         'can_approve_finances',
         'profile_picture',
         'phone_number',
@@ -47,6 +48,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'can_approve_finances' => 'boolean',
+        'is_admin' => 'boolean',
         'login_blocked_until' => 'datetime',
     ];
 
@@ -58,7 +60,7 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->is_admin;
     }
 
     public function isTreasurer()

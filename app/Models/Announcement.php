@@ -125,13 +125,13 @@ class Announcement extends Model
             return false;
         }
 
-        $now = Carbon::now()->toDateString();
+        $now = Carbon::today();
 
-        if ($this->start_date && $this->start_date->format('Y-m-d') > $now) {
+        if ($this->start_date && $this->start_date->gt($now)) {
             return false;
         }
 
-        if ($this->end_date && $this->end_date->format('Y-m-d') <= $now) {
+        if ($this->end_date && $this->end_date->lt($now)) {
             return false;
         }
 

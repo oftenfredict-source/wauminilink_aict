@@ -15,7 +15,7 @@ return new class extends Migration {
             'value' => '10000',
             'type' => 'integer',
             'category' => 'finance',
-            'group' => 'basic',
+            'group' => 'General',
             'description' => 'The amount members must pay for annual fees',
             'is_editable' => true,
             'is_public' => false,

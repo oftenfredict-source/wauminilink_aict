@@ -511,7 +511,7 @@ class LeaderController extends Controller
             }
 
             // Get church name from settings (use same default as member registration)
-            $churchName = SettingsService::get('church_name', 'Waumini Link');
+            $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
 
             // Build the message using the requested template/content
             $message = "Hongera {$leader->member->full_name}! Umechaguliwa rasmi kuwa {$leader->position_display} wa kanisa la {$churchName}. Mungu akupe hekima, ujasiri na neema katika kutimiza wajibu huu wa kiroho. Tunaamini uongozi wako utaleta umoja, upendo, na maendeleo katika huduma ya Bwana.";

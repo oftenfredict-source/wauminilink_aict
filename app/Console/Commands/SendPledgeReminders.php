@@ -69,7 +69,7 @@ class SendPledgeReminders extends Command
             }
 
             $remainingAmount = $pledge->remaining_amount;
-            $pledgeType = $pledge->pledge_type ?? 'general';
+            $pledgeType = $pledge->pledge_type_label ?? ($pledge->pledge_type ?? 'general');
             $dueDate = $pledge->due_date ? $pledge->due_date->format('Y-m-d') : 'Hakuna tarehe maalum';
 
             $this->line("Processing pledge #{$pledge->id} for {$member->full_name}...");

@@ -245,6 +245,7 @@
                         <option value="mission" {{ request('pledge_type') == 'mission' ? 'selected' : '' }}>Mission</option>
                         <option value="special" {{ request('pledge_type') == 'special' ? 'selected' : '' }}>Special Project</option>
                         <option value="general" {{ request('pledge_type') == 'general' ? 'selected' : '' }}>General</option>
+                        <option value="other" {{ request('pledge_type') == 'other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
                 
@@ -331,7 +332,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-info">{{ ucfirst($pledge->pledge_type) }}</span>
+                                <span class="badge bg-info text-truncate d-inline-block" style="max-width: 220px;" title="{{ $pledge->pledge_type_label }}">{{ $pledge->pledge_type_label }}</span>
                             </td>
                             <td class="text-end">
                                 <span class="fw-bold text-primary">TZS {{ number_format($pledge->pledge_amount, 0) }}</span>
@@ -378,7 +379,8 @@
                                         onclick="viewPledge(this)"
                                         data-id="{{ $pledge->id }}"
                                         data-member="{{ $pledge->member->full_name ?? 'Unknown' }}"
-                                        data-type="{{ ucfirst($pledge->pledge_type) }}"
+                                        data-type="{{ e($pledge->pledge_type_label) }}"
+                                        data-type-key="{{ $pledge->pledge_type }}"
                                         data-amount="{{ number_format($pledge->pledge_amount, 2) }}"
                                         data-paid="{{ number_format($pledge->amount_paid, 2) }}"
                                         data-remaining="{{ number_format($pledge->remaining_amount, 2) }}"
@@ -429,14 +431,14 @@
                 <h5 class="modal-title" id="addPledgeModalLabel">Add New Pledge</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('finance.pledges.store') }}" method="POST">
+            <form action="{{ route('finance.pledges.store') }}" method="POST" id="addPledgeForm">
                 @csrf
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="modal_member_id" class="form-label">Member *</label>
-                                <select class="form-select select2-member-modal" id="modal_member_id" name="member_id" required>
+                                <label for="add_member_id" class="form-label">Member *</label>
+                                <select class="form-select select2-member-modal" id="add_member_id" name="member_id" required>
                                     <option value="">Select Member</option>
                                     @foreach($members as $member)
                                         <option value="{{ $member->id }}">{{ $member->full_name }} ({{ $member->member_id }})</option>
@@ -446,8 +448,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="modal_pledge_type" class="form-label">Pledge Type *</label>
-                                <select class="form-select" id="modal_pledge_type" name="pledge_type" required>
+                                <label for="add_pledge_type" class="form-label">Pledge Type *</label>
+                                <select class="form-select" id="add_pledge_type" name="pledge_type" required>
                                     <option value="">Select Type</option>
                                     <option value="building">Building Fund</option>
                                     <option value="mission">Mission</option>
@@ -457,6 +459,11 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-3" id="add_pledge_type_other_wrap" style="display: none;">
+                        <label for="add_pledge_type_other" class="form-label">Custom pledge type *</label>
+                        <input type="text" class="form-control" id="add_pledge_type_other" name="pledge_type_other" maxlength="255" placeholder="Describe this pledge type">
                     </div>
                     
                     <!-- Custom Pledge Type (Hidden by default) -->
@@ -472,14 +479,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="pledge_amount" class="form-label">Pledge Amount *</label>
-                                <input type="number" class="form-control" id="pledge_amount" name="pledge_amount" step="0.01" min="0" required>
+                                <label for="add_pledge_amount" class="form-label">Pledge Amount *</label>
+                                <input type="number" class="form-control" id="add_pledge_amount" name="pledge_amount" step="0.01" min="0" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="modal_payment_frequency" class="form-label">Payment Frequency *</label>
-                                <select class="form-select" id="modal_payment_frequency" name="payment_frequency" required>
+                                <label for="add_payment_frequency" class="form-label">Payment Frequency *</label>
+                                <select class="form-select" id="add_payment_frequency" name="payment_frequency" required>
                                     <option value="">Select Frequency</option>
                                     <option value="monthly">Monthly</option>
                                     <option value="quarterly">Quarterly</option>
@@ -493,28 +500,31 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="modal_pledge_date" class="form-label">Pledge Date *</label>
-                                <input type="date" class="form-control" id="modal_pledge_date" name="pledge_date" value="{{ date('Y-m-d') }}" required>
+                                <label for="add_pledge_date" class="form-label">Pledge Date *</label>
+                                <input type="date" class="form-control" id="add_pledge_date" name="pledge_date" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3" id="recurring_due_date_group">
-                                <label for="modal_due_date" class="form-label">Due Date</label>
-                                <input type="date" class="form-control" id="modal_due_date" name="due_date">
-                                <div id="modal_due_date_error" class="text-danger small mt-1" style="display: none;"></div>
+                        <div class="col-md-6" id="add_recurring_due_wrap">
+                            <div class="mb-3">
+                                <label for="add_due_date" class="form-label">Due date (end of first period)</label>
+                                <input type="date" class="form-control" id="add_due_date" name="due_date" readonly>
+                                <div class="form-text">Filled automatically from pledge date and frequency (e.g. monthly: same day next month).</div>
+                                <div id="due_date_error" class="text-danger small mt-1" style="display: none;"></div>
                             </div>
-                            <div class="mb-3" id="one_time_date_group" style="display: none;">
-                                <label for="modal_one_time_date" class="form-label">One Time Date *</label>
-                                <input type="date" class="form-control" id="modal_one_time_date">
+                        </div>
+                        <div class="col-md-6" id="add_one_time_date_wrap" style="display: none;">
+                            <div class="mb-3">
+                                <label for="add_one_time_payment_date" class="form-label">One-time payment date *</label>
+                                <input type="date" class="form-control" id="add_one_time_payment_date" name="one_time_payment_date">
+                                <div class="form-text">When this one-time pledge should be paid (no recurring due cycle).</div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Removed Purpose field as requested -->
-                    
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        <label for="add_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="add_notes" name="notes" rows="3"></textarea>
+                    </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -712,24 +722,108 @@ document.addEventListener('DOMContentLoaded', function() {
         dropdownParent: $('#addPledgeModal')
     });
     
-    // Reset validation when modal is opened
-    $('#addPledgeModal').on('show.bs.modal', function() {
-        console.log('Add Pledge Modal opened');
-        const dueDate = document.getElementById('modal_due_date');
-        const dueDateError = document.getElementById('modal_due_date_error');
-        const oneTimeDate = document.getElementById('modal_one_time_date');
-        if (dueDate) {
-            dueDate.classList.remove('is-invalid');
-            dueDate.readOnly = false;
-            dueDate.value = ''; // Clear on open
+    const addPledgeType = document.getElementById('add_pledge_type');
+    const addPledgeTypeOtherWrap = document.getElementById('add_pledge_type_other_wrap');
+    const addPledgeTypeOther = document.getElementById('add_pledge_type_other');
+    const addPaymentFrequency = document.getElementById('add_payment_frequency');
+    const addPledgeDate = document.getElementById('add_pledge_date');
+    const addDueDate = document.getElementById('add_due_date');
+    const addRecurringDueWrap = document.getElementById('add_recurring_due_wrap');
+    const addOneTimeWrap = document.getElementById('add_one_time_date_wrap');
+    const addOneTimePaymentDate = document.getElementById('add_one_time_payment_date');
+    const dueDateError = document.getElementById('due_date_error');
+    const addPledgeForm = document.getElementById('addPledgeForm');
+
+    function formatYmdFromParts(y, m, d) {
+        const mm = String(m).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        return `${y}-${mm}-${dd}`;
+    }
+
+    /** Same calendar day after adding months (browser aligns overflow days). */
+    function addCalendarMonthsYmd(ymd, monthsToAdd) {
+        if (!ymd) return '';
+        const parts = ymd.split('-').map(Number);
+        if (parts.length !== 3) return '';
+        const dt = new Date(parts[0], parts[1] - 1 + monthsToAdd, parts[2]);
+        return formatYmdFromParts(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+    }
+
+    function addCalendarYearsYmd(ymd, yearsToAdd) {
+        if (!ymd) return '';
+        const parts = ymd.split('-').map(Number);
+        if (parts.length !== 3) return '';
+        const dt = new Date(parts[0] + yearsToAdd, parts[1] - 1, parts[2]);
+        return formatYmdFromParts(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+    }
+
+    function syncPledgeTypeOther() {
+        if (!addPledgeType || !addPledgeTypeOtherWrap || !addPledgeTypeOther) return;
+        const isOther = addPledgeType.value === 'other';
+        addPledgeTypeOtherWrap.style.display = isOther ? 'block' : 'none';
+        addPledgeTypeOther.required = isOther;
+        if (!isOther) {
+            addPledgeTypeOther.value = '';
+            addPledgeTypeOther.classList.remove('is-invalid');
+>>>>>>> origin/main
         }
-        if (oneTimeDate) {
-            oneTimeDate.value = '';
+    }
+
+    function syncFrequencyDateUi() {
+        if (!addPaymentFrequency || !addRecurringDueWrap || !addOneTimeWrap) return;
+        const freq = addPaymentFrequency.value;
+        const isOneTime = freq === 'one_time';
+
+        addRecurringDueWrap.style.display = isOneTime ? 'none' : 'block';
+        addOneTimeWrap.style.display = isOneTime ? 'block' : 'none';
+
+        if (addDueDate) {
+            addDueDate.disabled = isOneTime;
+            if (isOneTime) {
+                addDueDate.removeAttribute('name');
+            } else {
+                addDueDate.setAttribute('name', 'due_date');
+            }
         }
+        if (addOneTimePaymentDate) {
+            addOneTimePaymentDate.required = isOneTime;
+            if (!isOneTime) {
+                addOneTimePaymentDate.removeAttribute('name');
+                addOneTimePaymentDate.value = '';
+                addOneTimePaymentDate.classList.remove('is-invalid');
+            } else {
+                addOneTimePaymentDate.setAttribute('name', 'one_time_payment_date');
+            }
+        }
+        if (!isOneTime) {
+            updateRecurringDueDateField();
+        }
+    }
+
+    function updateRecurringDueDateField() {
+        if (!addPaymentFrequency || !addPledgeDate || !addDueDate) return;
+        const freq = addPaymentFrequency.value;
+        const pledgeYmd = addPledgeDate.value;
+        if (!pledgeYmd || freq === 'one_time' || freq === '') {
+            return;
+        }
+        let due = '';
+        if (freq === 'monthly') {
+            due = addCalendarMonthsYmd(pledgeYmd, 1);
+        } else if (freq === 'quarterly') {
+            due = addCalendarMonthsYmd(pledgeYmd, 3);
+        } else if (freq === 'annually') {
+            due = addCalendarYearsYmd(pledgeYmd, 1);
+        }
+        addDueDate.value = due;
+    }
+
+    function clearDueDateMessages() {
         if (dueDateError) {
             dueDateError.style.display = 'none';
             dueDateError.textContent = '';
         }
+<<<<<<< HEAD
         // Reset custom field
         const customRow = document.getElementById('custom_pledge_type_row');
         if (customRow) customRow.style.display = 'none';
@@ -861,6 +955,83 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+=======
+        if (addDueDate) addDueDate.classList.remove('is-invalid');
+        if (addOneTimePaymentDate) addOneTimePaymentDate.classList.remove('is-invalid');
+    }
+
+    $('#addPledgeModal').on('show.bs.modal', function() {
+        clearDueDateMessages();
+        if (addPledgeType) addPledgeType.value = '';
+        if (addPledgeTypeOther) addPledgeTypeOther.value = '';
+        syncPledgeTypeOther();
+        if (addPaymentFrequency) addPaymentFrequency.value = '';
+        syncFrequencyDateUi();
+        if (addDueDate) addDueDate.value = '';
+        if (addOneTimePaymentDate) addOneTimePaymentDate.value = '';
+        const amt = document.getElementById('add_pledge_amount');
+        const notes = document.getElementById('add_notes');
+        if (amt) amt.value = '';
+        if (notes) notes.value = '';
+        if (addPledgeDate) addPledgeDate.value = '{{ date('Y-m-d') }}';
+        const memberSel = document.getElementById('add_member_id');
+        if (memberSel && window.jQuery && jQuery.fn.select2) {
+            jQuery(memberSel).val(null).trigger('change');
+        }
+    });
+
+    if (addPledgeType) {
+        addPledgeType.addEventListener('change', syncPledgeTypeOther);
+    }
+    if (addPaymentFrequency) {
+        addPaymentFrequency.addEventListener('change', function() {
+            clearDueDateMessages();
+            syncFrequencyDateUi();
+        });
+    }
+    if (addPledgeDate) {
+        addPledgeDate.addEventListener('change', function() {
+            clearDueDateMessages();
+            updateRecurringDueDateField();
+        });
+    }
+
+    syncPledgeTypeOther();
+    syncFrequencyDateUi();
+
+    if (addPledgeForm) {
+        addPledgeForm.addEventListener('submit', function(e) {
+            clearDueDateMessages();
+            if (addPledgeType && addPledgeType.value === 'other') {
+                if (!addPledgeTypeOther || !addPledgeTypeOther.value.trim()) {
+                    e.preventDefault();
+                    addPledgeTypeOther.classList.add('is-invalid');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Please enter a custom pledge type when "Other" is selected.',
+                        confirmButtonText: 'OK'
+                    });
+                    return false;
+                }
+            }
+            const freq = addPaymentFrequency ? addPaymentFrequency.value : '';
+            if (freq === 'one_time') {
+                if (!addOneTimePaymentDate || !addOneTimePaymentDate.value) {
+                    e.preventDefault();
+                    addOneTimePaymentDate.classList.add('is-invalid');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Please select the one-time payment date.',
+                        confirmButtonText: 'OK'
+                    });
+                    return false;
+                }
+            }
+        });
+    }
+>>>>>>> origin/main
 });
 
 function viewPledge(button) {
@@ -886,11 +1057,12 @@ function viewPledge(button) {
                        data.status.toLowerCase() === 'active' ? 'primary' : 
                        data.status.toLowerCase() === 'overdue' ? 'danger' : 'secondary';
 
-    // Pledge type styling
-    const typeClass = data.type.toLowerCase() === 'building' ? 'primary' :
-                     data.type.toLowerCase() === 'mission' ? 'info' :
-                     data.type.toLowerCase() === 'special' ? 'warning' :
-                     data.type.toLowerCase() === 'general' ? 'success' : 'secondary';
+    const typeKey = (data.typeKey || '').toLowerCase();
+    const typeClass = typeKey === 'building' ? 'primary' :
+                     typeKey === 'mission' ? 'info' :
+                     typeKey === 'special' ? 'warning' :
+                     typeKey === 'general' ? 'success' :
+                     typeKey === 'other' ? 'dark' : 'secondary';
 
     const html = `
         <div class="row g-4">

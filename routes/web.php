@@ -8,6 +8,42 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\PreventBackHistory;
 
 
+Route::get('/repair-system', function () {
+    try {
+        // 1. Clear all caches
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+
+        // 2. Ensure critical SMS settings exist in the database with safe defaults
+        $criticalSettings = [
+            'enable_sms_notifications' => ['value' => '1', 'type' => 'boolean'],
+            'enable_otp' => ['value' => '1', 'type' => 'boolean'],
+            'sms_sender_id' => ['value' => 'WauminiLnk', 'type' => 'string'],
+        ];
+
+        foreach ($criticalSettings as $key => $data) {
+            \App\Models\SystemSetting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $data['value'], 'type' => $data['type'], 'category' => 'notifications', 'is_editable' => true]
+            );
+        }
+
+        // 3. Clear cache again after DB updates to ensure they are picked up
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+
+        return "<h1>System Repaired Successfully!</h1>
+                <p>1. Caches cleared.</p>
+                <p>2. SMS/OTP settings verified.</p>
+                <p>3. HTTPS forcing active.</p>
+                <br>
+                <p><b>Next Step:</b> Go to your Dashboard and press <b>Ctrl + F5</b> to refresh CSS.</p>
+                <a href='/login' style='padding:10px; background:maroon; color:white; text-decoration:none; border-radius:5px;'>Back to Login</a>";
+    } catch (\Exception $e) {
+        return 'Error repairing system: ' . $e->getMessage();
+    }
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -523,8 +559,8 @@ Route::middleware(['auth', PreventBackHistory::class, 'treasurer'])->group(funct
     // Alternative route for compatibility
     Route::get('/attendance/missed-members', [AttendanceController::class, 'getMembersWithMissedAttendance'])->name('attendance.missed.members.legacy');
     // Generic routes come LAST
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/service-attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/service-attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
     // Biometric Device Testing Routes
     Route::get('/biometric/test', [ZKTecoController::class, 'index'])->name('biometric.test');

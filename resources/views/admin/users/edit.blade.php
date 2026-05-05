@@ -224,15 +224,15 @@
 
                     <div class="col-md-6 mb-3">
                         <label for="email" class="form-label">
-                            <i class="fas fa-envelope me-1"></i>Email (Username) <span class="text-danger">*</span>
+                            <i class="fas fa-user-circle me-1"></i>Email / Username <span class="text-danger">*</span>
                         </label>
-                        <input type="email" 
+                        <input type="text" 
                                class="form-control @error('email') is-invalid @enderror" 
                                id="email" 
                                name="email" 
                                value="{{ old('email', $user->email) }}" 
                                required>
-                        <small class="form-text text-muted">Email will be used as the username for login</small>
+                        <small class="form-text text-muted">Email or Username will be used for login</small>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -313,6 +313,20 @@
                                 <i class="fas fa-check-circle me-1"></i>Can Approve Finances
                             </label>
                             <small class="form-text text-muted d-block">Allow this user to approve financial transactions</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="is_admin" 
+                                   name="is_admin" 
+                                   value="1"
+                                   {{ old('is_admin', $user->is_admin) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="is_admin">
+                                <i class="fas fa-shield-alt me-1 text-danger"></i>Is System Administrator
+                            </label>
+                            <small class="form-text text-muted d-block">Grant full administrative access regardless of role</small>
                         </div>
                     </div>
                 </div>

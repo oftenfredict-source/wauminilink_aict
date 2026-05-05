@@ -22,10 +22,13 @@ use App\Services\DeviceInfoService;
 use App\Services\SystemMonitorService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    private ?bool $hasIsAdminColumn = null;
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -505,7 +508,7 @@ class AdminController extends Controller
             // Direct admin creation (not tied to a member)
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email',
+                'email' => 'required|string|max:255|unique:users,email',
                 'phone_number' => [
                     'nullable',
                     'string',
@@ -528,6 +531,7 @@ class AdminController extends Controller
                         }
                     },
                 ],
+                'is_admin' => 'nullable|boolean',
             ]);
 
             $role = 'admin';
@@ -566,9 +570,9 @@ class AdminController extends Controller
                 'email' => [
                     'required',
                     'string',
-                    'email:rfc,dns',
                     'max:255',
                 ],
+                'is_admin' => 'nullable|boolean',
             ], [
                 'leader_id.required' => 'Please select a leader from the dropdown.',
                 'leader_id.exists' => 'The selected leader is invalid.',
@@ -746,17 +750,25 @@ class AdminController extends Controller
             'phone_number' => $phoneNumber,
         ]);
 
+        $isAdminFlag = $request->boolean('is_admin');
+
+        $userData = [
+            'name' => $userName,
+            'email' => $userEmail,
+            'password' => Hash::make($generatedPassword),
+            'role' => $role,
+            'phone_number' => $phoneNumber,
+            'member_id' => $memberId,
+            'can_approve_finances' => $role === 'pastor' || $role === 'admin' || $isAdminFlag,
+        ];
+
+        if ($this->hasIsAdminColumn()) {
+            $userData['is_admin'] = $isAdminFlag;
+        }
+
         // Create the user
         try {
-            $user = User::create([
-                'name' => $userName,
-                'email' => $userEmail,
-                'password' => Hash::make($generatedPassword),
-                'role' => $role,
-                'phone_number' => $phoneNumber,
-                'member_id' => $memberId,
-                'can_approve_finances' => $role === 'pastor' || $role === 'admin',
-            ]);
+            $user = User::create($userData);
 
             Log::info('User created successfully', ['user_id' => $user->id]);
         } catch (\Exception $e) {
@@ -787,7 +799,7 @@ class AdminController extends Controller
                     ]);
                 } else {
                     $smsService = app(SmsService::class);
-                    $churchName = SettingsService::get('church_name', 'Waumini Link');
+                    $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
 
                     $roleLabel = ucfirst($role);
                     $message = "Hongera {$user->name}! Akaunti yako ya {$roleLabel} imeundwa kikamilifu kwenye mfumo wa {$churchName}.\n\n";
@@ -1120,7 +1132,7 @@ class AdminController extends Controller
                         ]);
                     } else {
                         $smsService = app(SmsService::class);
-                        $churchName = SettingsService::get('church_name', 'Waumini Link');
+                        $churchName = SettingsService::get('church_name', 'AIC Moshi Kilimanjaro');
 
                         $roleLabel = ucfirst($user->role);
                         $message = "Shalom {$user->name}, nenosiri lako jipya la akaunti yako ya {$roleLabel} ni: {$newPassword}.\n\n";
@@ -1242,7 +1254,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $userId,
+            'email' => 'required|string|max:255|unique:users,email,' . $userId,
             'role' => 'required|in:admin,pastor,secretary,treasurer',
             'phone_number' => [
                 'nullable',
@@ -1267,6 +1279,7 @@ class AdminController extends Controller
                 },
             ],
             'can_approve_finances' => 'nullable|boolean',
+            'is_admin' => 'nullable|boolean',
         ]);
 
         // Format phone number: prepend +255 if not already present
@@ -1281,14 +1294,22 @@ class AdminController extends Controller
             $phoneNumber = '+255' . $phone;
         }
 
-        // Update the user
-        $user->update([
+        $isAdminFlag = $request->boolean('is_admin');
+
+        $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'phone_number' => $phoneNumber,
-            'can_approve_finances' => $validated['can_approve_finances'] ?? false,
-        ]);
+            'can_approve_finances' => $request->boolean('can_approve_finances'),
+        ];
+
+        if ($this->hasIsAdminColumn()) {
+            $updateData['is_admin'] = $isAdminFlag;
+        }
+
+        // Update the user
+        $user->update($updateData);
 
         // Log this activity
         try {
@@ -1870,6 +1891,15 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.otps', compact('otps', 'stats', 'users'));
+    }
+
+    private function hasIsAdminColumn(): bool
+    {
+        if ($this->hasIsAdminColumn === null) {
+            $this->hasIsAdminColumn = Schema::hasColumn('users', 'is_admin');
+        }
+
+        return $this->hasIsAdminColumn;
     }
 }
 
