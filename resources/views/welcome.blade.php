@@ -46,7 +46,7 @@
             text-align: center;
             color: white;
             overflow: hidden;
-            background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
+            background: url('{{ asset("assets/images/church.jpg") }}') no-repeat center center;
             background-size: cover;
         }
 
