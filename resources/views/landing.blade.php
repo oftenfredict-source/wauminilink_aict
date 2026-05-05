@@ -215,7 +215,7 @@
             .ve-hero {
                 flex-direction: column !important;
                 height: auto !important;
-                padding-top: 120px !important;
+                padding-top: 65px !important;
                 padding-bottom: 60px !important;
             }
             .ve-hero-left, .ve-hero-right {
@@ -238,6 +238,21 @@
             .ve-stat-divider {
                 height: 30px !important;
                 margin: 0 15px !important;
+            }
+            .ve-hero-btns {
+                justify-content: center !important;
+                display: flex !important;
+                width: 100% !important;
+                margin-top: 30px !important;
+            }
+            .ve-hero-btns .ve-btn-primary {
+                width: 100% !important;
+                max-width: 380px !important;
+                padding: 18px 0 !important;
+                font-size: 1.2rem !important;
+                text-align: center !important;
+                text-transform: uppercase !important;
+                font-weight: 700 !important;
             }
         }
 
