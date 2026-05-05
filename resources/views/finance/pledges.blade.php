@@ -375,7 +375,7 @@
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button 
                                         type="button" 
-                                        class="btn btn-sm btn-outline-primary text-white"
+                                        class="btn btn-sm btn-outline-primary"
                                         onclick="viewPledge(this)"
                                         data-id="{{ $pledge->id }}"
                                         data-member="{{ $pledge->member->full_name ?? 'Unknown' }}"
@@ -395,11 +395,11 @@
                                         <i class="fas fa-eye"></i>
                                         <span class="d-none d-sm-inline ms-1">View</span>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-success text-white" onclick="addPayment({{ $pledge->id }})" title="Add Payment">
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addPayment({{ $pledge->id }})" title="Add Payment">
                                         <i class="fas fa-plus"></i>
                                         <span class="d-none d-sm-inline ms-1">Pay</span>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-warning text-white" onclick="editPledge({{ $pledge->id }})" title="Edit">
+                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editPledge({{ $pledge->id }})" title="Edit">
                                         <i class="fas fa-edit"></i>
                                         <span class="d-none d-sm-inline ms-1">Edit</span>
                                     </button>
@@ -524,7 +524,6 @@
                     <div class="mb-3">
                         <label for="add_notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="add_notes" name="notes" rows="3"></textarea>
-                    </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -765,7 +764,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isOther) {
             addPledgeTypeOther.value = '';
             addPledgeTypeOther.classList.remove('is-invalid');
->>>>>>> origin/main
         }
     }
 
@@ -823,139 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dueDateError.style.display = 'none';
             dueDateError.textContent = '';
         }
-<<<<<<< HEAD
-        // Reset custom field
-        const customRow = document.getElementById('custom_pledge_type_row');
-        if (customRow) customRow.style.display = 'none';
-        setDueDateFieldMode('');
-    });
-    
-    // Format JS date as YYYY-MM-DD for date input
-    function formatDateForInput(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    function addMonthsFromPledgeDate(baseDate, monthsToAdd) {
-        const targetMonthStart = new Date(baseDate.getFullYear(), baseDate.getMonth() + monthsToAdd, 1);
-        const lastDayOfTargetMonth = new Date(targetMonthStart.getFullYear(), targetMonthStart.getMonth() + 1, 0).getDate();
-        const targetDay = Math.min(baseDate.getDate(), lastDayOfTargetMonth);
-        return new Date(targetMonthStart.getFullYear(), targetMonthStart.getMonth(), targetDay);
-    }
-
-    function setDueDateFieldMode(frequency) {
-        const $recurringGroup = $('#recurring_due_date_group');
-        const $oneTimeGroup = $('#one_time_date_group');
-        const $dueDate = $('#modal_due_date');
-        const $oneTimeDate = $('#modal_one_time_date');
-        const $dueDateError = $('#modal_due_date_error');
-
-        $dueDateError.hide().text('');
-        $dueDate.removeClass('is-invalid');
-
-        if (frequency === 'one_time') {
-            $recurringGroup.hide();
-            $oneTimeGroup.show();
-
-            $dueDate.removeAttr('name').prop('required', false).attr('readonly', false).val('');
-            $oneTimeDate.attr('name', 'due_date').prop('required', true);
-        } else {
-            $oneTimeGroup.hide();
-            $recurringGroup.show();
-
-            $oneTimeDate.removeAttr('name').prop('required', false).val('');
-            $dueDate.attr('name', 'due_date').prop('required', false);
-        }
-    }
-
-    // Function to calculate automatic due date
-    function calculateDueDate() {
-        const frequency = $('#modal_payment_frequency').val();
-        const pledgeDateValue = $('#modal_pledge_date').val();
-        const $dueDate = $('#modal_due_date');
-        
-        console.log('Calculating due date:', {frequency, pledgeDateValue});
-        setDueDateFieldMode(frequency);
-        
-        if (!pledgeDateValue || !frequency) return;
-        
-        const date = new Date(`${pledgeDateValue}T00:00:00`);
-        let calculatedDate = null;
-        
-        if (frequency === 'monthly') {
-            calculatedDate = addMonthsFromPledgeDate(date, 1);
-        } else if (frequency === 'quarterly') {
-            calculatedDate = addMonthsFromPledgeDate(date, 6);
-        } else if (frequency === 'annually') {
-            calculatedDate = addMonthsFromPledgeDate(date, 12);
-        }
-        
-        if (calculatedDate) {
-            $dueDate.val(formatDateForInput(calculatedDate));
-            $dueDate.attr('readonly', true);
-        } else {
-            // One-time stays manual: user chooses the payment date.
-            $dueDate.val('');
-            $dueDate.attr('readonly', false);
-        }
-        
-        validateDueDate();
-    }
-    
-    // Function to validate due date
-    function validateDueDate() {
-        const frequency = $('#modal_payment_frequency').val();
-        const pledgeDateValue = $('#modal_pledge_date').val();
-        const dueDateValue = $('#modal_due_date').val();
-        const $dueDateError = $('#modal_due_date_error');
-        const $dueDate = $('#modal_due_date');
-        
-        $dueDateError.hide().text('');
-        $dueDate.removeClass('is-invalid');
-        
-        if (frequency !== 'one_time' && pledgeDateValue && dueDateValue) {
-            const pDate = new Date(`${pledgeDateValue}T00:00:00`);
-            const dDate = new Date(`${dueDateValue}T00:00:00`);
-            const diffDays = Math.ceil((dDate - pDate) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays < 0) {
-                $dueDateError.text('The due date cannot be before the pledge date.').show();
-                $dueDate.addClass('is-invalid');
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    // Event Listeners using jQuery for robustness
-    $(document).on('change', '#modal_pledge_type', function() {
-        const isOther = $(this).val() === 'other';
-        console.log('Pledge type changed:', $(this).val());
-        $('#custom_pledge_type_row').toggle(isOther);
-        $('#custom_pledge_type').prop('required', isOther);
-    });
-    
-    $(document).on('change', '#modal_payment_frequency, #modal_pledge_date', function() {
-        calculateDueDate();
-    });
-    
-    $(document).on('change', '#modal_due_date', function() {
-        validateDueDate();
-    });
-    
-    $('#addPledgeModal form').on('submit', function(e) {
-        if (!validateDueDate()) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please check the due date requirements.'
-            });
-        }
-    });
-=======
         if (addDueDate) addDueDate.classList.remove('is-invalid');
         if (addOneTimePaymentDate) addOneTimePaymentDate.classList.remove('is-invalid');
     }
@@ -1031,7 +896,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
->>>>>>> origin/main
 });
 
 function viewPledge(button) {
