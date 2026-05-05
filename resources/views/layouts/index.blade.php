@@ -114,11 +114,20 @@
                     min-height: 100vh;
                     overflow-x: hidden !important;
                     width: 100%;
+                    flex-grow: 1;
+                    min-width: 0;
                 }
                 
                 footer.py-4 {
                     width: 100% !important;
                     margin-top: auto !important;
+                    left: 0;
+                    right: 0;
+                }
+                
+                #layoutSidenav {
+                    display: flex;
+                    width: 100%;
                 }
                 
                 /* Navbar should not overflow */
@@ -2306,7 +2315,7 @@
                 </main>
                <footer class="bg-dark text-light py-4 mt-auto w-100">
   <div class="container-fluid px-4">
-    <div class="row align-items-center">
+    <div class="row align-items-center w-100">
       <!-- Left Side -->
       <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
         <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
