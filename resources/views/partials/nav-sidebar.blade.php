@@ -1,12 +1,12 @@
 <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
   <a class="navbar-brand ps-3 d-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-    <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo"
-      style="height: 45px; max-width: 180px; object-fit: contain;">
+    <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Moshi Kilimanjaro Logo" class="logo"
+      style="height: 65px; max-width: 250px; object-fit: contain;">
   </a>
   <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i
       class="fas fa-bars"></i></button>
   <div class="navbar-text text-white me-auto ms-3" style="font-size: 1.1rem;">
-    <strong>Waumini Link</strong>
+    <strong>AIC Moshi Kilimanjaro</strong>
   </div>
   <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
     <li class="nav-item dropdown">

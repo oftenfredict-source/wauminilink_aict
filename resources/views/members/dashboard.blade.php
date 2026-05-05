@@ -102,9 +102,9 @@
                                 style="display: inline-block; animation: scroll-left 50s linear infinite; color: white; font-weight: 600; font-size: 1.05rem; padding: 0.75rem 0;">
                                 <span class="marquee-item">
                                     <i class="fas fa-church me-2"></i>
-                                    <strong>Karibu katika kanisa la Waumini Link</strong> |
+                                    <strong>Karibu katika kanisa la AIC Moshi Kilimanjaro</strong> |
                                     <i class="fas fa-mobile-alt me-1"></i> <strong>Lipa Namba Voda:</strong> <span
-                                        class="highlight-number">68019088</span> - <strong>Waumini Link</strong> |
+                                        class="highlight-number">68019088</span> - <strong>AIC Moshi Kilimanjaro</strong> |
                                     <i class="fas fa-university me-1"></i> <strong>CRDB Bank:</strong> Akaunti <span
                                         class="highlight-number">0152324275400</span> - <strong>Africa Inland Church
                                         Tanzania</strong> |
@@ -113,9 +113,9 @@
                                 </span>
                                 <span class="marquee-item" style="padding-left: 80px;">
                                     <i class="fas fa-church me-2"></i>
-                                    <strong>Karibu katika kanisa la Waumini Link</strong> |
+                                    <strong>Karibu katika kanisa la AIC Moshi Kilimanjaro</strong> |
                                     <i class="fas fa-mobile-alt me-1"></i> <strong>Lipa Namba Voda:</strong> <span
-                                        class="highlight-number">68019088</span> - <strong>Waumini Link</strong> |
+                                        class="highlight-number">68019088</span> - <strong>AIC Moshi Kilimanjaro</strong> |
                                     <i class="fas fa-university me-1"></i> <strong>CRDB Bank:</strong> Akaunti <span
                                         class="highlight-number">0152324275400</span> - <strong>Africa Inland Church
                                         Tanzania</strong> |

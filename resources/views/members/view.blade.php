@@ -4224,7 +4224,7 @@
                                                                                                                 </div>
 
                                                                                                                 <div class="report-footer">
-                                                                                                                    <p><strong>Waumini Link Church Management System</strong></p>
+                                                                                                                    <p><strong>AIC Moshi Kilimanjaro Church Management System</strong></p>
                                                                                                                     <p class="date-time">Report generated on ${new Date().toLocaleString()}</p>
                                                                                                                 </div>
                                                                                                             </div>
@@ -4598,7 +4598,7 @@
 
             // Footer
             w.document.write(`<div class="footer">
-                                                                                                        Printed on ${printedAt} by ${printedBy} • © ${yearNow} Waumini Link • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
+                                                                                                        Printed on ${printedAt} by ${printedBy} • © ${yearNow} AIC Moshi Kilimanjaro • Powered by <a href="https://emca.tech/#" target="_blank" rel="noopener" style="color: #940000 !important;">EmCa Technologies</a>
                                                                                                     </div>`);
 
             w.document.write('</div>');

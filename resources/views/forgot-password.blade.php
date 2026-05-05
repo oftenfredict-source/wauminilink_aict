@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waumini Link - Forgot Password</title>
+    <title>AIC Moshi Kilimanjaro - Forgot Password</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -322,7 +322,7 @@
     <!-- Navbar/Header -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="{{ route('landing_page') }}">
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo">
+            <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo">
         </a>
     </nav>
 

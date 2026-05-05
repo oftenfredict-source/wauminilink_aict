@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="Waumini Link - Church Management System">
+    <meta name="description" content="AIC Moshi Kilimanjaro - Church Management System">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Waumini Link - Church Management System</title>
+    <title>AIC Moshi Kilimanjaro - Church Management System</title>
 
     <link rel="icon" href="{{ asset('vaultedge/img/core-img/favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('vaultedge/style.css') }}">
@@ -209,13 +209,154 @@
             color: #940000 !important;
             font-weight: 700;
         }
+
+        /* Mobile Responsiveness Improvements */
+        @media only screen and (max-width: 991px) {
+            .ve-hero {
+                flex-direction: column !important;
+                height: auto !important;
+                padding-top: 120px !important;
+                padding-bottom: 60px !important;
+            }
+            .ve-hero-left, .ve-hero-right {
+                width: 100% !important;
+                flex: none !important;
+            }
+            .ve-hero-left {
+                text-align: center !important;
+                padding: 0 30px !important;
+                order: 2 !important;
+            }
+            .ve-hero-right {
+                height: 350px !important;
+                order: 1 !important;
+                margin-bottom: 40px !important;
+            }
+            .ve-hero-stats {
+                justify-content: center !important;
+            }
+            .ve-stat-divider {
+                height: 30px !important;
+                margin: 0 15px !important;
+            }
+        }
+
+        @media only screen and (max-width: 767px) {
+            .ve-hero-left h1 {
+                font-size: 2.2rem !important;
+            }
+            .ve-hero-left p {
+                font-size: 1rem !important;
+            }
+            .ve-hero-stats {
+                flex-wrap: wrap !important;
+                gap: 15px !important;
+            }
+            .ve-stat-divider {
+                display: none !important;
+            }
+            .ve-stat {
+                width: 45% !important;
+            }
+            .ve-trust-bar {
+                overflow: hidden !important;
+            }
+            .ve-trust-inner {
+                display: flex !important;
+                width: max-content !important;
+                animation: marquee-scroll 20s linear infinite !important;
+            }
+            .ve-trust-inner span {
+                padding: 0 20px !important;
+                white-space: nowrap !important;
+            }
+            @keyframes marquee-scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+            }
+            .ve-footer-bottom-inner {
+                flex-direction: column !important;
+                text-align: center !important;
+                gap: 10px !important;
+            }
+            .ve-section-header h2 {
+                font-size: 2rem !important;
+            }
+        }
+
+        /* Centering Footer & Why Us Image */
+        .ve-whyus-section .row {
+            justify-content: center !important;
+        }
+        .ve-whyus-img-wrap {
+            margin: 0 auto 30px !important;
+            max-width: 500px;
+            display: block !important;
+        }
+        .ve-whyus-img-main {
+            margin: 0 auto !important;
+        }
+        .ve-footer .col-12 {
+            text-align: center !important;
+            margin-bottom: 40px;
+        }
+        .ve-footer-title::after {
+            left: 50% !important;
+            transform: translateX(-50%);
+        }
+        .ve-footer-links, .ve-footer-contact {
+            display: inline-block;
+            text-align: left;
+            padding: 0 !important;
+        }
+        .ve-footer-links li a, .ve-footer-contact li {
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        .ve-footer-links li a i, .ve-footer-contact li i {
+            margin-right: 8px !important;
+        }
+        .ve-social {
+            justify-content: center !important;
+            display: flex;
+        }
+
+        /* Hero Button Centering & Widening */
+        .ve-hero-btns {
+            justify-content: center !important;
+            display: flex !important;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .ve-hero-btns .ve-btn-primary {
+            min-width: 280px !important;
+            padding: 18px 50px !important;
+            font-size: 1.2rem !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* Section Spacing Overrides */
+        .ve-section {
+            padding: 70px 0 !important;
+        }
+        .ve-services-section {
+            padding-bottom: 20px !important;
+        }
+        .ve-whyus-section {
+            padding-top: 20px !important;
+        }
+        .ve-services-grid {
+            margin-bottom: 0 !important;
+        }
     </style>
 </head>
 
 <body>
     <!-- Preloader -->
     <div class="preloader d-flex flex-column align-items-center justify-content-center" style="background-color: #121212;">
-        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" style="height: 80px; width: auto; margin-bottom: 30px; animation: pulse 2s infinite ease-in-out;">
+        <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo" style="height: 140px; width: auto; margin-bottom: 30px; animation: pulse 2s infinite ease-in-out;">
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
         <div style="margin-top: 40px; font-size: 13px; color: rgba(255, 255, 255, 0.6); letter-spacing: 0.2rem; text-transform: uppercase;">
             Powered by <span style="color: #940000; font-weight: 600;">EmCa Technologies</span>
@@ -237,7 +378,7 @@
             <!-- Logo -->
             <div class="ve-logo">
                 <a href="{{ route('landing_page') }}">
-                    <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link" style="height: 60px; width: auto;">
+                    <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Moshi Kilimanjaro" style="height: 100px; width: auto;">
                 </a>
             </div>
 
@@ -279,34 +420,34 @@
     <section class="ve-hero">
         <!-- Left Panel -->
         <div class="ve-hero-left">
-            <span class="ve-hero-badge">Empowering Faith Through Technology</span>
-            <h1>Connecting <span class="ve-highlight">Believers</span><br>Empowering Churches</h1>
-            <p>Waumini Link delivers intelligent, data-driven church management strategies and personalised guidance to help your congregation grow.</p>
+            <span class="ve-hero-badge">Walking in Faith, Growing in Christ</span>
+            <h1>Welcome to <span class="ve-highlight">AICT</span><br>Moshi Kilimanjaro</h1>
+            <p style="font-weight: 600; font-size: 1.25rem; color: #940000; margin-bottom: 10px;">A Place of Faith, Love, and Hope</p>
+            <p>AICT Moshi is a church devoted to worshiping God, building a strong community of believers, and guiding each member in their spiritual journey through the Word, fellowship, and service.</p>
             <div class="ve-hero-btns">
-                <a href="{{ route('login') }}" class="ve-btn-primary" style="background-color: #940000; border-color: #940000; color: #ffffff;">View Demo</a>
-                <a href="#about" class="ve-btn-ghost" style="color: #940000; border-color: #940000;">Learn More</a>
+                <a href="{{ route('login') }}" class="ve-btn-primary" style="background-color: #940000; border-color: #940000; color: #ffffff;">Login</a>
             </div>
             <!-- Quick Stats Row -->
             <div class="ve-hero-stats">
                 <div class="ve-stat">
                     <strong>5,000+</strong>
-                    <span>Members Tracked</span>
+                    <span>Believers</span>
                 </div>
                 <div class="ve-stat-divider"></div>
                 <div class="ve-stat">
                     <strong>100%</strong>
-                    <span>Transparency</span>
+                    <span>Trust & Integrity</span>
                 </div>
                 <div class="ve-stat-divider"></div>
                 <div class="ve-stat">
                     <strong>24/7</strong>
-                    <span>Support</span>
+                    <span>Spiritual Care</span>
                 </div>
             </div>
         </div>
         <!-- Right Panel -->
         <div class="ve-hero-right">
-            <div class="ve-hero-img-main bg-img" style="background-image:url({{ asset('assets/images/church1.jpg') }});"></div>
+            <div class="ve-hero-img-main bg-img" style="background-image:url({{ asset('assets/images/aict.jpeg') }});"></div>
             <div class="ve-hero-img-accent bg-img" style="background-image:url({{ asset('assets/images/church4.jpg') }});"></div>
             <!-- Floating card -->
             <div class="ve-float-card">
@@ -336,39 +477,39 @@
         <div class="container">
             <div class="ve-section-header text-center">
                 <span class="ve-section-tag">What We Offer</span>
-                <h2>Comprehensive Church <span>Solutions</span></h2>
-                <p>From member management to financial tracking — we cover every aspect of your church administration.</p>
+                <h2>Ministries & Church <span>Life</span></h2>
+                <p>At AICT Moshi Kilimanjaro, we provide a welcoming environment where everyone can grow in faith and serve God together.</p>
             </div>
             <div class="ve-services-grid">
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="100ms">
-                    <div class="ve-service-icon"><i class="fa fa-users"></i></div>
-                    <h4>Member Management</h4>
-                    <p>Maintain a centralized database of all church members, including families and children.</p>
+                    <div class="ve-service-icon"><i class="fa fa-book"></i></div>
+                    <h4>Spiritual Growth & Discipleship</h4>
+                    <p>We guide believers in their journey of faith through biblical teachings, discipleship programs, and spiritual mentorship.</p>
                 </div>
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="200ms">
-                    <div class="ve-service-icon"><i class="fa fa-money"></i></div>
-                    <h4>Financial Tracking</h4>
-                    <p>Seamlessly track tithes, offerings, and donations with automated reporting.</p>
+                    <div class="ve-service-icon"><i class="fa fa-heart"></i></div>
+                    <h4>Fellowship & Community Building</h4>
+                    <p>We create a loving and united church family where members connect, support one another, and grow together in Christ.</p>
                 </div>
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="300ms">
-                    <div class="ve-service-icon"><i class="fa fa-calendar"></i></div>
-                    <h4>Attendance Control</h4>
-                    <p>Monitor attendance for services and special events using digital tools.</p>
+                    <div class="ve-service-icon"><i class="fa fa-music"></i></div>
+                    <h4>Worship Services & Events</h4>
+                    <p>We organize inspiring worship services, prayer meetings, and special events that bring people closer to God.</p>
                 </div>
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="400ms">
-                    <div class="ve-service-icon"><i class="fa fa-bullhorn"></i></div>
-                    <h4>Announcement System</h4>
-                    <p>Broadcast important information to your congregation via SMS and notifications.</p>
+                    <div class="ve-service-icon"><i class="fa fa-gift"></i></div>
+                    <h4>Giving & Stewardship</h4>
+                    <p>We encourage faithful giving and ensure responsible, transparent use of resources to support the mission of the church.</p>
                 </div>
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="500ms">
-                    <div class="ve-service-icon"><i class="fa fa-line-chart"></i></div>
-                    <h4>Transparent Reports</h4>
-                    <p>Get real-time insights into your church's growth and financial health.</p>
+                    <div class="ve-service-icon"><i class="fa fa-comments"></i></div>
+                    <h4>Church Communication</h4>
+                    <p>We keep everyone informed and connected through timely announcements, updates, and shared information.</p>
                 </div>
                 <div class="ve-service-card wow fadeInUp" data-wow-delay="600ms">
-                    <div class="ve-service-icon"><i class="fa fa-mobile"></i></div>
-                    <h4>Mobile Accessible</h4>
-                    <p>Access your church data anytime, anywhere from any device.</p>
+                    <div class="ve-service-icon"><i class="fa fa-life-ring"></i></div>
+                    <h4>Care & Support for Members</h4>
+                    <p>We provide spiritual care, guidance, and support to members in times of need, strengthening faith and hope.</p>
                 </div>
             </div>
         </div>
@@ -381,7 +522,7 @@
                 <!-- Image Side -->
                 <div class="col-12 col-lg-5">
                     <div class="ve-whyus-img-wrap wow fadeInLeft" data-wow-delay="100ms">
-                        <div class="ve-whyus-img-main bg-img" style="background-image:url({{ asset('assets/images/church2.jpg') }});"></div>
+                        <div class="ve-whyus-img-main bg-img" style="background-image:url({{ asset('assets/images/aict.jpeg') }});"></div>
                         <div class="ve-whyus-badge">
                             <strong>100%</strong>
                             <span>Dedicated to Church Growth</span>
@@ -391,24 +532,24 @@
                 <!-- Content Side -->
                 <div class="col-12 col-lg-7 wow fadeInRight" data-wow-delay="200ms">
                     <div class="ve-whyus-content">
-                        <span class="ve-section-tag">Why Waumini Link</span>
-                        <h2>A Smarter Way to Manage <span>Your Church</span></h2>
-                        <p>We combine church expertise with cutting-edge technology to deliver outcomes that streamline your administration — all while keeping your mission first.</p>
+                        <span class="ve-section-tag">Why AICT Moshi Kilimanjaro</span>
+                        <h2>A Church That <span>Cares and Grows</span></h2>
+                        <p>At AICT Moshi Kilimanjaro, we are committed to fostering a spiritual environment where love, faith, and community thrive, ensuring every member feels valued and supported in their journey with Christ.</p>
                         <div class="ve-checklist">
                             <div class="ve-check-item">
                                 <i class="fa fa-check-circle"></i>
-                                <div><strong>Personalised Support</strong><p>Our team is here to help you set up and manage your system.</p></div>
+                                <div><strong>Dedicated Support</strong><p>Guiding and supporting members in every aspect of church life.</p></div>
                             </div>
                             <div class="ve-check-item">
                                 <i class="fa fa-check-circle"></i>
-                                <div><strong>Transparent Finance</strong><p>Clear, automated tracking of all church contributions and expenses.</p></div>
+                                <div><strong>Faithful Stewardship</strong><p>Ensuring transparency in all church resources.</p></div>
                             </div>
                             <div class="ve-check-item">
                                 <i class="fa fa-check-circle"></i>
-                                <div><strong>Scalable Solution</strong><p>Whether you're a small chapel or a large cathedral, we grow with you.</p></div>
+                                <div><strong>Growing Together</strong><p>Building a strong church at every stage of growth.</p></div>
                             </div>
                         </div>
-                        <a href="{{ route('login') }}" class="ve-btn-primary mt-30" style="background-color: #940000; border-color: #940000; color: #ffffff;">View Demo</a>
+                        <a href="{{ route('login') }}" class="ve-btn-primary mt-30" style="background-color: #940000; border-color: #940000; color: #ffffff;">Login</a>
                     </div>
                 </div>
             </div>
@@ -421,8 +562,8 @@
         <div class="container ve-cta-content">
             <div class="row align-items-center">
                 <div class="col-12 col-lg-8">
-                    <h2>Ready to Take Control of Your <span>Church Administration?</span></h2>
-                    <p>Join hundreds of churches already using Waumini Link to empower their congregation.</p>
+                    <h2>Ready to Join Our Community and <span>Grow in Faith?</span></h2>
+                    <p>Experience the warmth of our church family and the power of spiritual connection at AICT Moshi Kilimanjaro.</p>
                 </div>
                 <div class="col-12 col-lg-4 text-lg-right">
                     <a href="{{ route('login') }}" class="ve-btn-white">Go to Dashboard</a>
@@ -437,9 +578,9 @@
             <div class="row">
                 <!-- Col 1: About -->
                 <div class="col-12 col-md-6 col-lg-3 mb-50">
-                    <h5 class="ve-footer-title">About Waumini Link</h5>
+                    <h5 class="ve-footer-title">About AICT Moshi</h5>
                     <p style="color: rgba(255,255,255,0.7); line-height: 1.8; margin-bottom: 25px;">
-                        Your comprehensive church management system designed to streamline member administration, financial tracking, and community engagement.
+                        A church family devoted to worshiping God, building a strong community of believers, and guiding each member in their spiritual journey through faith, love, and service.
                     </p>
                     <div class="ve-social">
                         <a href="#"><i class="fa fa-facebook"></i></a>
@@ -475,9 +616,9 @@
                 <div class="col-12 col-md-6 col-lg-3 mb-50">
                     <h5 class="ve-footer-title">Our Services</h5>
                     <ul class="ve-footer-links">
-                        <li><a href="#"><i class="fa fa-users"></i> Member Management</a></li>
-                        <li><a href="#"><i class="fa fa-line-chart"></i> Financial Reports</a></li>
-                        <li><a href="#"><i class="fa fa-check-square-o"></i> Attendance Tracking</a></li>
+                        <li><a href="#"><i class="fa fa-book"></i> Spiritual Growth</a></li>
+                        <li><a href="#"><i class="fa fa-music"></i> Worship Services</a></li>
+                        <li><a href="#"><i class="fa fa-heart"></i> Community Outreach</a></li>
                     </ul>
                 </div>
             </div>
@@ -487,7 +628,7 @@
         <div class="ve-footer-bottom">
             <div class="container">
                 <div class="ve-footer-bottom-inner">
-                    <p>&copy; {{ date('Y') }} Waumini Link. All rights reserved.</p>
+                    <p>&copy; {{ date('Y') }} AIC Moshi Kilimanjaro. All rights reserved.</p>
                     <p>Powered by <span class="emca-red">EmCa Technologies</span></p>
                 </div>
             </div>

@@ -18,7 +18,7 @@
         <meta name="description" content="" />
         <meta name="author" content="" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Waumini Link - Dashboard</title>
+        <title>AIC Moshi Kilimanjaro - Dashboard</title>
         <!-- Google Fonts - Montserrat as fallback (similar to Century Gothic) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1858,13 +1858,13 @@
         <nav class="{{ $navClasses }}" @if($navStyle)style="{{ $navStyle }}"@endif>
             <!-- Navbar Brand - Hidden on Mobile -->
             <a class="navbar-brand ps-3 d-none d-lg-flex align-items-center logo-white-section" href="{{ route('dashboard') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo" style="height: 45px; max-width: 180px; object-fit: contain;">
+                <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Moshi Kilimanjaro Logo" class="logo" style="height: 65px; max-width: 250px; object-fit: contain;">
             </a>
             <!-- Sidebar Toggle - First on Mobile -->
             <button class="btn btn-link btn-sm order-first order-lg-0 me-3 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars" style="color: #ffffff !important;"></i></button>
             <!-- Welcome Message -->
             <div class="navbar-text me-auto ms-2 ms-md-3" style="font-size: 1.1rem; font-weight: 600; color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <strong>Waumini Link</strong>
+                <strong>AIC Moshi Kilimanjaro</strong>
             </div>
 
             <!-- Navbar-->
@@ -2318,7 +2318,7 @@
     <div class="row align-items-center w-100">
       <!-- Left Side -->
       <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-        <small>&copy; <span id="year"></span> Waumini Link — Version 1.0</small>
+        <small>&copy; <span id="year"></span> AIC Moshi Kilimanjaro — Version 1.0</small>
       </div>
 
       <!-- Right Side -->

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waumini Link - Welcome</title>
+    <title>AIC Moshi Kilimanjaro - Welcome</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -46,7 +46,7 @@
             text-align: center;
             color: white;
             overflow: hidden;
-            background: url('{{ asset("assets/images/church.jpg") }}') no-repeat center center;
+            background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
             background-size: cover;
         }
 
@@ -568,7 +568,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="#">
-            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" style="height: 50px; width: auto;">
+            <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo" style="height: 90px; width: auto;">
         </a>
     </nav>
 
@@ -576,9 +576,9 @@
     <section class="hero">
 
         <div class="hero-content">
-            <h1>Welcome to Waumini Link</h1>
+            <h1>Welcome to AIC Moshi Kilimanjaro</h1>
             <p>Your central system to manage all church members efficiently</p>
-            <a href="{{ route('login') }}" class="btn btn-welcome">View Demo</a>
+            <a href="{{ route('login') }}" class="btn btn-welcome">Login</a>
         </div>
     </section>
 
@@ -586,7 +586,7 @@
     <section class="features">
         <div class="container">
             <div class="text-center mb-5">
-                <h2>Why Waumini Link?</h2>
+                <h2>Why AIC Moshi Kilimanjaro?</h2>
                 <p>Manage all your church members efficiently with ease</p>
             </div>
             <div class="row g-4">
@@ -624,9 +624,8 @@
             <div class="footer-content">
                 <!-- About Section -->
                 <div class="footer-section">
-                    <h5>About Waumini Link</h5>
-                    <p>Your comprehensive church management system designed to streamline member administration,
-                        financial tracking, and community engagement.</p>
+                    <h5>About AICT Moshi</h5>
+                    <p>A church family devoted to worshiping God, building a strong community of believers, and guiding each member in their spiritual journey through faith, love, and service.</p>
                     <div class="footer-social">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
@@ -675,12 +674,12 @@
                 <div class="footer-section">
                     <h5>Our Services</h5>
                     <ul class="footer-links">
-                        <li><a href="#"><i class="fas fa-users"></i> Member Management</a></li>
-                        <li><a href="#"><i class="fas fa-chart-line"></i> Financial Reports</a></li>
-                        <li><a href="#"><i class="fas fa-calendar-check"></i> Attendance Tracking</a></li>
-                        <li><a href="#"><i class="fas fa-bullhorn"></i> Announcements</a></li>
-                        <li><a href="#"><i class="fas fa-id-card"></i> Identity Cards</a></li>
-                        <li><a href="#"><i class="fas fa-bell"></i> SMS Notifications</a></li>
+                        <li><a href="#"><i class="fas fa-book"></i> Spiritual Growth</a></li>
+                        <li><a href="#"><i class="fas fa-music"></i> Worship Services</a></li>
+                        <li><a href="#"><i class="fas fa-heart"></i> Community Outreach</a></li>
+                        <li><a href="#"><i class="fas fa-bullhorn"></i> Church Announcements</a></li>
+                        <li><a href="#"><i class="fas fa-hands-helping"></i> Member Support</a></li>
+                        <li><a href="#"><i class="fas fa-pray"></i> Prayer Requests</a></li>
                     </ul>
                 </div>
             </div>
@@ -688,7 +687,7 @@
 
         <div class="footer-bottom">
             <div class="footer-bottom-content">
-                <p>&copy; {{ date('Y') }} Waumini Link. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} AIC Moshi Kilimanjaro. All rights reserved.</p>
                 <div class="powered-by">
                     <span>Powered by</span>
                     <img src="{{ asset('assets/images/emca_logo.png') }}" alt="EmCa Technologies">

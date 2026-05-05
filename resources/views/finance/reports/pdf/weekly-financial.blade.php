@@ -290,7 +290,7 @@
             <table style="width:100%;border-collapse:collapse;">
                 <tr>
                     <td>
-                        <div class="church-name">&#9962; WauminiLink &mdash; Financial Management</div>
+                        <div class="church-name">&#9962; AIC Moshi Kilimanjaro &mdash; Financial Management</div>
                         <div class="report-title">Weekly Financial Report</div>
                         <div class="report-subtitle">Period: {{ $startDate->format('M d') }} &mdash;
                             {{ $endDate->format('M d, Y') }}</div>
@@ -468,7 +468,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <strong>WauminiLink Financial Management System</strong> &mdash; Weekly Financial Report<br>
+            <strong>AIC Moshi Kilimanjaro Financial Management System</strong> &mdash; Weekly Financial Report<br>
             Generated: {{ now()->format('F d, Y \a\t h:i A') }} &nbsp;|&nbsp; Confidential Financial Report<br>
             <span style="color:#bbb;">This is a computer-generated report. No signature required.</span>
         </div>

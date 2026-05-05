@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waumini Link - Reset Password</title>
+    <title>AIC Moshi Kilimanjaro - Reset Password</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -321,7 +321,7 @@
     <!-- Navbar/Header -->
     <nav class="navbar navbar-custom">
         <a class="navbar-brand" href="{{ route('landing_page') }}">
-                <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" class="logo">
+                <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo" class="logo">
         </a>
     </nav>
 
@@ -342,7 +342,7 @@
                 @csrf
                 <input type="hidden" name="token" value="{{ $token }}">
 
-                <img src="{{ asset('assets/images/aict.png') }}" alt="Waumini Link Logo" class="logo">
+                <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo" class="logo">
                 <h2>Reset Password</h2>
                 <p>Enter your email and choose a new password.</p>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waumini Link - Login</title>
+<title>AIC Moshi Kilimanjaro - Login</title>
 
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}?v={{ time() }}">
@@ -63,7 +63,7 @@
     /* Left side background */
     .login-left {
         flex: 1;
-        background: url('{{ asset("assets/images/church.jpg") }}') no-repeat center center;
+        background: url('{{ asset("assets/images/aict.jpeg") }}') no-repeat center center;
         background-size: cover;
         position: relative;
         color: #fff;
@@ -137,7 +137,7 @@
     .login-form .logo {
         display: block;
         margin: 0 auto 20px;
-        height: 120px;
+        height: 180px;
         transition: all 0.3s ease;
     }
     .login-form .logo:hover {
@@ -631,7 +631,7 @@
 <!-- Navbar/Header -->
 <nav class="navbar navbar-custom">
     <a class="navbar-brand" href="{{ route('landing_page') }}">
-        <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo" style="height: 50px; width: auto;">
+        <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo" style="height: 50px; width: auto;">
     </a>
 </nav>
 

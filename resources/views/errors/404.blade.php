@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found | Waumini Link</title>
+    <title>404 - Page Not Found | AIC Moshi Kilimanjaro</title>
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
     <script src="{{ asset('assets/js/fontawesome.min.js') }}" crossorigin="anonymous"></script>
     <style>

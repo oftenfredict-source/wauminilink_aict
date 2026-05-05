@@ -60,7 +60,7 @@
                     <div
                         style="display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
                         <div style="flex: 0 0 100px;">
-                            <img src="{{ asset('assets/images/waumini_link_logo.png') }}" alt="Waumini Link Logo"
+                            <img src="{{ asset('assets/images/aict.png') }}" alt="AIC Logo"
                                 style="height: 80px; width: auto;">
                         </div>
                         <div style="flex: 1; text-align: center;">
@@ -399,7 +399,7 @@
         </div>
         <div
             style="margin-top: 60px; text-align: center; border-top: 1px solid #eee; padding-top: 10px; font-size: 10px; color: #666;">
-            This report was generated automatically by WauminiLink Financial System on {{ date('M d, Y H:i:s') }}
+            This report was generated automatically by AIC Moshi Kilimanjaro Financial System on {{ date('M d, Y H:i:s') }}
         </div>
     </div>
     </div>
