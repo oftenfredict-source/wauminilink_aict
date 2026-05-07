@@ -23,10 +23,10 @@ class AuthApiController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'phone_number' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ], [
-            'phone_number.required' => 'Phone number is required.',
+            'username.required' => 'Email, Member ID or Phone number is required.',
             'password.required' => 'Password is required.',
         ]);
 
@@ -38,33 +38,21 @@ class AuthApiController extends Controller
             ], 422);
         }
 
-        $phoneNumber = $request->input('phone_number');
+        $username = $request->input('username');
         $password = $request->input('password');
 
-        // Normalize phone number (remove spaces, dashes, etc.)
-        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber);
-
-        // Try to find user by phone_number in users table
-        $user = User::where('phone_number', $phoneNumber)
-            ->orWhere('phone_number', 'like', '%' . $phoneNumber . '%')
+        // Try to find user by email, phone_number, or through member_id
+        $user = User::where('email', $username)
+            ->orWhere('phone_number', $username)
+            ->orWhereHas('member', function($query) use ($username) {
+                $query->where('member_id', $username);
+            })
             ->first();
-
-        // If not found in users table, try to find through member relationship
-        if (!$user) {
-            $member = Member::where('phone_number', $phoneNumber)
-                ->orWhere('phone_number', 'like', '%' . $phoneNumber . '%')
-                ->first();
-
-            if ($member) {
-                // Find user associated with this member
-                $user = User::where('member_id', $member->id)->first();
-            }
-        }
 
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid phone number or password.'
+                'message' => 'Invalid credentials.'
             ], 401);
         }
 
@@ -114,21 +102,24 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        // Ensure user is a member
-        if (!$user->isMember() || !$user->member_id) {
+        // Ensure user has access (Admins, Pastors, and Members can all use the app)
+        if (!$user->member_id && !$user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Access denied. Only members can access the mobile app.'
+                'message' => 'Access denied. Your account is not linked to a member record.'
             ], 403);
         }
 
-        // Verify member exists
-        $member = $user->member;
-        if (!$member) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member record not found.'
-            ], 404);
+        // Verify member exists if they have a member_id
+        $member = null;
+        if ($user->member_id) {
+            $member = $user->member;
+            if (!$member) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Member record not found.'
+                ], 404);
+            }
         }
 
         // Revoke existing tokens (optional - for single device login)
@@ -161,16 +152,16 @@ class AuthApiController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'phone_number' => $user->phone_number ?? $member->phone_number,
+                    'phone_number' => $user->phone_number ?? ($member ? $member->phone_number : null),
                     'role' => $user->role,
                 ],
-                'member' => [
+                'member' => $member ? [
                     'id' => $member->id,
                     'member_id' => $member->member_id,
                     'full_name' => $member->full_name,
                     'email' => $member->email,
                     'phone_number' => $member->phone_number,
-                ],
+                ] : null,
                 'token' => $token,
                 'token_type' => 'Bearer',
             ]

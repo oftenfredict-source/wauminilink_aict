@@ -13,6 +13,9 @@ use Illuminate\Session\Events\SessionStarted;
 use App\Notifications\Channels\SmsChannel;
 use App\Services\SmsService;
 use App\Session\DatabaseSessionHandler;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -132,5 +135,10 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Log or handle error if necessary
         }
+
+        // Define API rate limiter
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

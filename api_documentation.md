@@ -3,7 +3,7 @@
 This documentation provides details on the API endpoints available for the WauminiLink mobile application.
 
 ## Base URL
-`https://aict-moshi.wauminilink.co.tz/api`
+`http://192.168.100.114:8000/api`
 
 ## Authentication
 The API uses **Laravel Sanctum** for authentication. Most endpoints require a Bearer Token.
@@ -18,7 +18,7 @@ The API uses **Laravel Sanctum** for authentication. Most endpoints require a Be
 *   **Body:**
     ```json
     {
-        "email": "user@example.com",
+        "username": "user@example.com OR MemberID",
         "password": "password123",
         "device_name": "iPhone 13"
     }
@@ -121,6 +121,55 @@ The API uses **Laravel Sanctum** for authentication. Most endpoints require a Be
 *   **Method:** `GET`
 *   **Headers:** `Authorization: Bearer [token]`
 *   **Description:** Returns a summary of profile, financial status, and latest announcements in one request.
+
+---
+
+## 8. Prayer Requests (Maombi)
+
+### Get My Prayer Requests
+*   **URL:** `/member/prayer-requests`
+*   **Method:** `GET`
+*   **Headers:** `Authorization: Bearer [token]`
+
+### Send New Prayer Request
+*   **URL:** `/member/prayer-requests`
+*   **Method:** `POST`
+*   **Headers:** `Authorization: Bearer [token]`
+*   **Body:**
+    ```json
+    {
+        "subject": "Ombi la Afya",
+        "content": "Naomba mniombee kwa ajili ya afya yangu...",
+        "is_anonymous": false
+    }
+    ```
+
+---
+
+## 9. Attendance via QR Code (Mahudhurio)
+
+### Scan QR Code to Record Attendance
+*   **URL:** `/member/attendance/scan`
+*   **Method:** `POST`
+*   **Headers:** `Authorization: Bearer [token]`
+*   **Body:**
+    ```json
+    {
+        "qr_code": "QR_CODE_STRING_FROM_SCANNER"
+    }
+    ```
+*   **Success Response:**
+    ```json
+    {
+        "success": true,
+        "message": "Attendance recorded successfully!",
+        "data": {
+            "service_name": "Ibada ya Asubuhi",
+            "type": "sunday_service",
+            "time": "2026-05-07 10:00:00"
+        }
+    }
+    ```
 
 ---
 

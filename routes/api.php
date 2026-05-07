@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\SettingsApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\MemberApiController;
 use App\Http\Controllers\Api\DepartmentApiController;
+use App\Http\Controllers\Api\PrayerRequestApiController;
+use App\Http\Controllers\Api\AttendanceApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +41,14 @@ Route::prefix('member')->middleware('auth:sanctum')->group(function () {
     Route::get('/announcements', [MemberApiController::class, 'announcements']);
     Route::post('/announcements/{announcementId}/read', [MemberApiController::class, 'markAnnouncementAsRead']);
     Route::get('/leaders', [MemberApiController::class, 'leaders']);
+    
+    // Prayer Request Routes
+    Route::get('/prayer-requests', [PrayerRequestApiController::class, 'index']);
+    Route::post('/prayer-requests', [PrayerRequestApiController::class, 'store']);
+    Route::get('/prayer-requests/{id}', [PrayerRequestApiController::class, 'show']);
+    
+    // Attendance QR Route
+    Route::post('/attendance/scan', [AttendanceApiController::class, 'scan']);
 });
 
 // Department API Routes (Protected)
