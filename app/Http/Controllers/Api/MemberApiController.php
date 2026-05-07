@@ -18,6 +18,7 @@ use App\Models\Leader;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class MemberApiController extends Controller
@@ -92,6 +93,157 @@ class MemberApiController extends Controller
                 'leadership' => $leadershipData,
             ]
         ], 200);
+    }
+
+    /**
+     * Get member profile
+     */
+    public function profile(): JsonResponse
+    {
+        $user = Auth::user();
+        $member = $user->member;
+
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member record not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $member->id,
+                'member_id' => $member->member_id,
+                'full_name' => $member->full_name,
+                'email' => $member->email,
+                'phone_number' => $member->phone_number,
+                'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('Y-m-d') : null,
+                'gender' => $member->gender,
+                'address' => $member->address,
+                'membership_type' => $member->membership_type,
+                'profession' => $member->profession,
+                'region' => $member->region,
+                'district' => $member->district,
+            ]
+        ]);
+    }
+
+    /**
+     * Update member profile (Account settings)
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $member = $user->member;
+
+        if (!$member) {
+            return response()->json(['success' => false, 'message' => 'Member not found.'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'full_name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:members,email,' . $member->id,
+            'phone_number' => 'sometimes|string|max:20',
+            'address' => 'sometimes|string',
+            'profession' => 'sometimes|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $member->update($request->only(['full_name', 'email', 'phone_number', 'address', 'profession']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'data' => $member
+        ]);
+    }
+
+    /**
+     * Get Sunday Services
+     */
+    public function services(): JsonResponse
+    {
+        $now = Carbon::now();
+        $services = SundayService::whereDate('service_date', '>=', $now->toDateString())
+            ->orderBy('service_date')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $services
+        ]);
+    }
+
+    /**
+     * Get Special Events
+     */
+    public function events(): JsonResponse
+    {
+        $now = Carbon::now();
+        $events = SpecialEvent::whereDate('event_date', '>=', $now->toDateString())
+            ->orderBy('event_date')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $events
+        ]);
+    }
+
+    /**
+     * Get Announcements
+     */
+    public function announcements(): JsonResponse
+    {
+        $user = Auth::user();
+        $member = $user->member;
+        
+        $announcements = Announcement::active()
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($announcement) use ($member) {
+                $isUnread = false;
+                if ($member) {
+                    $isUnread = !AnnouncementView::where('announcement_id', $announcement->id)
+                        ->where('member_id', $member->id)
+                        ->exists();
+                }
+
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'content' => $announcement->content,
+                    'is_pinned' => $announcement->is_pinned,
+                    'is_unread' => $isUnread,
+                    'created_at' => $announcement->created_at->toISOString(),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $announcements
+        ]);
+    }
+
+    /**
+     * Get leadership data
+     */
+    public function leaders(): JsonResponse
+    {
+        $user = Auth::user();
+        $member = $user->member;
+        
+        $leadershipData = $this->getLeadershipData($member);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $leadershipData
+        ]);
     }
 
     /**

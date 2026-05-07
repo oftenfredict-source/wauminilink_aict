@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SettingsApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\MemberApiController;
+use App\Http\Controllers\Api\DepartmentApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,7 +32,19 @@ Route::prefix('auth')->group(function () {
 // Member Dashboard API Routes (Protected)
 Route::prefix('member')->middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [MemberApiController::class, 'dashboard']);
+    Route::get('/profile', [MemberApiController::class, 'profile']);
+    Route::post('/profile', [MemberApiController::class, 'updateProfile']);
+    Route::get('/services', [MemberApiController::class, 'services']);
+    Route::get('/events', [MemberApiController::class, 'events']);
+    Route::get('/announcements', [MemberApiController::class, 'announcements']);
     Route::post('/announcements/{announcementId}/read', [MemberApiController::class, 'markAnnouncementAsRead']);
+    Route::get('/leaders', [MemberApiController::class, 'leaders']);
+});
+
+// Department API Routes (Protected)
+Route::prefix('departments')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [DepartmentApiController::class, 'index']);
+    Route::get('/{id}', [DepartmentApiController::class, 'show']);
 });
 
 // Settings API Routes
