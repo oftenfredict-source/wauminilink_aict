@@ -112,10 +112,28 @@
                         
                         <div class="row">
                             <div class="col-12">
-                                <h5 class="mb-3" style="color: #940000 !important;">
-                                    <i class="{{ $categories[$categoryKey]['icon'] }} me-2"></i>
-                                    {{ $categories[$categoryKey]['name'] }}
-                                </h5>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0" style="color: #940000 !important;">
+                                        <i class="{{ $categories[$categoryKey]['icon'] }} me-2"></i>
+                                        {{ $categories[$categoryKey]['name'] }}
+                                    </h5>
+                                    @if($categoryKey === 'backup' && (auth()->user()->isAdmin()))
+                                        <div class="d-flex align-items-center">
+                                            @if(env('GOOGLE_DRIVE_REFRESH_TOKEN'))
+                                                <span class="badge bg-success me-3">
+                                                    <i class="fas fa-check-circle me-1"></i>Google Drive Connected
+                                                </span>
+                                            @else
+                                                <span class="badge bg-warning text-dark me-3">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Google Drive Not Connected
+                                                </span>
+                                            @endif
+                                            <a href="{{ route('google.auth') }}" class="btn btn-sm text-white" style="background-color: #4285F4; border-color: #4285F4;">
+                                                <i class="fab fa-google me-2"></i>Connect / Re-authenticate Google Drive
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
                                 <p class="text-muted mb-4">{{ $categories[$categoryKey]['description'] }}</p>
                             </div>
                         </div>

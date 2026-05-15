@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\MemberApiController;
 use App\Http\Controllers\Api\DepartmentApiController;
 use App\Http\Controllers\Api\PrayerRequestApiController;
 use App\Http\Controllers\Api\AttendanceApiController;
+use App\Http\Controllers\Api\BereavementApiController;
+use App\Http\Controllers\Api\ServiceApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,8 +33,8 @@ Route::prefix('auth')->group(function () {
     Route::get('/me', [AuthApiController::class, 'me'])->middleware('auth:sanctum');
 });
 
-// Member Dashboard API Routes (Protected)
-Route::prefix('member')->middleware('auth:sanctum')->group(function () {
+// Protected Mobile API Routes
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [MemberApiController::class, 'dashboard']);
     Route::get('/profile', [MemberApiController::class, 'profile']);
     Route::post('/profile', [MemberApiController::class, 'updateProfile']);
@@ -49,6 +51,24 @@ Route::prefix('member')->middleware('auth:sanctum')->group(function () {
     
     // Attendance QR Route
     Route::post('/attendance/scan', [AttendanceApiController::class, 'scan']);
+    
+    // Bereavement Routes
+    Route::get('/bereavement', [BereavementApiController::class, 'index']);
+    Route::get('/bereavement/history', [BereavementApiController::class, 'myHistory']);
+    Route::get('/bereavement/{id}', [BereavementApiController::class, 'show']);
+    
+    // Additional Service Routes
+    Route::get('/annual-fees', [MemberApiController::class, 'annualFees']);
+    Route::get('/celebrations', [MemberApiController::class, 'celebrations']);
+    Route::post('/upload-receipt', [MemberApiController::class, 'uploadReceipt']);
+    Route::get('/assignments', [MemberApiController::class, 'assignments']);
+
+    // Service Explorer Routes
+    Route::get('/fellowships', [ServiceApiController::class, 'fellowships']);
+    Route::get('/sermons', [ServiceApiController::class, 'sermons']);
+    Route::get('/calendar', [ServiceApiController::class, 'calendar']);
+    Route::get('/service-requests', [ServiceApiController::class, 'myRequests']);
+    Route::post('/service-requests', [ServiceApiController::class, 'submitRequest']);
 });
 
 // Department API Routes (Protected)

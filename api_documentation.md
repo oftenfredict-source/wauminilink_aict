@@ -3,7 +3,7 @@
 This documentation provides details on the API endpoints available for the WauminiLink mobile application.
 
 ## Base URL
-`http://192.168.100.114:8000/api`
+`http://192.168.100.103:8000/api`
 
 ## Authentication
 The API uses **Laravel Sanctum** for authentication. Most endpoints require a Bearer Token.
@@ -170,6 +170,72 @@ The API uses **Laravel Sanctum** for authentication. Most endpoints require a Be
         }
     }
     ```
+
+---
+
+## 10. Financial & Payments
+
+### Get Annual Fees Status
+*   **URL:** `/annual-fees`
+*   **Method:** `GET`
+*   **Headers:** `Authorization: Bearer [token]`
+*   **Response:**
+    ```json
+    {
+        "success": true,
+        "data": [
+            {
+                "id": 1,
+                "year": 2026,
+                "category": "Adult",
+                "amount": 2000.0,
+                "amount_paid": 500.0,
+                "balance": 1500.0,
+                "status": "pending"
+            }
+        ]
+    }
+    ```
+
+### Upload Payment Receipt
+*   **URL:** `/upload-receipt`
+*   **Method:** `POST`
+*   **Headers:** 
+    *   `Authorization: Bearer [token]`
+    *   `Content-Type: multipart/form-data`
+*   **Body (Form Data):**
+    *   `receipt_type`: "Tithe", "Offering", "Annual Fee", etc.
+    *   `amount`: 5000 (optional)
+    *   `reference_number`: "REF123" (optional)
+    *   `receipt_image`: [File Binary]
+    *   `notes`: "Malipo ya mwezi Mei" (optional)
+*   **Response:**
+    ```json
+    {
+        "success": true,
+        "message": "Receipt uploaded successfully.",
+        "data": { ... }
+    }
+    ```
+
+---
+
+## 11. Extra Services
+
+### Get Celebrations
+*   **URL:** `/celebrations`
+*   **Method:** `GET`
+*   **Headers:** `Authorization: Bearer [token]`
+
+### Get Weekly Assignments
+*   **URL:** `/assignments`
+*   **Method:** `GET`
+*   **Headers:** `Authorization: Bearer [token]`
+
+### Get Sermons
+*   **URL:** `/sermons`
+*   **Method:** `GET`
+*   **Headers:** `Authorization: Bearer [token]`
 
 ---
 

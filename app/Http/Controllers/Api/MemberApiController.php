@@ -3,136 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Member;
-use App\Models\Tithe;
-use App\Models\Offering;
-use App\Models\Donation;
-use App\Models\Pledge;
-use App\Models\PledgePayment;
-use App\Models\SpecialEvent;
-use App\Models\Celebration;
-use App\Models\SundayService;
 use App\Models\Announcement;
 use App\Models\AnnouncementView;
+use App\Models\Member;
+use App\Models\SundayService;
+use App\Models\SpecialEvent;
 use App\Models\Leader;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class MemberApiController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum');
-    }
-
     /**
-     * Get member dashboard data
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * Get dashboard data for the member
      */
-    public function dashboard(Request $request): JsonResponse
-    {
-        $user = Auth::user();
-
-        // Ensure user is a member
-        if (!$user->isMember() || !$user->member_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access. Only members can access this endpoint.'
-            ], 403);
-        }
-
-        $member = $user->member;
-
-        if (!$member) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member record not found.'
-            ], 404);
-        }
-
-        // Get member information
-        $memberInfo = [
-            'member_id' => $member->member_id,
-            'full_name' => $member->full_name,
-            'email' => $member->email,
-            'phone_number' => $member->phone_number,
-            'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('Y-m-d') : null,
-            'gender' => $member->gender,
-            'membership_type' => $member->membership_type,
-            'member_type' => $member->member_type,
-            'profession' => $member->profession,
-            'address' => $member->address,
-            'region' => $member->region,
-            'district' => $member->district,
-        ];
-
-        // Get financial summary
-        $financialSummary = $this->getFinancialSummary($member);
-
-        // Get announcements
-        $announcements = $this->getAnnouncements($member);
-
-        // Get unread announcements count
-        $unreadCount = $this->getUnreadAnnouncementsCount($member);
-
-        // Get leadership data
-        $leadershipData = $this->getLeadershipData($member);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'member_info' => $memberInfo,
-                'financial_summary' => $financialSummary,
-                'announcements' => $announcements,
-                'unread_announcements_count' => $unreadCount,
-                'leadership' => $leadershipData,
-            ]
-        ], 200);
-    }
-
     /**
-     * Get member profile
+     * Get user's annual fees status
      */
-    public function profile(): JsonResponse
-    {
-        $user = Auth::user();
-        $member = $user->member;
-
-        if (!$member) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member record not found.'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $member->id,
-                'member_id' => $member->member_id,
-                'full_name' => $member->full_name,
-                'email' => $member->email,
-                'phone_number' => $member->phone_number,
-                'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('Y-m-d') : null,
-                'gender' => $member->gender,
-                'address' => $member->address,
-                'membership_type' => $member->membership_type,
-                'profession' => $member->profession,
-                'region' => $member->region,
-                'district' => $member->district,
-            ]
-        ]);
-    }
-
-    /**
-     * Update member profile (Account settings)
-     */
-    public function updateProfile(Request $request): JsonResponse
+    public function annualFees(): JsonResponse
     {
         $user = Auth::user();
         $member = $user->member;
@@ -141,24 +33,218 @@ class MemberApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Member not found.'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:members,email,' . $member->id,
-            'phone_number' => 'sometimes|string|max:20',
-            'address' => 'sometimes|string',
-            'profession' => 'sometimes|string',
-        ]);
+        // Get the target amounts from settings
+        $adultAmount = (double)\App\Models\SystemSetting::getValue('annual_fee_adult', 2000);
+        $childAmount = (double)\App\Models\SystemSetting::getValue('annual_fee_child', 1000);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
-
-        $member->update($request->only(['full_name', 'email', 'phone_number', 'address', 'profession']));
+        $fees = \App\Models\AnnualFee::where('member_id', $member->id)
+            ->orderBy('year', 'desc')
+            ->get()
+            ->map(function ($fee) use ($adultAmount, $childAmount) {
+                // Determine target amount based on category
+                $target = (strtolower($fee->category) == 'child') ? $childAmount : $adultAmount;
+                
+                return [
+                    'id' => $fee->id,
+                    'year' => $fee->year,
+                    'category' => $fee->category ?? 'Adult',
+                    'amount' => $target, // The amount they SHOULD pay
+                    'amount_paid' => (double)$fee->amount, // The amount they HAVE paid
+                    'balance' => (double)($target - $fee->amount),
+                    'status' => $fee->approval_status == 'approved' ? 'paid' : 'pending',
+                ];
+            });
 
         return response()->json([
             'success' => true,
-            'message' => 'Profile updated successfully.',
-            'data' => $member
+            'data' => $fees
+        ]);
+    }
+
+    /**
+     * Get weekly assignments
+     */
+    public function assignments(): JsonResponse
+    {
+        $assignments = \App\Models\WeeklyAssignment::where('is_active', true)
+            ->where('date', '>=', Carbon::today())
+            ->orderBy('date', 'asc')
+            ->get()
+            ->map(function ($assignment) {
+                return [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'description' => $assignment->description,
+                    'date' => $assignment->date->format('Y-m-d'),
+                    'assigned_to' => $assignment->assigned_to,
+                    'type' => $assignment->type,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $assignments
+        ]);
+    }
+
+    public function dashboard(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $member = $user->member;
+
+            // Get basic info even if not a member
+            $memberInfo = $member ? [
+                'member_id' => $member->member_id,
+                'full_name' => $member->full_name,
+                'email' => $member->email,
+                'phone_number' => $member->phone_number,
+            ] : [
+                'full_name' => $user->name,
+                'email' => $user->email,
+                'member_id' => 'ADMIN',
+            ];
+
+            Log::info("Dashboard requested for user: " . $user->id);
+            // Get financial summary (only if member exists)
+            $financialSummary = [
+                'total_tithes' => 0,
+                'total_offerings' => 0,
+                'total_donations' => 0,
+                'total_pledges' => 0,
+                'total_pledge_payments' => 0,
+                'remaining_pledges' => 0,
+                'recent_transactions' => [],
+            ];
+
+            if ($member) {
+                try {
+                    Log::info("Fetching financial summary for member: " . $member->id);
+                    $financialSummary = $this->getFinancialSummary($member);
+                } catch (\Exception $e) {
+                    Log::error("Dashboard Financial Summary Error: " . $e->getMessage());
+                }
+            }
+
+            // Get announcements
+            $announcements = [];
+            try {
+                Log::info("Fetching announcements");
+                $announcements = $this->getAnnouncementsData($member);
+            } catch (\Exception $e) {
+                Log::error("Dashboard Announcements Error: " . $e->getMessage());
+            }
+
+            // Get unread announcements count
+            $unreadCount = 0;
+            if ($member) {
+                try {
+                    Log::info("Fetching unread count");
+                    $unreadCount = $this->getUnreadAnnouncementsCount($member);
+                } catch (\Exception $e) {
+                    Log::error("Dashboard Unread Count Error: " . $e->getMessage());
+                }
+            }
+
+            // Get leadership data
+            $leadershipData = [
+                'all_leaders' => [],
+                'my_positions' => []
+            ];
+            try {
+                Log::info("Fetching leadership data");
+                $leadershipData = $this->getLeadershipDataHelper($member);
+            } catch (\Exception $e) {
+                Log::error("Dashboard Leadership Error: " . $e->getMessage());
+            }
+
+            // Get upcoming services & events
+            $upcomingData = [
+                'services' => [],
+                'events' => []
+            ];
+            try {
+                Log::info("Fetching upcoming data");
+                $upcomingData = $this->getUpcomingData();
+            } catch (\Exception $e) {
+                Log::error("Dashboard Upcoming Data Error: " . $e->getMessage());
+            }
+            Log::info("Dashboard data compiled successfully");
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'member_info' => $memberInfo,
+                    'financial_summary' => $financialSummary,
+                    'announcements' => $announcements,
+                    'unread_announcements_count' => $unreadCount,
+                    'leadership' => $leadershipData,
+                    'upcoming_services' => $upcomingData['services'],
+                    'upcoming_events' => $upcomingData['events'],
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Critical Dashboard Error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hitilafu imetokea wakati wa kupakia dashboard.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get full member profile details
+     */
+    public function profile(): JsonResponse
+    {
+        $user = Auth::user();
+        $member = $user->member;
+
+        if (!$member) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'personal_info' => [
+                        'full_name' => $user->name,
+                        'member_id' => 'ADMIN',
+                        'email' => $user->email,
+                        'phone_number' => $user->phone_number ?? 'N/A',
+                    ]
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'personal_info' => [
+                    'full_name' => $member->full_name,
+                    'member_id' => $member->member_id,
+                    'gender' => $member->gender == 'male' ? 'Mwanaume' : 'Mwanamke',
+                    'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('d-m-Y') : 'N/A',
+                    'marital_status' => $member->marital_status,
+                    'email' => $member->email ?? $user->email,
+                    'phone_number' => $member->phone_number,
+                ],
+                'church_info' => [
+                    'member_type' => $member->member_type,
+                    'membership_type' => $member->membership_type,
+                    'envelope_number' => $member->envelope_number ?? 'N/A',
+                ],
+                'professional_info' => [
+                    'education_level' => $member->education_level,
+                    'profession' => $member->profession,
+                ],
+                'address_info' => [
+                    'residence' => "{$member->residence_region}, {$member->residence_district}, {$member->residence_ward}",
+                    'street' => $member->residence_street,
+                    'house_number' => $member->residence_house_number ?? 'N/A',
+                ],
+                'spouse_info' => $member->marital_status == 'married' ? [
+                    'name' => $member->spouse_full_name,
+                    'phone' => $member->spouse_phone_number,
+                ] : null,
+            ]
         ]);
     }
 
@@ -167,10 +253,30 @@ class MemberApiController extends Controller
      */
     public function services(): JsonResponse
     {
-        $now = Carbon::now();
-        $services = SundayService::whereDate('service_date', '>=', $now->toDateString())
-            ->orderBy('service_date')
-            ->get();
+        $services = SundayService::orderBy('service_date', 'desc')
+            ->get()
+            ->map(function ($service) {
+                return [
+                    'id' => $service->id,
+                    'title' => $service->theme ?? $service->service_type,
+                    'theme' => $service->theme,
+                    'service_type' => $service->service_type,
+                    'preacher' => $service->preacher,
+                    'coordinator' => optional($service->coordinator)->full_name ?? 'N/A',
+                    'church_elder' => optional($service->churchElder)->full_name ?? 'N/A',
+                    'start_time' => $service->start_time,
+                    'end_time' => $service->end_time,
+                    'venue' => $service->venue,
+                    'attendance' => $service->attendance_count,
+                    'guests' => $service->guests_count,
+                    'choir' => $service->choir,
+                    'scripture_readings' => $service->scripture_readings,
+                    'announcements' => $service->announcements,
+                    'notes' => $service->notes,
+                    'date' => $service->service_date,
+                    'status' => $service->status,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -183,10 +289,24 @@ class MemberApiController extends Controller
      */
     public function events(): JsonResponse
     {
-        $now = Carbon::now();
-        $events = SpecialEvent::whereDate('event_date', '>=', $now->toDateString())
-            ->orderBy('event_date')
-            ->get();
+        $events = SpecialEvent::orderBy('event_date', 'desc')
+            ->get()
+            ->map(function ($event) {
+                return [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'speaker' => $event->speaker,
+                    'event_date' => $event->event_date,
+                    'start_time' => $event->start_time,
+                    'end_time' => $event->end_time,
+                    'location' => $event->venue,
+                    'category' => $event->category,
+                    'description' => $event->description,
+                    'notes' => $event->notes,
+                    'attendance' => $event->attendance_count,
+                    'budget' => $event->budget_amount,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -202,8 +322,7 @@ class MemberApiController extends Controller
         $user = Auth::user();
         $member = $user->member;
         
-        $announcements = Announcement::active()
-            ->orderBy('is_pinned', 'desc')
+        $announcements = Announcement::orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($announcement) use ($member) {
@@ -231,141 +350,61 @@ class MemberApiController extends Controller
     }
 
     /**
-     * Get leadership data
+     * Mark announcement as read
      */
-    public function leaders(): JsonResponse
+    public function markAnnouncementAsRead($announcementId): JsonResponse
     {
         $user = Auth::user();
         $member = $user->member;
-        
-        $leadershipData = $this->getLeadershipData($member);
-        
-        return response()->json([
-            'success' => true,
-            'data' => $leadershipData
+
+        if (!$member) {
+            return response()->json(['success' => false, 'message' => 'Only members can mark announcements as read.'], 403);
+        }
+
+        AnnouncementView::firstOrCreate([
+            'announcement_id' => $announcementId,
+            'member_id' => $member->id
+        ], [
+            'viewed_at' => now()
         ]);
+
+        return response()->json(['success' => true]);
     }
 
     /**
-     * Get financial summary for the member
+     * Helper to get financial summary
      */
     private function getFinancialSummary($member)
     {
-        $currentYear = Carbon::now()->year;
-        $currentMonth = Carbon::now()->month;
-
-        // Get tithes - use approved scope method
-        $totalTithes = Tithe::where('member_id', $member->id)
-            ->approved()
-            ->sum('amount');
+        Log::info("Calculating sums for member ID: " . $member->id);
+        $tithes = $member->tithes()->sum('amount') ?? 0;
+        $offerings = $member->offerings()->sum('amount') ?? 0;
+        $donations = $member->donations()->sum('amount') ?? 0;
         
-        $monthlyTithes = Tithe::where('member_id', $member->id)
-            ->approved()
-            ->whereYear('tithe_date', $currentYear)
-            ->whereMonth('tithe_date', $currentMonth)
-            ->sum('amount');
-
-        // Get offerings - use approved scope method
-        $totalOfferings = Offering::where('member_id', $member->id)
-            ->approved()
-            ->sum('amount');
+        $pledgeTotal = $member->pledges()->sum('pledge_amount') ?? 0;
+        $pledgePaid = $member->pledges()->sum('amount_paid') ?? 0;
         
-        $monthlyOfferings = Offering::where('member_id', $member->id)
-            ->approved()
-            ->whereYear('offering_date', $currentYear)
-            ->whereMonth('offering_date', $currentMonth)
-            ->sum('amount');
-
-        // Get donations - use approved scope method
-        $totalDonations = Donation::where('member_id', $member->id)
-            ->approved()
-            ->sum('amount');
-        
-        $monthlyDonations = Donation::where('member_id', $member->id)
-            ->approved()
-            ->whereYear('donation_date', $currentYear)
-            ->whereMonth('donation_date', $currentMonth)
-            ->sum('amount');
-
-        // Get pledges
-        $totalPledges = Pledge::where('member_id', $member->id)->sum('pledge_amount');
-        $totalPledgePayments = PledgePayment::whereHas('pledge', function($query) use ($member) {
-            $query->where('member_id', $member->id);
-        })->approved()->sum('amount');
-        $remainingPledges = max(0, $totalPledges - $totalPledgePayments);
-
-        // Recent transactions
-        $recentTithes = Tithe::where('member_id', $member->id)
-            ->approved()
-            ->orderBy('tithe_date', 'desc')
-            ->take(5)
-            ->get()
-            ->map(function ($tithe) {
-                return [
-                    'id' => $tithe->id,
-                    'amount' => $tithe->amount,
-                    'date' => $tithe->tithe_date->format('Y-m-d'),
-                    'type' => 'tithe',
-                ];
-            });
-
-        $recentOfferings = Offering::where('member_id', $member->id)
-            ->approved()
-            ->orderBy('offering_date', 'desc')
-            ->take(5)
-            ->get()
-            ->map(function ($offering) {
-                return [
-                    'id' => $offering->id,
-                    'amount' => $offering->amount,
-                    'date' => $offering->offering_date->format('Y-m-d'),
-                    'type' => 'offering',
-                ];
-            });
-
-        $recentDonations = Donation::where('member_id', $member->id)
-            ->approved()
-            ->orderBy('donation_date', 'desc')
-            ->take(5)
-            ->get()
-            ->map(function ($donation) {
-                return [
-                    'id' => $donation->id,
-                    'amount' => $donation->amount,
-                    'date' => $donation->donation_date->format('Y-m-d'),
-                    'type' => 'donation',
-                ];
-            });
+        Log::info("Sums calculated: Tithes=$tithes, Offerings=$offerings, Donations=$donations");
 
         return [
-            'total_tithes' => (float) $totalTithes,
-            'monthly_tithes' => (float) $monthlyTithes,
-            'total_offerings' => (float) $totalOfferings,
-            'monthly_offerings' => (float) $monthlyOfferings,
-            'total_donations' => (float) $totalDonations,
-            'monthly_donations' => (float) $monthlyDonations,
-            'total_pledges' => (float) $totalPledges,
-            'total_pledge_payments' => (float) $totalPledgePayments,
-            'remaining_pledges' => (float) $remainingPledges,
-            'recent_transactions' => $recentTithes->concat($recentOfferings)->concat($recentDonations)
-                ->sortByDesc('date')
-                ->take(10)
-                ->values(),
+            'total_tithes' => (double)$tithes,
+            'total_offerings' => (double)$offerings,
+            'total_donations' => (double)$donations,
+            'total_pledges' => (double)$pledgeTotal,
+            'total_pledge_payments' => (double)$pledgePaid,
+            'remaining_pledges' => (double)($pledgeTotal - $pledgePaid),
+            'recent_transactions' => [], // Add if needed
         ];
     }
 
     /**
-     * Get announcements (upcoming events, celebrations, and church announcements)
+     * Helper to get announcements data for dashboard
      */
-    private function getAnnouncements($member = null)
+    private function getAnnouncementsData($member)
     {
-        $now = Carbon::now();
-        $next30Days = $now->copy()->addDays(30);
-
-        // Get active church announcements (pinned first, then by date)
-        $announcements = Announcement::active()
-            ->orderBy('is_pinned', 'desc')
+        return Announcement::orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
+            ->take(5)
             ->get()
             ->map(function ($announcement) use ($member) {
                 $isUnread = false;
@@ -374,180 +413,185 @@ class MemberApiController extends Controller
                         ->where('member_id', $member->id)
                         ->exists();
                 }
-
                 return [
                     'id' => $announcement->id,
                     'title' => $announcement->title,
-                    'content' => $announcement->content,
                     'is_pinned' => $announcement->is_pinned,
                     'is_unread' => $isUnread,
-                    'created_at' => $announcement->created_at->toISOString(),
-                    'updated_at' => $announcement->updated_at->toISOString(),
                 ];
             });
-
-        // Get upcoming special events
-        $events = SpecialEvent::whereDate('event_date', '>=', $now->toDateString())
-            ->whereDate('event_date', '<=', $next30Days->toDateString())
-            ->orderBy('event_date')
-            ->get()
-            ->map(function ($event) {
-                return [
-                    'id' => $event->id,
-                    'title' => $event->title,
-                    'description' => $event->description,
-                    'event_date' => $event->event_date->format('Y-m-d'),
-                    'event_time' => $event->event_time,
-                    'location' => $event->location,
-                ];
-            });
-
-        // Get upcoming celebrations
-        $celebrations = Celebration::whereDate('celebration_date', '>=', $now->toDateString())
-            ->whereDate('celebration_date', '<=', $next30Days->toDateString())
-            ->orderBy('celebration_date')
-            ->get()
-            ->map(function ($celebration) {
-                return [
-                    'id' => $celebration->id,
-                    'member_name' => $celebration->member->full_name ?? 'N/A',
-                    'celebration_type' => $celebration->celebration_type,
-                    'celebration_date' => $celebration->celebration_date->format('Y-m-d'),
-                    'description' => $celebration->description,
-                ];
-            });
-
-        // Get upcoming Sunday services
-        $sundayServices = SundayService::whereDate('service_date', '>=', $now->toDateString())
-            ->whereDate('service_date', '<=', $next30Days->toDateString())
-            ->orderBy('service_date')
-            ->get()
-            ->map(function ($service) {
-                return [
-                    'id' => $service->id,
-                    'service_date' => $service->service_date->format('Y-m-d'),
-                    'service_time' => $service->service_time,
-                    'theme' => $service->theme,
-                    'preacher' => $service->preacher,
-                ];
-            });
-
-        return [
-            'announcements' => $announcements,
-            'events' => $events,
-            'celebrations' => $celebrations,
-            'sunday_services' => $sundayServices,
-        ];
     }
 
     /**
-     * Get leadership data for the member
+     * Helper to get unread announcements count
      */
-    private function getLeadershipData($member)
+    private function getUnreadAnnouncementsCount($member)
     {
-        // Get all active leaders with their member information
+        $totalActiveCount = Announcement::where('is_active', true)->count();
+        $readCount = AnnouncementView::where('member_id', $member->id)->count();
+        return max(0, $totalActiveCount - $readCount);
+    }
+
+    /**
+     * Get leadership data endpoint
+     */
+    public function leaders(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $this->getLeadershipDataHelper(Auth::user()->member)
+        ]);
+    }
+
+    private function getLeadershipDataHelper($member)
+    {
         $allLeaders = Leader::with('member')
             ->where('is_active', true)
-            ->where(function($query) {
-                $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
-            })
-            ->orderBy('position')
-            ->orderBy('appointment_date', 'desc')
             ->get()
             ->map(function ($leader) {
                 return [
                     'id' => $leader->id,
                     'position' => $leader->position,
-                    'member_name' => $leader->member->full_name ?? 'N/A',
-                    'member_phone' => $leader->member->phone_number ?? null,
-                    'appointment_date' => $leader->appointment_date->format('Y-m-d'),
-                    'end_date' => $leader->end_date ? $leader->end_date->format('Y-m-d') : null,
+                    'member_name' => optional($leader->member)->full_name ?? 'N/A',
+                    'member_phone' => optional($leader->member)->phone_number,
+                    'appointment_date' => $leader->appointment_date ? $leader->appointment_date->format('Y-m-d') : null,
                 ];
             });
 
-        // Get current member's leadership positions
-        $memberLeadershipPositions = $member->activeLeadershipPositions()
-            ->where(function($query) {
-                $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now()->toDateString());
-            })
-            ->get()
-            ->map(function ($position) {
-                return [
-                    'id' => $position->id,
-                    'position' => $position->position,
-                    'appointment_date' => $position->appointment_date->format('Y-m-d'),
-                    'end_date' => $position->end_date ? $position->end_date->format('Y-m-d') : null,
-                ];
-            });
+        $myPositions = collect([]);
+        if ($member) {
+            $myPositions = $member->leadershipPositions()
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($pos) {
+                    return [
+                        'id' => $pos->id,
+                        'position' => $pos->position,
+                    ];
+                });
+        }
 
         return [
             'all_leaders' => $allLeaders,
-            'member_positions' => $memberLeadershipPositions,
-            'has_leadership_position' => $memberLeadershipPositions->count() > 0
+            'my_positions' => $myPositions
         ];
     }
 
     /**
-     * Get count of unread announcements for a member
+     * Helper to get upcoming services and events
      */
-    private function getUnreadAnnouncementsCount($member)
+    private function getUpcomingData()
     {
-        $activeAnnouncements = Announcement::active()->pluck('id');
-        
-        $viewedAnnouncementIds = AnnouncementView::where('member_id', $member->id)
-            ->whereIn('announcement_id', $activeAnnouncements)
-            ->pluck('announcement_id');
-        
-        return $activeAnnouncements->diff($viewedAnnouncementIds)->count();
+        $services = SundayService::orderBy('service_date', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function($s) {
+                return [
+                    'id' => $s->id,
+                    'title' => $s->theme ?? $s->service_type,
+                    'date' => $s->service_date,
+                    'start_time' => $s->start_time,
+                ];
+            });
+
+        $events = SpecialEvent::orderBy('event_date', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function($e) {
+                return [
+                    'id' => $e->id,
+                    'title' => $e->title,
+                    'date' => $e->event_date,
+                    'start_time' => $e->start_time,
+                ];
+            });
+
+        return [
+            'services' => $services,
+            'events' => $events,
+        ];
     }
 
     /**
-     * Mark announcement as read
+     * Get Public Celebrations
      */
-    public function markAnnouncementAsRead(Request $request, $announcementId): JsonResponse
+    public function celebrations(): JsonResponse
     {
-        $user = Auth::user();
-
-        if (!$user->isMember() || !$user->member_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access.'
-            ], 403);
-        }
-
-        $member = $user->member;
-
-        if (!$member) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member record not found.'
-            ], 404);
-        }
-
-        $announcement = Announcement::find($announcementId);
-
-        if (!$announcement) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Announcement not found.'
-            ], 404);
-        }
-
-        AnnouncementView::firstOrCreate([
-            'announcement_id' => $announcement->id,
-            'member_id' => $member->id,
-        ], [
-            'viewed_at' => now(),
-        ]);
+        $celebrations = \App\Models\Celebration::where('is_public', true)
+            ->where('celebration_date', '>=', now())
+            ->orderBy('celebration_date', 'asc')
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id' => $c->id,
+                    'title' => $c->title,
+                    'description' => $c->description,
+                    'date' => $c->celebration_date->format('Y-m-d'),
+                    'time' => $c->start_time,
+                    'venue' => $c->venue,
+                    'type' => $c->type,
+                    'celebrant' => $c->celebrant_name,
+                ];
+            });
 
         return response()->json([
             'success' => true,
-            'message' => 'Announcement marked as read.'
-        ], 200);
+            'data' => $celebrations
+        ]);
+    }
+
+    /**
+     * Upload payment receipt
+     */
+    public function uploadReceipt(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'receipt_type' => 'required|string',
+            'amount' => 'nullable|numeric',
+            'reference_number' => 'nullable|string',
+            'receipt_image' => 'required|image|max:5120', // Max 5MB
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+        $member = $user->member;
+
+        if (!$member) {
+            return response()->json(['success' => false, 'message' => 'Member record not found.'], 404);
+        }
+
+        try {
+            if ($request->hasFile('receipt_image')) {
+                $file = $request->file('receipt_image');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('receipts/' . $member->id, $filename, 'public');
+
+                $receipt = \App\Models\PaymentReceipt::create([
+                    'member_id' => $member->id,
+                    'receipt_type' => $request->receipt_type,
+                    'amount' => $request->amount,
+                    'reference_number' => $request->reference_number,
+                    'file_path' => $path,
+                    'notes' => $request->notes,
+                    'uploaded_at' => now(),
+                    'status' => 'pending'
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Receipt uploaded successfully.',
+                    'data' => $receipt
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'No file uploaded.'], 400);
+        } catch (\Exception $e) {
+            Log::error("Receipt Upload Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to upload receipt.'], 500);
+        }
     }
 }
-
-
-

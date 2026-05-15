@@ -1429,39 +1429,11 @@ Route::get('/storage/{path}', function ($path) {
 })->where('path', '.*')->name('storage.serve');
 
 // --- GOOGLE DRIVE REFRESH TOKEN GENERATION ---
-use Google\Client as GoogleClient;
-use Google\Service\Drive as GoogleDrive;
+use App\Http\Controllers\GoogleAuthController;
 
-Route::get('/google/login', function () {
-    $client = new GoogleClient();
-    $client->setAuthConfig(storage_path('app/google/credentials.json'));
-    $client->addScope(GoogleDrive::DRIVE_FILE);
-    $client->setRedirectUri(url('/google/callback'));
-    $client->setAccessType('offline');
-    $client->setPrompt('consent');
-
-    return redirect($client->createAuthUrl());
-});
-
-Route::get('/google/callback', function (Illuminate\Http\Request $request) {
-    if (!$request->has('code')) {
-        return response()->json(['error' => 'No code provided'], 400);
-    }
-
-    $client = new GoogleClient();
-    $client->setAuthConfig(storage_path('app/google/credentials.json'));
-    $client->setRedirectUri(url('/google/callback'));
-
-    try {
-        $token = $client->fetchAccessTokenWithAuthCode($request->code);
-        return response()->json($token);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'redirect_uri' => url('/google/callback'),
-            'code' => $request->code
-        ], 500);
-    }
+Route::middleware(['auth'])->prefix('super-admin')->group(function () {
+    Route::get('/google/auth', [GoogleAuthController::class, 'auth'])->name('google.auth');
+    Route::get('/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 });
 
 

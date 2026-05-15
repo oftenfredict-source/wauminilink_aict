@@ -161,6 +161,11 @@ class AuthApiController extends Controller
                     'full_name' => $member->full_name,
                     'email' => $member->email,
                     'phone_number' => $member->phone_number,
+                    'gender' => $member->gender,
+                    'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('Y-m-d') : null,
+                    'marital_status' => $member->marital_status,
+                    'residence' => trim(($member->residence_street ? $member->residence_street . ', ' : '') . ($member->residence_ward ? $member->residence_ward . ', ' : '') . ($member->residence_district ?? '')),
+                    'jumuia' => $member->jumuia ?? 'N/A', // Fallback if field exists
                 ] : null,
                 'token' => $token,
                 'token_type' => 'Bearer',
@@ -214,10 +219,10 @@ class AuthApiController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->isMember() || !$user->member_id) {
+        if (!$user->member_id && !$user->isMember()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Access denied. Only members can access the mobile app.'
+                'message' => 'Access denied. Please ensure your account is linked to a member record.'
             ], 403);
         }
 
@@ -246,6 +251,11 @@ class AuthApiController extends Controller
                     'full_name' => $member->full_name,
                     'email' => $member->email,
                     'phone_number' => $member->phone_number,
+                    'gender' => $member->gender,
+                    'date_of_birth' => $member->date_of_birth ? $member->date_of_birth->format('Y-m-d') : null,
+                    'marital_status' => $member->marital_status,
+                    'residence' => trim(($member->residence_street ? $member->residence_street . ', ' : '') . ($member->residence_ward ? $member->residence_ward . ', ' : '') . ($member->residence_district ?? '')),
+                    'jumuia' => $member->jumuia ?? 'N/A', // Fallback if field exists
                 ],
             ]
         ], 200);
